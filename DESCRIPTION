@@ -1,0 +1,43 @@
+Package: REMP
+Type: Package
+Title: Repetitive Element Methylation Prediction
+Version: 0.99.14
+Authors@R: c(person("Yinan","Zheng", role = c("aut","cre"), email =
+        "y-zheng@northwestern.edu"),person("Lei","Liu", role =
+        c("aut"), email = "lei.liu@northwestern.edu "),
+        person("Wei","Zhang", role = c("aut"), email =
+        "wei.zhang1@northwestern.edu"), person("Warren","Kibbe", role =
+        c("aut"), email = "warren.kibbe@nih.gov"),
+        person("Lifang","Hou", role = c("cph"), email =
+        "l-hou@northwestern.edu"))
+Description: Machine learing-based tools to predict DNA methylation of
+        locus-specific repetitive elements (RE) by learning surrounding
+        genetic and epigenetic information. These tools provide
+        genomewide and single-base resolution of DNA methylation
+        prediction on RE that are difficult to measure using
+        array-based or sequencing-based platforms, which enables
+        epigenome-wide association study (EWAS) and differentially
+        methylated region (DMR) analysis on RE.
+License: GPL-3
+Depends: R (>= 3.4), minfi,
+        IlluminaHumanMethylation450kanno.ilmn12.hg19,
+        IlluminaHumanMethylationEPICanno.ilm10b2.hg19
+Imports: graphics, stats, utils, methods, settings, BiocGenerics,
+        S4Vectors, Biostrings, GenomicRanges, SummarizedExperiment,
+        IRanges, BiocParallel, doParallel, parallel, caret,
+        quantregForest, BSgenome, AnnotationHub,
+        BSgenome.Hsapiens.UCSC.hg19, org.Hs.eg.db, impute, iterators
+Suggests: knitr, rmarkdown, randomForest, e1071, kernlab, minfiDataEPIC
+Collate: REMParcel-class.R REMProduct-class.R generics.R
+        REMParcel-methods.R REMProduct-methods.R options.R utils.R
+        tools.R getGM12878.R grooMethy.R initREMP.R remp.R DemoData.R
+        REMP-package.R
+VignetteBuilder: knitr
+URL: https://github.com/YinanZheng/REMP
+BugReports: https://github.com/YinanZheng/REMP/issues
+LazyData: true
+biocViews: DNAMethylation, Microarray, MethylationArray,
+        GenePrediction, Sequencing, Alignment, Epigenetics,
+        Normalization, Preprocessing, MultiChannel, TwoChannel,
+        DifferentialMethylation, QualityControl, DataImport
+RoxygenNote: 5.0.1

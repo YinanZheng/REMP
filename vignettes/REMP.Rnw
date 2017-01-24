@@ -1,0 +1,196 @@
+%\VignetteIndexEntry{An Introduction to the REMP Package}
+%\VignetteKeywords{DNA Methylation, repetitive element, prediction}
+%\VignettePackage{REMP}
+\documentclass[10pt]{article}
+
+\usepackage{listings}
+\usepackage{times}
+\usepackage{hyperref}
+\usepackage{biblatex}
+
+\textwidth=7in
+\textheight=9in
+%\parskip=.3cm
+\oddsidemargin=-.1in
+\evensidemargin=-.1in
+\headheight=-.3in
+
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rpkg}[1]{{\textit{#1}}}
+\newcommand{\Rmethod}[1]{{\texttt{#1}}}
+\newcommand{\Rfunarg}[1]{{\texttt{#1}}}
+\newcommand{\Rclass}[1]{{\textit{#1}}}
+\newcommand{\Rcode}[1]{{\texttt{#1}}}
+
+<<echo=FALSE>>=
+library(knitr)
+options(width=60)
+
+listing <- function(x, options) {
+  paste("\\begin{lstlisting}[basicstyle=\\ttfamily,breaklines=true]\n",
+    x, "\\end{lstlisting}\n", sep = "")
+}
+knit_hooks$set(source=listing, output=listing)
+@
+
+\title{An Introduction to the \Rpkg{REMP} Package}
+\author{Yinan Zheng}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Introduction}
+
+\Rpkg{REMP} predicts DNA methylation of locus-specific repetitive elements (RE) by learning surrounding genetic and epigenetic information. \Rpkg{REMP} provides genomewide single-base resolution of DNA methylation on RE that are difficult to measure using array-based or sequencing-based platforms, which enables epigenome-wide association study (EWAS) and differentially methylated region (DMR) analysis on RE. 
+
+\section{Installation}
+Install \Rpkg{REMP} (release version):
+
+<<bioconductorREMPrelease, eval=FALSE>>=
+source("http://bioconductor.org/biocLite.R")
+biocLite("REMP")
+@
+
+To install devel version:
+
+<<bioconductorREMPdev, eval=FALSE>>=
+library(devtools)
+install_github("YinanZheng/REMP")
+@
+
+Load \Rpkg{REMP} into the workspace:
+
+<<loadREMP, message=FALSE, eval=TRUE>>=
+library(REMP)
+@
+
+\section{REMP: Repetitive Element Methylation Prediction}
+Currently \Rpkg{REMP} supports Human (hg19, build 37) Alu and LINE-1 (L1) repetitive element (RE) methylation prediction using Illumina 450k or EPIC array.
+
+\subsection{Groom methylation data}
+Appropriate data preprocessing including quality control and normalization of methylation data are recommended before running \Rpkg{REMP}. Many packages are available to carry out these data preprocessing steps, for example, \Rpkg{minfi}, \Rpkg{wateRmelon}, and \Rpkg{methylumi}.
+
+\Rpkg{REMP} is trying to minimize the requirement of the methylation data format. User can maintain the methylation data in \Rclass{RatioSet} or \Rclass{GenomicRatioSet} object offered by \Rpkg{minfi}, \Rclass{data.table}, \Rclass{data.frame}, \Rclass{DataFrame}, or \Rclass{matrix}. User can input either beta value or M-value. There are only two basic requirements of the methylation data:
+\begin{enumerate}
+  \item Each row should represent CpG probe and each column should represent sample.
+  \item The row names should indicate Illumina probe ID (i.e. cg00000029).
+\end{enumerate}
+
+However, there are some other common data issues that may prevent \Rpkg{REMP} from running correctly. For example, if the methylation data are in beta value and contain zero methylation values, logit transformation (to create M-value) will create negative infinite value; or the methylation data contain \Rcode{NA}, \Rcode{Inf}, or \Rcode{NaN} data. To tackle these potential issues, \Rpkg{REMP} includes a handy function \Rfunction{grooMethy} which can help detect and fix these issues. We highly recommend to take advantage of this function:
+
+<<grooMethy, eval=TRUE>>=
+# Get GM12878 methylation data (450k array)
+GM12878_450k <- getGM12878('450k') 
+GM12878_450k <- grooMethy(GM12878_450k, verbose = TRUE)
+GM12878_450k
+@
+
+For zero beta values, \Rfunction{grooMethy} will replace them with smallest non-zero beta value. For \Rcode{NA}/\Rcode{NaN}/\Rcode{Inf} values, \Rfunction{grooMethy} will treat them as missing values and then apply KNN-imputation to complete the dataset. It is noteworthy that KNN-imputation can sometimes generate a few imputed values that are out of the original data range across samples. For these "bad" imputed value, \Rfunction{grooMethy} will instead use the mean value across samples to do the imputation.
+
+\subsection{Prepare annotation data}
+To run \Rpkg{REMP} for RE methylation prediction, user first needs to prepare some annotation datasets. The function \Rfunction{initREMP} is designed to do the job.
+
+Suppose user will predict Alu methylation using Illumina 450k array data:
+
+<<remparcel, eval=TRUE>>=
+data(Alu.demo)
+remparcel <- initREMP(arrayType = "450k", REtype = "Alu", 
+                      RE = Alu.demo, ncore = 1)
+remparcel
+@
+
+For demonstration, we only use 500 selected Alu sequence dataset which comes along with the package (\Rcode{Alu.demo}). We specify \Rfunarg{RE = Alu.demo}, so that the annotation dataset will be generated for the 500 selected Alu sequences. In real-world prediction, specifying \Rfunarg{RE} is not necessary, as the function will pull up the complete RE sequence dataset from package \Rpkg{AnnotationHub}. 
+
+All data are stored in the \Rclass{REMParcel} object. It is recommended to specify a working directory so that the data generated can be preserved for later use:
+
+<<saveParcel, eval=TRUE>>=
+saveParcel(remparcel)
+@
+
+Without specifying working directory using option \Rfunarg{work.dir}, the annotation dataset will be created under the temporal directory \Rcode{tempdir()} by default. User can also turn on the \Rfunarg{export} parameter in \Rfunction{initREMP} to save the data automatically.
+
+\subsection{Run prediction}
+
+Once the annotation data are ready, user can pass the annotation data parcel to \Rfunction{remp} for prediction:
+
+<<rempredict, eval=TRUE>>=
+remp.res <- remp(GM12878_450k, REtype = 'Alu', parcel = remparcel,
+                 autoTune = FALSE, param = 6, ncore = 1)
+@
+
+If \Rfunarg{parcel} is missing, \Rfunction{remp} will then try to search the REMParcel data file in the directory indicated by \Rfunarg{work.dir} (use \Rfunction{tempdir()} if not specified).
+
+By default, \Rfunction{remp} uses Random Forest (\Rfunarg{method = 'rf'}) model (package \Rpkg{randomForest}) for prediction. Random Forest model is recommended because it offers more accurate prediction results and it automatically enables Quantile Regression Forest (package \Rpkg{quantregForest}) for prediction reliability evaluation. \Rfunction{remp} constructs 19 predictors to carry out the prediction. For Random Forest model, the tuning parameter \Rfunarg{param = 6} (i.e. \Rfunarg{mtry} in \Rpkg{randomForest}) indicates how many predictors will be randomly selected for building the individual trees. To speed up the prediction process, user can turn off the tuning functionality by \Rfunarg{autoTune = FALSE} and specify the tuning parameter by \Rfunarg{param = 6} - this is about one third of the total number of predictors, which is also default in package \Rpkg{randomForest}). The performance of Random Forest model is often relatively insensitive to the choice of \Rfunarg{mtry}.
+
+\Rfunction{remp} will return a \Rclass{REMPset} object, which inherits Bioconductor's \Rclass{RangedSummarizedExperiment} class:
+
+<<rempprint, eval=TRUE>>=
+remp.res
+
+# Display more detailed information
+details(remp.res)
+@
+
+Prediction results can be obtained by accessors: 
+
+<<rempaccessors, eval=TRUE>>=
+# Predicted RE-CpG methylation value (Beta value)
+head(rempB(remp.res))
+
+# Predicted RE-CpG methylation value (M value)
+head(rempM(remp.res))
+
+# Genomic location information of the predicted RE-CpG
+head(rowRanges(remp.res))
+@
+
+To add genomic regions annotation of the predicted REs:
+
+<<rempdecodeAnnot, eval=TRUE, tidy=TRUE>>=
+# By default gene symbol information will be added
+remp.res <- decodeAnnot(remp.res)
+annotation(remp.res)
+@
+
+Seven genomic region indicators will be added to the annotation data in the input \Rclass{REMProduct} object:
+
+\begin{itemize}
+\item InNM: in protein-coding genes (overlap with refSeq gene's "NM" transcripts + 2000 bp upstream of the transcription start site (TSS))
+\item InNR: in noncoding RNA genes (overlap with refSeq gene's "NR" transcripts + 2000 bp upstream of the TSS)
+\item InTSS: in flanking region of 2000 bp upstream of the TSS. Default upstream limit is 2000 bp, which can be modified globally using \Rfunction{remp\_options}
+\item In5UTR: in 5'untranslated regions (UTRs)
+\item InCDS: in coding DNA sequence regions
+\item InExon: in exon regions
+\item In3UTR: in 3'UTRs
+\end{itemize}
+
+Note that intron region and intergenic region information can be derived from the above genomic region indicators: if "InNM" and/or "InNR" is not missing but "InTSS", "In5UTR", "InExon", and "In3UTR" are missing, then the RE is strictly located within intron region; if all indicators are missing, then the RE is strictly located in intergenic region.
+
+\subsection{Plot prediction}
+
+Make a density plot of the predicted methylation (beta values):
+
+\begin{figure}[h!]
+\centering
+<<rempplot, eval=TRUE, fig.width=4.5, fig.height=4>>=
+plot(remp.res, main = "Alu methylation (GM12878)", col = "blue")
+@
+\end{figure}
+
+\pagebreak
+
+\section{Session Information}
+
+<<SessionInfo, echo=FALSE>>=
+sessionInfo()
+@
+
+\end{document}
