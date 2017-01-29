@@ -14,11 +14,13 @@
 #' @param predictModel Name of the model used for prediction.
 #' @param QCModel Name of the model used for prediction quality evaluation.
 #' @param rempM Predicted methylation level in M-value.
+#' @param rempB Predicted methylation level in beta value (optional).
 #' @param rempQC Prediction quality scores, which is available only when Random Forest 
 #' model is used in \code{\link{remp}}.
 #' @param cpgRanges Genomic ranges of the predicting RE-CpG.
 #' @param sampleInfo Sample information. 
 #' @param REannotation Annotation data for the predicting RE.
+#' @param RECpG Annotation data for the RE-CpG profiled by Illumina platform.
 #' @param regionCode Internal index code defined in \code{refGene} for gene region indicators.
 #' @param refGene refSeq gene annotation data, which can be obtained by \code{\link{fetchRefSeqGene}}.
 #' @param varImp Importance of the predictors.
@@ -26,6 +28,8 @@
 #' @param GeneStats Gene coverage statistics, which is internally generated in \code{\link{remp}}.
 #' @param type For \code{plot} and \code{decodeAnnot}: see Utilities.
 #' @param x For \code{plot}: an \code{REMProduct} object.
+#' @param threshold For \code{trim}: see Utilities.
+#' @param missingRate For \code{trim}: see Utilities.
 #' @param ... For \code{plot}: \code{\link{graphical parameters}} to be passed to the \code{plot} method.
 #' 
 #' @return An object of class \code{REMProduct} for the constructor.
@@ -51,6 +55,10 @@
 #'     RE annotation data by Gene Symbol (when \code{type = "Symbol"}) or Entrez Gene 
 #'     (when \code{type = "Entrez"}).Default \code{type = "Symbol"}. Annotation data are provided by 
 #'     \code{\link{org.Hs.eg.db}}.}
+#'     \item{\code{trim(object, threshold = 1.7, missingRate = 0.2)}}{Any predicted CpG values with 
+#'     quality score < threshold (default = 1.7) will be replaced with NA. CpGs contain more than 
+#'     missingRate * 100% (default = 20%) missing rate across samples will be discarded. Relavant statistics
+#'     will be re-evaluated.}
 #'     }
 #' 
 #' @examples
@@ -65,9 +73,10 @@ REMProduct <- setClass("REMProduct",
 ## Constructor function
 REMProduct <- function(REtype = "Unknown", platform = "Unknown", win = "Unknown", 
                        predictModel = "Unknown", QCModel = "Unknown",
-                       rempM = NULL, rempQC = NULL, 
+                       rempM = NULL, rempB = NULL, rempQC = NULL, 
                        cpgRanges = GRanges(), sampleInfo = DataFrame(),
-                       REannotation = GRanges(), regionCode = DataFrame(), 
+                       REannotation = GRanges(), RECpG = GRanges(), 
+                       regionCode = DataFrame(), 
                        refGene = GRanges(),
                        varImp = DataFrame(),
                        REStats = DataFrame(), GeneStats = DataFrame())
@@ -77,12 +86,12 @@ REMProduct <- function(REtype = "Unknown", platform = "Unknown", win = "Unknown"
                             win = win, 
                             predictModel = predictModel,
                             QCModel = QCModel)
-  
-  rempB <- .toBeta(rempM)
+  if(is.null(rempB)) rempB <- .toBeta(rempM)
   assays <- SimpleList(rempB = rempB, rempM = rempM, rempQC = rempQC)
   assays <- assays[!sapply(assays, is.null)]
   
   metadata = list(REannotation = REannotation,
+                  RECpG = RECpG,
                   regionCode = regionCode,
                   refGene = refGene,
                   varImp = varImp,

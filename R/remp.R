@@ -293,7 +293,7 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
                                    REtype, indent = "    ", verbose)
   
   # Gene coverage
-  GENE_COVERAGE <- .coverageStats_GENE(regionCode, cpgRanges, refgene_main, 
+  GENE_COVERAGE <- .coverageStats_GENE(regionCode, refgene_main, 
                                        REtype, indent = "    ", verbose)
   
   ## Prediction
@@ -367,6 +367,7 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
                            rempM = REMP_PREDICT_CpG, rempQC = REMP_PREDICT_QC,
                            cpgRanges = cpgRanges, sampleInfo = BEST_TUNE,
                            REannotation = RE_annotation, 
+                           RECpG = RE_CpG_ILMN,
                            regionCode = regionCode,
                            refGene = refgene_main,
                            varImp = REMP_PREDICT_IMP, 
@@ -538,21 +539,21 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
                               REtype, indent, verbose) {
   
   mcols(RE_annotation) <- cbind(mcols(RE_annotation), regionCode)
-  RECpG_annotation <- RE_annotation[match(cpgRanges$RE.Index, RE_annotation$Index)]
+  mcols(cpgRanges) <- mcols(RE_annotation[match(cpgRanges$RE.Index, RE_annotation$Index)])
   
   RE_annotation_prf <- subsetByOverlaps(RE_annotation, RE_CpG_ILMN, ignore.strand = TRUE)
-  RECpG_annotation_prf <- subsetByOverlaps(RECpG_annotation, RE_CpG_ILMN, ignore.strand = TRUE)
+  cpgRanges_prf <- subsetByOverlaps(cpgRanges, RE_CpG_ILMN, ignore.strand = TRUE)
   
   # Profiled RE for prediction
   cvr_RE_win_list <- runValue(RE_annotation_prf$Index)
   
-  # Profiled RE for prediction + unprofiled RE
+  # Profiled RE for prediction + predicted unprofiled RE
   cvr_unRE_win_list <- runValue(RE_annotation$Index)
   
   REStats <- DataFrame(cbind(.countREByGene(RE_annotation_prf, cvr_RE_win_list),
-                             .countREByGene(RECpG_annotation_prf, cvr_RE_win_list),
+                             .countREByGene(cpgRanges_prf, cvr_RE_win_list),
                              .countREByGene(RE_annotation, cvr_unRE_win_list),
-                             .countREByGene(RECpG_annotation, cvr_unRE_win_list)
+                             .countREByGene(cpgRanges, cvr_unRE_win_list)
   ))
   
   colnames(REStats) <- c("Train_RE", "Train_RECpG", "Predict_RE", "Predict_RECpG")
@@ -581,7 +582,7 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
   return(c(NM = NM, NR = NR, Gene = Gene))
 }
 
-.coverageStats_GENE <- function(regionCode, cpgRanges, refgene_main, 
+.coverageStats_GENE <- function(regionCode, refgene_main, 
                                 REtype, indent, verbose) {
   ## Count the total number of gene (protein coding gene and noncoding RNA
   ## gene)

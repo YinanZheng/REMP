@@ -9,3 +9,7 @@
 # REMP 0.99.16
 
 * Package accepted by Bioconductor
+
+# REMP 0.99.17
+
+* Added trim(REMProduct) functionality to trim predicted CpGs based on quality score (only for Random Forest model)

@@ -8,7 +8,7 @@
 #' and differentially methylated region (DMR) analysis on RE.
 #' 
 #' \tabular{ll}{ Name: \tab REMP\cr Type: \tab Package\cr
-#' Version: \tab 0.99.16\cr License: \tab GPL-3\cr }
+#' Version: \tab 0.99.17\cr License: \tab GPL-3\cr }
 #' 
 #' @name REMP-package
 #' 

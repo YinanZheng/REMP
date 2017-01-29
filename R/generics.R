@@ -54,3 +54,7 @@ setGeneric("details", function(object) standardGeneric("details"))
 #' @rdname REMProduct-class
 #' @exportMethod decodeAnnot
 setGeneric("decodeAnnot", function(object, ...) standardGeneric("decodeAnnot"))
+
+#' @rdname REMProduct-class
+#' @exportMethod trim
+setGeneric("trim", function(object, ...) standardGeneric("trim"))

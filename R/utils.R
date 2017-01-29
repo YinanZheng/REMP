@@ -103,11 +103,13 @@
 }
 
 .showREStats <- function(REStats, REtype, printType, indent) {
-  p <- rep(NA, 2)
+  p <- rep(NA, 3)
   
   p[1] <- paste0(indent, "There are ", REStats[1, 1], " profiled ", 
-                 REtype, " (", REStats[1, 2], " RE-CpG) are used for model training.")
-  p[2] <- paste0(indent, "REMP predicts ", REStats[1, 3], " ", REtype, 
+                 REtype, " by Illumina array.")
+  p[2] <- paste0(indent, "There are ", REStats[1, 2], 
+                 " RE-CpGs that have neighboring profiled CpGs are used for model training.")
+  p[3] <- paste0(indent, "In total, REMP predicts ", REStats[1, 3], " ", REtype, 
                  " (", REStats[1, 4], " RE-CpG).")
 
   if(printType == "message")
@@ -119,7 +121,7 @@
 .showGeneStats <- function(GeneStats, REtype, printType, indent) {
   p <- rep(NA, 4)
   
-  p[1] <- paste0(indent, "Gene coverage by predicted ", REtype, " (refSeq Gene):")
+  p[1] <- paste0(indent, "Gene coverage by predicted ", REtype, " (out of total refSeq Gene):")
   p[2] <- paste0(indent, indent, GeneStats[2, 3], 
           " (", round(GeneStats[2, 3]/GeneStats[1, 3] * 100, 2), "%) total genes;")
   p[3] <- paste0(indent, indent, GeneStats[2, 1], 

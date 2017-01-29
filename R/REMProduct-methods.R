@@ -150,3 +150,67 @@ setMethod("decodeAnnot", signature(object = "REMProduct"),
 # annotation(remptest)
 # remptest <- decodeAnnot(remptest, type = "entrez")
 # annotation(remptest)
+
+#' @rdname REMProduct-class
+setMethod("trim", signature(object = "REMProduct"), 
+          function(object, threshold = 1.7, missingRate = 0.2) {
+            method <- object@REMPInfo[["predictModel"]]
+            if(method != "Random Forest")
+            {
+              message("Trim is only applicable to prediction using Random Forest model. No changes made.")
+              return(object)
+            }
+            
+            REtype = object@REMPInfo[["REtype"]]
+            beta <- as.matrix(rempB(object))
+            M <- as.matrix(rempB(object))
+            QC <- as.matrix(rempQC(object))
+            badInd <- QC > threshold
+            QC[badInd] <- NA
+            beta[badInd] <- NA
+            M[badInd] <- NA
+            
+            removeCpG <- rowMeans(badInd) > missingRate
+            
+            RE_annotation <- annotation(object)
+            RE_CpG_ILMN <-  metadata(object)$RECpG
+            regionCode <-  metadata(object)$regionCode
+            refgene_main <- metadata(object)$refGene
+
+            beta <- beta[!removeCpG,,drop = FALSE]
+            M <- M[!removeCpG,,drop = FALSE]
+            QC <- QC[!removeCpG,,drop = FALSE]
+            cpgRanges <- rowRanges(object)[!removeCpG, ]
+            
+            trimmed_RE_list <- runValue(cpgRanges$RE.Index)
+            regionCode <- regionCode[RE_annotation$Index %in% trimmed_RE_list,]
+            RE_annotation <- RE_annotation[RE_annotation$Index %in% trimmed_RE_list]
+            
+            ## Updated RE coverage
+            RE_COVERAGE <- .coverageStats_RE(RE_annotation, regionCode, cpgRanges, RE_CpG_ILMN, 
+                                             REtype, indent = "    ", TRUE)
+            
+            # Updated Gene coverage
+            GENE_COVERAGE <- .coverageStats_GENE(regionCode, refgene_main, 
+                                                 REtype, indent = "    ", TRUE)
+            
+            
+            ## Update object
+            object_trim <- REMProduct(REtype = object@REMPInfo[["REtype"]], 
+                                      platform = object@REMPInfo[["platform"]], 
+                                      win = object@REMPInfo[["win"]],
+                                      predictModel = paste0(object@REMPInfo[["predictModel"]], " - trimmed (", threshold, ")"),  
+                                      QCModel = object@REMPInfo[["QCModel"]], 
+                                      rempM = M, rempB = beta, rempQC = QC,
+                                      cpgRanges = cpgRanges, sampleInfo = colData(remp.res),
+                                      REannotation = RE_annotation, 
+                                      RECpG = RE_CpG_ILMN,
+                                      regionCode = regionCode,
+                                      refGene = refgene_main,
+                                      varImp = imp(object), 
+                                      REStats = RE_COVERAGE, GeneStats = GENE_COVERAGE)
+            
+            return(object_trim)
+          })
+# object_trim <- trim(object)
+# details(object_trim)
