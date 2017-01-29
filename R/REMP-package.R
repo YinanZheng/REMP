@@ -7,8 +7,8 @@
 #' array-based or sequencing-based platforms, which enables epigenome-wide association study (EWAS) 
 #' and differentially methylated region (DMR) analysis on RE.
 #' 
-#' \tabular{ll}{ Package: \tab REMP\cr Type: \tab Package\cr
-#' Version: \tab 0.99.14\cr Date: \tab 2016-12-13\cr License: \tab GPL-3\cr }
+#' \tabular{ll}{ Name: \tab REMP\cr Type: \tab Package\cr
+#' Version: \tab 0.99.16\cr License: \tab GPL-3\cr }
 #' 
 #' @name REMP-package
 #' 
@@ -37,7 +37,7 @@
 #' 
 #' Maintainer: Yinan Zheng \email{y-zheng@@northwestern.edu}
 #' 
-#' @references Manuscript in review
+#' @references Manuscript in review (Nucleic Acids Research)
 #' 
 #' @keywords package
 #' 

@@ -34,16 +34,16 @@ getBackend <- function(ncore, BPPARAM = NULL, verbose = FALSE) {
       message("You have successfully set non-parallel mode (single worker).")
   } else {
     if (is.null(BPPARAM)) 
-      bpparam <- bpparam() else bpparam <- BPPARAM
+      bpparam <- BiocParallel::bpparam() else bpparam <- BPPARAM
       backend_class <- attributes(bpparam)$class
-      if (!backend_class %in% names(registered())) {
+      if (!backend_class %in% names(BiocParallel::registered())) {
         stop("Back-end '", backend_class, "' is not supported on ", 
              Sys.info()["sysname"], "!")
       } else {
         if (backend_class == "SnowParam") 
-          backend <- SnowParam(workers = ncore)
+          backend <- BiocParallel::SnowParam(workers = ncore)
         if (backend_class == "MulticoreParam") 
-          backend <- MulticoreParam(workers = ncore)
+          backend <- BiocParallel::MulticoreParam(workers = ncore)
         if (verbose) 
           message("You have successfully set parallel mode with ", 
                   BiocParallel::bpworkers(backend), " workers (", backend_class, ").")
@@ -82,7 +82,7 @@ fetchRMSK <- function(ah, REtype, verbose = FALSE) {
             remp_options(".default.AH.repeatmasker.hg19"))
   }
   # HG19 rtracklayer://hgdownload.cse.ucsc.edu/goldenpath/hg19/database/rmsk
-  rmsk <- suppressMessages(ah[[remp_options(".default.AH.repeatmasker.hg19")]])  
+  rmsk <- suppressWarnings(suppressMessages(ah[[remp_options(".default.AH.repeatmasker.hg19")]]))  
   
   if (REtype == "Alu") 
     REFamily <- remp_options(".default.AluFamily")
@@ -133,8 +133,8 @@ fetchRefSeqGene <- function(ah, mainOnly = FALSE, verbose = FALSE) {
             remp_options(".default.AH.refgene.hg19"))
     
   }
-
-  refgene <- suppressMessages(ah[[remp_options(".default.AH.refgene.hg19")]])  
+  
+  refgene <- suppressWarnings(suppressMessages(ah[[remp_options(".default.AH.refgene.hg19")]]))  
   refgene <- refgene[as.character(seqnames(refgene)) %in% 
                        paste0("chr", c(1:22, "X", "Y"))]  ## chr1 - 22, chrX, chrY
   refgene$type <- substring(refgene$name, 1, 2)  ## Protein coding gene (NM) or noncoding RNA gene (NR)
@@ -223,7 +223,7 @@ fetchRefSeqGene <- function(ah, mainOnly = FALSE, verbose = FALSE) {
                                     fiveUTR = refgene_5UTR, 
                                     threeUTR = refgene_3UTR))
   )
-
+  
 }
 
 
@@ -262,7 +262,7 @@ findRECpG <- function(RE.hg19, REtype = c("Alu", "L1"), be = NULL, verbose = FAL
   
   if(is.null(be)) be <- getBackend(1, verbose)
   REtype <- match.arg(REtype)
-
+  
   ## Flank RE by 1 base pair to cover the cases where CG is located in
   ## RE's head or tail
   RE.hg19 <- .twoWayFlank(RE.hg19, 1)

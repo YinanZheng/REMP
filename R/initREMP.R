@@ -28,7 +28,10 @@
 #' RE methylation prediction in \code{\link{remp}}. Once generated, the data can be reused in the future 
 #' (data can be very large). Therefore, we recommand user to save the output from 
 #' \code{initREMP} to the local machine, so that user only need to run this function once 
-#' as long as there is no change on the RE database. 
+#' as long as there is no change on the RE database. To minimize the size of resulting data file, the generated 
+#' annotation data are only for REs that contain RE-CpGs with neighboring profiled CpGs. By default, the 
+#' neighboring CpGs are confined within 1200 bp flanking window. This window size can be modified using 
+#' \code{\link{remp_options}}.
 #'
 #' @return An \code{\link{REMParcel}} object containing data needed for RE methylation prediction.
 #'
@@ -91,8 +94,8 @@ initREMP <- function(arrayType = c("450k", "EPIC"), REtype = c("Alu", "L1"), RE 
   if(permission != 0)
   {
     if (verbose) message(AnnotationHub::getAnnotationHubOption("CACHE"), 
-            " is not writable, using temporal directory ", 
-            .forwardSlashPath(tempdir()), " instead.")
+                         " is not writable, using temporal directory ", 
+                         .forwardSlashPath(tempdir()), " instead.")
     AnnotationHub::setAnnotationHubOption("CACHE", file.path(tempdir(),".AnnotationHub"))
   }
   
@@ -108,7 +111,7 @@ initREMP <- function(arrayType = c("450k", "EPIC"), REtype = c("Alu", "L1"), RE 
   
   ### Get refSeq gene database
   refgene.hg19 <- fetchRefSeqGene(ah, mainOnly = FALSE, verbose)
-
+  
   ### Get RE-CpG location database Narrow down RE.hg19 to RE sequence that
   ### overlaps with CpG sites flanking region For demo data, this will not
   ### change anything.
@@ -121,10 +124,10 @@ initREMP <- function(arrayType = c("450k", "EPIC"), REtype = c("Alu", "L1"), RE 
   
   ## Locate RE-CpG
   RE.CpG <- findRECpG(RE.hg19, REtype, be, verbose)
-
+  
   ## Make RE.hg19 and RE.CpG dataset consistent with RE
   RE.hg19 <- RE.hg19[runValue(match(RE.CpG$Index, RE.hg19$Index))]
-
+  
   ######################################## 
   ###------ Part II - Annotation ------###
   ######################################## 
@@ -134,7 +137,7 @@ initREMP <- function(arrayType = c("450k", "EPIC"), REtype = c("Alu", "L1"), RE 
   RE.CpG.flanking <- .twoWayFlank(RE.CpG, remp_options(".default.max.flankWindow"))
   ILMN.GR <- subsetByOverlaps(ILMN.GR, RE.CpG.flanking, ignore.strand = TRUE)
   # ILMN.GR <- GRannot(ILMN.GR, refgene.hg19, verbose)
-
+  
   ###----------------------------------------------------------------------------------------------------
   ### Annotate RE
   RE.refGene <- GRannot(RE.hg19, refgene.hg19, verbose)
@@ -144,7 +147,7 @@ initREMP <- function(arrayType = c("450k", "EPIC"), REtype = c("Alu", "L1"), RE 
   RECpG_Platform.hits <- findOverlaps(ILMN.GR, RE.CpG, ignore.strand = TRUE)
   ILMN.GR$RE.Index <- NA
   ILMN.GR$RE.Index[queryHits(RECpG_Platform.hits)] <- RE.CpG[subjectHits(RECpG_Platform.hits)]$Index
-
+  
   remparcel <- REMParcel(REtype = REtype, platform = arrayType,
                          RefGene = refgene.hg19$main, 
                          RE = RE.refGene, RECpG = RE.CpG,

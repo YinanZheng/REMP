@@ -75,11 +75,13 @@ Prediction reliability is estimated by conditional standard deviation using Quan
 (see package \code{\link{quantregForest}} for more details). Please note that if parallel computing 
 is allowed, parallel random forest (\code{parRF} in package \code{caret}) will be used automatically.
 If \code{autoTune = TRUE}, preset tuning parameter search grid can be access and modified 
-using \code{remp_options}.
+using \code{\link{remp_options}}.
 }
 \examples{
 # Obtain example Illumina example data (450k)
 GM12878_450k <- getGM12878('450k')
+
+# Make sure you have run intREMP before running remp.
 
 # Run prediction (grooMethy will be run implicitly)
 remp.res <- remp(GM12878_450k, REtype = 'Alu', autoTune = FALSE,
@@ -92,6 +94,6 @@ plot(remp.res)
 
 }
 \seealso{
-see \code{\link{initREMP}} to prepare necessary annotation database before running \code{remp}.
+See \code{\link{initREMP}} to prepare necessary annotation database before running \code{remp}.
 }
 

@@ -47,7 +47,10 @@ annotation database (provided by \code{\link{AnnotationHub}}). These annotation 
 RE methylation prediction in \code{\link{remp}}. Once generated, the data can be reused in the future 
 (data can be very large). Therefore, we recommand user to save the output from 
 \code{initREMP} to the local machine, so that user only need to run this function once 
-as long as there is no change on the RE database.
+as long as there is no change on the RE database. To minimize the size of resulting data file, the generated 
+annotation data are only for REs that contain RE-CpGs with neighboring profiled CpGs. By default, the 
+neighboring CpGs are confined within 1200 bp flanking window. This window size can be modified using 
+\code{\link{remp_options}}.
 }
 \examples{
 data(Alu.demo)
