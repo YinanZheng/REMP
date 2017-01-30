@@ -21,13 +21,16 @@
 \alias{rempQC,REMProduct-method}
 \alias{stats}
 \alias{stats,REMProduct-method}
+\alias{trim}
+\alias{trim,REMProduct-method}
 \title{REMProduct instances}
 \usage{
 REMProduct(REtype = "Unknown", platform = "Unknown", win = "Unknown",
   predictModel = "Unknown", QCModel = "Unknown", rempM = NULL,
-  rempQC = NULL, cpgRanges = GRanges(), sampleInfo = DataFrame(),
-  REannotation = GRanges(), regionCode = DataFrame(), refGene = GRanges(),
-  varImp = DataFrame(), REStats = DataFrame(), GeneStats = DataFrame())
+  rempB = NULL, rempQC = NULL, cpgRanges = GRanges(),
+  sampleInfo = DataFrame(), REannotation = GRanges(), RECpG = GRanges(),
+  regionCode = DataFrame(), refGene = GRanges(), varImp = DataFrame(),
+  REStats = DataFrame(), GeneStats = DataFrame())
 
 rempM(object)
 
@@ -44,6 +47,8 @@ stats(object)
 details(object)
 
 decodeAnnot(object, ...)
+
+trim(object, ...)
 
 \S4method{rempM}{REMProduct}(object)
 
@@ -62,6 +67,8 @@ decodeAnnot(object, ...)
 \S4method{details}{REMProduct}(object)
 
 \S4method{decodeAnnot}{REMProduct}(object, type = c("symbol", "entrez"))
+
+\S4method{trim}{REMProduct}(object, threshold = 1.7, missingRate = 0.2)
 }
 \arguments{
 \item{REtype}{Type of RE (\code{"Alu"} or \code{"L1"}).}
@@ -76,6 +83,8 @@ decodeAnnot(object, ...)
 
 \item{rempM}{Predicted methylation level in M-value.}
 
+\item{rempB}{Predicted methylation level in beta value (optional).}
+
 \item{rempQC}{Prediction quality scores, which is available only when Random Forest 
 model is used in \code{\link{remp}}.}
 
@@ -84,6 +93,8 @@ model is used in \code{\link{remp}}.}
 \item{sampleInfo}{Sample information.}
 
 \item{REannotation}{Annotation data for the predicting RE.}
+
+\item{RECpG}{Annotation data for the RE-CpG profiled by Illumina platform.}
 
 \item{regionCode}{Internal index code defined in \code{refGene} for gene region indicators.}
 
@@ -102,6 +113,10 @@ model is used in \code{\link{remp}}.}
 \item{x}{For \code{plot}: an \code{REMProduct} object.}
 
 \item{type}{For \code{plot} and \code{decodeAnnot}: see Utilities.}
+
+\item{threshold}{For \code{trim}: see Utilities.}
+
+\item{missingRate}{For \code{trim}: see Utilities.}
 }
 \value{
 An object of class \code{REMProduct} for the constructor.
@@ -134,6 +149,10 @@ Class \code{REMProduct} is to maintain RE methylation prediction results.
     RE annotation data by Gene Symbol (when \code{type = "Symbol"}) or Entrez Gene 
     (when \code{type = "Entrez"}).Default \code{type = "Symbol"}. Annotation data are provided by 
     \code{\link{org.Hs.eg.db}}.}
+    \item{\code{trim(object, threshold = 1.7, missingRate = 0.2)}}{Any predicted CpG values with 
+    quality score < threshold (default = 1.7) will be replaced with NA. CpGs contain more than 
+    missingRate * 100% (default = 20%) missing rate across samples will be discarded. Relavant statistics
+    will be re-evaluated.}
     }
 }
 \examples{
