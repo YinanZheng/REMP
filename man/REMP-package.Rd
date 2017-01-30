@@ -11,9 +11,6 @@ by learning surrounding genetic and epigenetic information. These tools provide 
 single-base resolution of DNA methylation prediction on RE that are difficult to measure using 
 array-based or sequencing-based platforms, which enables epigenome-wide association study (EWAS) 
 and differentially methylated region (DMR) analysis on RE.
-
-\tabular{ll}{ Name: \tab REMP\cr Type: \tab Package\cr
-Version: \tab 0.99.19\cr License: \tab GPL-3\cr }
 }
 \section{Overview - standard procedure}{
  

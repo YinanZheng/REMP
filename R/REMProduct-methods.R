@@ -61,11 +61,11 @@ setMethod("plot", signature(x = "REMProduct", y = "missing"),
 
   if(type == "individual")
   {
-    do.call(plot, c(list(x = density(Bval[,1])), dotdotdot))
+    do.call(plot, c(list(x = density(na.omit(Bval[,1]))), dotdotdot))
     if(ncol(Bval) >= 2){
       for(i in seq(2, ncol(Bval)))
       {
-        do.call(lines, c(list(x = density(Bval[,i])), dotdotdot))
+        do.call(lines, c(list(x = density(na.omit(Bval[,i]))), dotdotdot))
       }
     }
   }
@@ -73,7 +73,7 @@ setMethod("plot", signature(x = "REMProduct", y = "missing"),
   if(type == "overall")
   {
     Bval.mean = rowMeans(Bval, na.rm = TRUE)
-    do.call(plot, c(list(x = density(Bval.mean)), dotdotdot))
+    do.call(plot, c(list(x = density(na.omit(Bval.mean))), dotdotdot))
   }
 })
 # plot(object)

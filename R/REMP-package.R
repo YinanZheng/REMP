@@ -7,9 +7,6 @@
 #' array-based or sequencing-based platforms, which enables epigenome-wide association study (EWAS) 
 #' and differentially methylated region (DMR) analysis on RE.
 #' 
-#' \tabular{ll}{ Name: \tab REMP\cr Type: \tab Package\cr
-#' Version: \tab 0.99.19\cr License: \tab GPL-3\cr }
-#' 
 #' @name REMP-package
 #' 
 #' @aliases REMP-package REMP
