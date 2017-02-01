@@ -354,6 +354,14 @@ findRECpG <- function(RE.hg19, REtype = c("Alu", "L1"), be = NULL, verbose = FAL
 #' 
 #' @export
 GRannot <- function(object.GR, refgene.hg19, verbose = FALSE) {
+  
+  ## Check if the object.GR contains a metadata column called "Index"
+  if(!"Index" %in% colnames(mcols(object.GR)))
+    object.GR$Index <- as.character(seq_len(length(object.GR)))
+  
+  if(any(duplicated(object.GR$Index)))
+    stop("The 'Index' column provided in the GRanges object must be unique.")
+  
   ####### InNM
   NM.GR <-  refgene.hg19$main[refgene.hg19$main$type == "NM"]
   NM.GR <- .oneWayFlank(NM.GR, 2000, start = TRUE)

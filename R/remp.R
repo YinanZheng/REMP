@@ -275,7 +275,8 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
     message("Prediction model: ", method_text, "\nQC model: ", QCname_text)
   
   cpgRanges <- unique(RE_NeibCpG[, "RE.Index"])
-  RE_annotation <- subsetByOverlaps(RE_refGene.original, cpgRanges)
+  RE_annotation <- subsetByOverlaps(RE_refGene.original, cpgRanges) 
+  # Note: Some REs have overlapping regions thus there can be more than one REs mapped to one RE-CpG.
   RE_annotation_name <- colnames(mcols(RE_annotation))
   regionCode <- mcols(RE_annotation)[remp_options(".default.genomicRegionColNames")]
   RE_annotation <- RE_annotation[, RE_annotation_name[!RE_annotation_name %in% 

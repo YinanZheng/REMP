@@ -182,9 +182,12 @@ setMethod("trim", signature(object = "REMProduct"),
             QC <- QC[!removeCpG,,drop = FALSE]
             cpgRanges <- rowRanges(object)[!removeCpG, ]
             
-            trimmed_RE_list <- runValue(cpgRanges$RE.Index)
-            regionCode <- regionCode[RE_annotation$Index %in% trimmed_RE_list,]
-            RE_annotation <- RE_annotation[RE_annotation$Index %in% trimmed_RE_list]
+            mcols(RE_annotation) <- cbind(mcols(RE_annotation), regionCode)
+            RE_annotation <- subsetByOverlaps(RE_annotation, cpgRanges)
+            RE_annotation_name <- colnames(mcols(RE_annotation))
+            regionCode <- mcols(RE_annotation)[remp_options(".default.genomicRegionColNames")]
+            RE_annotation <- RE_annotation[, RE_annotation_name[!RE_annotation_name %in% 
+                                                                  remp_options(".default.genomicRegionColNames")]]
             
             ## Updated RE coverage
             RE_COVERAGE <- .coverageStats_RE(RE_annotation, regionCode, cpgRanges, RE_CpG_ILMN, 

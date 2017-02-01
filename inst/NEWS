@@ -14,3 +14,8 @@
 
 * Added trim(REMProduct) functionality to trim predicted CpGs based on quality score (only for Random Forest model)
 * Fixed bugs
+
+# REMP 0.99.21
+
+* Improved the robustness of function GRannot() when indicator column "Index" is not provided.
+* Fixed the inaccurate RE statistics calculation after function trim() is applied.
