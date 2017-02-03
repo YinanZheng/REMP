@@ -152,10 +152,19 @@ head(rempM(remp.res))
 head(rowRanges(remp.res))
 @
 
+Trim off less reliable predicted results:
+
+<<remptrim, eval=TRUE>>=
+# Any predicted CpG values with quality score < threshold (default = 1.7) will be replaced with NA. CpGs contain more than missingRate * 100% (default = 20%) missing rate across samples will be discarded. 
+# For mechanism study, more stringent cutoff is recommended.
+remp.res <- trim(remp.res)
+details(remp.res)
+@
+
 To add genomic regions annotation of the predicted REs:
 
 <<rempdecodeAnnot, eval=TRUE, tidy=TRUE>>=
-# By default gene symbol information will be added
+# By default gene symbol annotation will be added
 remp.res <- decodeAnnot(remp.res)
 annotation(remp.res)
 @

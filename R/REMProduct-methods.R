@@ -102,15 +102,21 @@ setMethod("details", signature(object = "REMProduct"), function(object) {
 
 #' @rdname REMProduct-class
 setMethod("decodeAnnot", signature(object = "REMProduct"), 
-          function(object, type = c("symbol", "entrez")) {
+          function(object, type = c("symbol", "entrez"), ncore = NULL, BPPARAM = NULL) {
   .isREMProductOrStop(object)
+            
+  if (is.null(ncore)) 
+    ncore <- parallel::detectCores()
+  
+  be <- getBackend(ncore, BPPARAM, TRUE)
+  
   skip <- TRUE  
   type <- match.arg(type)
   message("Decoding ", object@REMPInfo[["REtype"]], " annotation to ", type, " ...")
   
   annot <- metadata(object)$REannotation
   code <-  metadata(object)$regionCode
-  refgene <- metadata(object)$refGene
+  refgene <- as.data.frame(metadata(object)$refGene)
   containSymbol <- any(grepl("symbol", colnames(mcols(annot))))
   containEntrez <- any(grepl("entrez", colnames(mcols(annot))))
     
@@ -127,19 +133,24 @@ setMethod("decodeAnnot", signature(object = "REMProduct"),
   
   if(!skip)
   {
+    bpstart(be)
+    .bploadLibraryQuiet("IRanges", be)
+    # message("Pacakge loaded!")
     for (region in remp_options(".default.genomicRegionColNames")) {
       InRegion.original <- code[, region]
       ind.missing <- which(is.na(InRegion.original))
       InRegion <- na.omit(InRegion.original)
       res <- strsplit(InRegion, "[|]")
       res <- lapply(res, as.numeric)
-      res <- sapply(res, decodeFun, refgene = refgene)
+      res <- IRanges::NumericList(res)
+      res <- unlist(bplapply(res, decodeFun, refgene = refgene, BPPARAM=be))
       InRegion.original[-ind.missing] <- res
       annot$newregionEncode <- InRegion.original
       annot <- .changeColNames(annot, "newregionEncode", 
                                paste(region, type, sep = "."))
     }
     metadata(object)$REannotation <- annot
+    bpstop(be)
   }
   return(object)
 })
@@ -155,7 +166,20 @@ setMethod("decodeAnnot", signature(object = "REMProduct"),
 setMethod("trim", signature(object = "REMProduct"), 
           function(object, threshold = 1.7, missingRate = 0.2) {
             method <- object@REMPInfo[["predictModel"]]
-            if(method != "Random Forest")
+            
+            if(grepl("trimmed", method))
+            {
+              previous_thres <- gsub("[\\(\\)]", "", regmatches(method, gregexpr("\\(.*?\\)", method))[[1]])
+              if (threshold >= as.numeric(previous_thres))
+              {
+                message("More stringent or equal threshold (", previous_thres, ") has been applied. No changes made.")
+                return(object)
+              } else {
+                object@REMPInfo[["predictModel"]] = method <- "Random Forest"
+              }
+            }
+            
+            if(!grepl("Random Forest", method))
             {
               message("Trim is only applicable to prediction using Random Forest model. No changes made.")
               return(object)
@@ -163,7 +187,7 @@ setMethod("trim", signature(object = "REMProduct"),
             
             REtype = object@REMPInfo[["REtype"]]
             beta <- as.matrix(rempB(object))
-            M <- as.matrix(rempB(object))
+            M <- as.matrix(rempM(object))
             QC <- as.matrix(rempQC(object))
             badInd <- QC > threshold
             QC[badInd] <- NA
@@ -191,11 +215,11 @@ setMethod("trim", signature(object = "REMProduct"),
             
             ## Updated RE coverage
             RE_COVERAGE <- .coverageStats_RE(RE_annotation, regionCode, cpgRanges, RE_CpG_ILMN, 
-                                             REtype, indent = "    ", TRUE)
+                                             REtype, indent = "    ", FALSE)
             
             # Updated Gene coverage
             GENE_COVERAGE <- .coverageStats_GENE(regionCode, refgene_main, 
-                                                 REtype, indent = "    ", TRUE)
+                                                 REtype, indent = "    ", FALSE)
             
             
             ## Update object

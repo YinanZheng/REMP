@@ -27,6 +27,10 @@
 #' @param REStats RE coverage statistics, which is internally generated in \code{\link{remp}}.
 #' @param GeneStats Gene coverage statistics, which is internally generated in \code{\link{remp}}.
 #' @param type For \code{plot} and \code{decodeAnnot}: see Utilities.
+#' @param ncore For \code{decodeAnnot}: number of cores to run parallel computation. By default max number of cores available 
+#' in the machine will be utilized. If \code{ncore = 1}, no parallel computating is allowed (not recommended).
+#' @param BPPARAM For \code{decodeAnnot}: an optional \code{\link{BiocParallelParam}} instance determining the parallel back-end to 
+#' be used during evaluation. If not specified, default back-end in the machine will be used.
 #' @param x For \code{plot}: an \code{REMProduct} object.
 #' @param threshold For \code{trim}: see Utilities.
 #' @param missingRate For \code{trim}: see Utilities.
@@ -51,7 +55,7 @@
 #'     plotted for each of the samples; If \code{type = "overall"}, one density curve of the mean methylation level 
 #'     across the samples will be plotted. Default \code{type = "individual"}.}
 #'     \item{\code{details(object)}}{Display detailed descriptive statistics of the predicion results.}
-#'     \item{\code{decodeAnnot(object, type = c("symbol", "entrez"))}}{Decode the 
+#'     \item{\code{decodeAnnot(object, type = c("symbol", "entrez")), ncore = NULL, BPPARAM = NULL}}{Decode the 
 #'     RE annotation data by Gene Symbol (when \code{type = "Symbol"}) or Entrez Gene 
 #'     (when \code{type = "Entrez"}).Default \code{type = "Symbol"}. Annotation data are provided by 
 #'     \code{\link{org.Hs.eg.db}}.}

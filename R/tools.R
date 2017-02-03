@@ -359,7 +359,7 @@ GRannot <- function(object.GR, refgene.hg19, verbose = FALSE) {
   if(!"Index" %in% colnames(mcols(object.GR)))
     object.GR$Index <- as.character(seq_len(length(object.GR)))
   
-  if(any(duplicated(object.GR$Index)))
+  if(any(duplicated(as.character(object.GR$Index))))
     stop("The 'Index' column provided in the GRanges object must be unique.")
   
   ####### InNM

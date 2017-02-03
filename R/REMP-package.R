@@ -58,7 +58,7 @@
 #' @importFrom BSgenome.Hsapiens.UCSC.hg19 Hsapiens
 #' @importFrom GenomicRanges GRanges GRangesList makeGRangesListFromFeatureFragments findOverlaps
 #' @importFrom GenomicRanges granges seqnames start end strand ranges promoters shift start<- end<-
-#' @importFrom IRanges IRanges IRangesList CharacterList subsetByOverlaps
+#' @importFrom IRanges IRanges IRangesList CharacterList NumericList subsetByOverlaps
 #' @importFrom parallel detectCores
 #' @importFrom doParallel registerDoParallel
 #' @importFrom BiocGenerics mget

@@ -19,3 +19,11 @@
 
 * Improved the robustness of function GRannot() when indicator column "Index" is not provided.
 * Fixed the inaccurate RE statistics calculation after function trim() is applied.
+
+# REMP 0.99.22
+
+* Enabled parallel computing in function decodeAnnot(REMProduct).
+
+# REMP 0.99.23
+
+* Vignettes updated.

@@ -66,7 +66,8 @@ trim(object, ...)
 
 \S4method{details}{REMProduct}(object)
 
-\S4method{decodeAnnot}{REMProduct}(object, type = c("symbol", "entrez"))
+\S4method{decodeAnnot}{REMProduct}(object, type = c("symbol", "entrez"),
+  ncore = NULL, BPPARAM = NULL)
 
 \S4method{trim}{REMProduct}(object, threshold = 1.7, missingRate = 0.2)
 }
@@ -114,6 +115,12 @@ model is used in \code{\link{remp}}.}
 
 \item{type}{For \code{plot} and \code{decodeAnnot}: see Utilities.}
 
+\item{ncore}{For \code{decodeAnnot}: number of cores to run parallel computation. By default max number of cores available 
+in the machine will be utilized. If \code{ncore = 1}, no parallel computating is allowed (not recommended).}
+
+\item{BPPARAM}{For \code{decodeAnnot}: an optional \code{\link{BiocParallelParam}} instance determining the parallel back-end to 
+be used during evaluation. If not specified, default back-end in the machine will be used.}
+
 \item{threshold}{For \code{trim}: see Utilities.}
 
 \item{missingRate}{For \code{trim}: see Utilities.}
@@ -145,7 +152,7 @@ Class \code{REMProduct} is to maintain RE methylation prediction results.
     plotted for each of the samples; If \code{type = "overall"}, one density curve of the mean methylation level 
     across the samples will be plotted. Default \code{type = "individual"}.}
     \item{\code{details(object)}}{Display detailed descriptive statistics of the predicion results.}
-    \item{\code{decodeAnnot(object, type = c("symbol", "entrez"))}}{Decode the 
+    \item{\code{decodeAnnot(object, type = c("symbol", "entrez")), ncore = NULL, BPPARAM = NULL}}{Decode the 
     RE annotation data by Gene Symbol (when \code{type = "Symbol"}) or Entrez Gene 
     (when \code{type = "Entrez"}).Default \code{type = "Symbol"}. Annotation data are provided by 
     \code{\link{org.Hs.eg.db}}.}

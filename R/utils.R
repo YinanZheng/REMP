@@ -192,13 +192,12 @@
 ## Convert refgene index to gene symbol or entrez id
 
 .decodeEntrez <- function(x, refgene) {
-  paste0(unique(refgene[x]$EntrezGene), collapse = "|")
+  paste0(unique(refgene[x, "EntrezGene"]), collapse = "|")
 }
 
 .decodeSymbol <- function(x, refgene) {
-  paste0(unique(refgene[x]$GeneSymbol), collapse = "|")
+  paste0(unique(refgene[x, "GeneSymbol"]), collapse = "|")
 }
-
 
 
 
@@ -211,9 +210,6 @@
 .toM <- function(beta) {
   log2(beta) - log2(1 - beta)
 }
-
-
-
 
 
 
