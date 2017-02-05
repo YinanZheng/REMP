@@ -17,13 +17,14 @@
 
 # REMP 0.99.21
 
-* Improved the robustness of function GRannot() when indicator column "Index" is not provided.
-* Fixed the inaccurate RE statistics calculation after function trim() is applied.
+* Improved the robustness of function GRannot() when indicator column "Index" is not provided
+* Fixed the inaccurate RE statistics calculation after function trim() is applied
 
 # REMP 0.99.22
 
-* Enabled parallel computing in function decodeAnnot(REMProduct).
+* Enabled parallel computing in function decodeAnnot(REMProduct)
 
-# REMP 0.99.23
+# REMP 0.99.24
 
-* Vignettes updated.
+* Vignettes updated
+* Fixed bugs for Mac OS and Linux system

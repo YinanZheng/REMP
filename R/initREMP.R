@@ -145,7 +145,7 @@ initREMP <- function(arrayType = c("450k", "EPIC"), REtype = c("Alu", "L1"), RE 
   ###----------------------------------------------------------------------------------------------------
   ### RE-CpG covered by ILMN
   RECpG_Platform.hits <- findOverlaps(ILMN.GR, RE.CpG, ignore.strand = TRUE)
-  ILMN.GR$RE.Index <- NA
+  mcols(ILMN.GR)$RE.Index <- Rle(NA)
   ILMN.GR$RE.Index[queryHits(RECpG_Platform.hits)] <- RE.CpG[subjectHits(RECpG_Platform.hits)]$Index
   
   remparcel <- REMParcel(REtype = REtype, platform = arrayType,
