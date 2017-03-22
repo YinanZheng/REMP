@@ -28,3 +28,7 @@
 
 * Vignettes updated
 * Fixed bugs for Mac OS and Linux system
+
+# REMP 0.99.25
+
+* Fixed timeout issue encountered in the build system

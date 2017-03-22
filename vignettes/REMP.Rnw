@@ -163,7 +163,7 @@ details(remp.res)
 
 To add genomic regions annotation of the predicted REs:
 
-<<rempdecodeAnnot, eval=TRUE, tidy=TRUE>>=
+<<rempdecodeAnnot, eval=FALSE>>=
 # By default gene symbol annotation will be added
 remp.res <- decodeAnnot(remp.res)
 annotation(remp.res)
