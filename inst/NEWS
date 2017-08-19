@@ -32,3 +32,11 @@
 # REMP 0.99.25
 
 * Fixed timeout issue encountered in the build system
+
+# REMP 1.0.0
+
+* Initial release on Bioconductor
+
+# REMP 1.0.1
+
+* In groomethy, changed the default KNN imputation direction from "by-column" to "by-row" to avoid out-of-range imputation results. 

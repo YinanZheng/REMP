@@ -13,7 +13,7 @@
 #' @param win Flanking window size of the predicting RE-CpG.
 #' @param predictModel Name of the model used for prediction.
 #' @param QCModel Name of the model used for prediction quality evaluation.
-#' @param rempM Predicted methylation level in M-value.
+#' @param rempM Predicted methylation level in M value.
 #' @param rempB Predicted methylation level in beta value (optional).
 #' @param rempQC Prediction quality scores, which is available only when Random Forest 
 #' model is used in \code{\link{remp}}.
@@ -28,7 +28,7 @@
 #' @param GeneStats Gene coverage statistics, which is internally generated in \code{\link{remp}}.
 #' @param type For \code{plot} and \code{decodeAnnot}: see Utilities.
 #' @param ncore For \code{decodeAnnot}: number of cores to run parallel computation. By default max number of cores available 
-#' in the machine will be utilized. If \code{ncore = 1}, no parallel computating is allowed (not recommended).
+#' in the machine will be utilized. If \code{ncore = 1}, no parallel computation is allowed (not recommended).
 #' @param BPPARAM For \code{decodeAnnot}: an optional \code{\link{BiocParallelParam}} instance determining the parallel back-end to 
 #' be used during evaluation. If not specified, default back-end in the machine will be used.
 #' @param x For \code{plot}: an \code{REMProduct} object.
@@ -40,7 +40,7 @@
 #' 
 #' @section Accessors:
 #' \describe{
-#'     \item{\code{rempM(object)}}{Return M-value of the prediction.}
+#'     \item{\code{rempM(object)}}{Return M value of the prediction.}
 #'     \item{\code{rempB(object)}}{Return beta value of the prediction.}
 #'     \item{\code{rempQC(object)}}{Return prediction quality scores.}
 #'     \item{\code{imp(object)}}{Return relative importance of predictors.}

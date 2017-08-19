@@ -1,0 +1,16 @@
+c(bibentry(bibtype = "Article",
+           key = "REMP",
+           title = "Prediction of genome-wide DNA methylation in repetitive elements",
+           author = c(
+             person("Yinan", "Zheng"),
+             person("Brian", "Joyce"),
+             person("Lei", "Liu"),
+             person("Zhou", "Zhang"),
+             person("Warren", "Kibbe"),
+             person("Wei", "Zhang"),
+             person("Lifang", "Hou")
+           ),
+           year = 2017,
+           journal = "Nucleic Acids Research",
+           pubmed = "",
+           header = "REMP R pacakge"))

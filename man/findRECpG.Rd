@@ -39,4 +39,3 @@ RE.CpG <- findRECpG(Alu.demo, 'Alu', be, verbose = TRUE)
 RE.CpG
 
 }
-
