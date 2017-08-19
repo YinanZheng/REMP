@@ -12,7 +12,7 @@
 #'   \item Index internal index
 #' }
 #'
-#' Scripts for genereating this object are contained in the \code{scripts} directory.
+#' Scripts for generating this object are contained in the \code{scripts} directory.
 #'
 #' @format A \code{GRanges} object.
 #' @return A GRanges object with 500 ranges and 3 metadata columns.

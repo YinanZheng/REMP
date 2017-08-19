@@ -4,42 +4,49 @@
 \alias{grooMethy}
 \title{Groom methylation data to fix potential data issues}
 \usage{
-grooMethy(methyDat, impute = TRUE, mapGenome = FALSE, verbose = FALSE)
+grooMethy(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = FALSE,
+  verbose = FALSE)
 }
 \arguments{
-\item{methyDat}{An \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
+\item{methyDat}{A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
 data.table, data.frame, or matrix of Illumina methylation data.}
 
 \item{impute}{If \code{TRUE}, K-Nearest Neighbouring imputation will be applied to fill 
-the missing values. If the imputed value is out of the original range, mean value will 
-be used instead. Default = \code{TRUE}.}
+the missing values. If the imputed value is out of the original range (which is possible when
+ \code{imputebyrow = FALSE}), mean value will be used instead. Default = \code{TRUE}. Warning: imputed 
+ values for multimodal distributed CpGs may not be correct. Please check package \code{ENmix} to
+ identify the CpGs with multimodal distribution.}
 
-\item{mapGenome}{Logical parameter. If \code{TRUE}, function will return a 
-\code{\link{GenomicRatioSet}} object instead of \code{\link{RatioSet}}.}
+\item{imputebyrow}{If \code{TRUE}, missing values will be imputed using similar values in row 
+(i.e., across samples); if \code{FALSE}, missing values will be imputed using similar values 
+in column (i.e., across CpGs). Default is \code{TRUE}.}
+
+\item{mapGenome}{Logical parameter. If \code{TRUE}, function will return a \code{\link{GenomicRatioSet}} 
+object instead of a \code{\link{RatioSet}}.}
 
 \item{verbose}{Logical parameter. Should the function be verbose?}
 }
 \value{
-An \code{\link{RatioSet}} or \code{\link{GenomicRatioSet}} containing beta value and 
+A \code{\link{RatioSet}} or \code{\link{GenomicRatioSet}} containing beta value and 
 M value of the methylation data.
 }
 \description{
 \code{grooMethy} is used to automatically detect and fix data issues including zero beta 
-value, missing value, and inifinate value.
+value, missing value, and infinite value.
 }
 \details{
-For methylation data in beta value, if zero value exist, the logit transformation 
-from beta to M-value will produce negative inifinite value. Therefore, zero beta value 
+For methylation data in beta value, if zero value exists, the logit transformation 
+from beta to M value will produce negative infinite value. Therefore, zero beta value 
 will be replaced with the smallest non-zero beta value found in the dataset. \code{grooMethy} 
 can also handle missing value (i.e. \code{NA} or \code{NaN}) using KNN imputation (see 
-\code{\link{impute.knn}}). Infinite value will be also treated as missing value for imputation. 
-If original dataset is in beta value, \code{grooMethy} will first transform it to M-value 
-before imputation is carried out. Since there is possibility that KNN imputation 
+\code{\link{impute.knn}}). The infinite value will be also treated as missing value for imputation. 
+If the original dataset is in beta value, \code{grooMethy} will first transform it to M value 
+before imputation is carried out. Since there is a possibility that KNN imputation 
 could produce imputed data that are not reliable (i.e. values that are out of the original 
-data range across samples), \code{grooMethy} will try to replace the unreliable imputation 
-(if any) by the average of the original methylation data across samples. Please note that
-\code{grooMethy} is also embedded in \code{\link{remp}} so user can run \code{\link{remp}}
-directly without explicitly running \code{grooMethy}.
+data range across samples, if the imputation is conducted by column), \code{grooMethy} will 
+try to replace the unreliable imputation (if any) by the average of the original methylation data 
+across samples. Please note that \code{grooMethy} is also embedded in \code{\link{remp}} so the 
+user can run \code{\link{remp}} directly without explicitly running \code{grooMethy}.
 }
 \examples{
 GM12878_450k <- getGM12878('450k') # Get GM12878 methylation data (450k array)
@@ -47,4 +54,3 @@ grooMethy(GM12878_450k, verbose = TRUE)
 grooMethy(minfi::getBeta(GM12878_450k), verbose = TRUE)
 
 }
-

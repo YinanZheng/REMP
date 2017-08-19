@@ -7,8 +7,8 @@
 #'
 #' @param arrayType Illumina methylation array type. Currently \code{"450k"} 
 #' and \code{"EPIC"} are supported. Default = \code{"450k"}.
-#' @param mapGenome logical parameter. If \code{TRUE}, function will return 
-#' a \code{\link{GenomicRatioSet}} object instead of an \code{link{RatioSet}} 
+#' @param mapGenome Logical parameter. If \code{TRUE}, function will return 
+#' a \code{\link{GenomicRatioSet}} object instead of a \code{link{RatioSet}} 
 #' object.
 
 #' @details
@@ -16,7 +16,7 @@
 #' \url{http://hgdownload.cse.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeHaibMethyl450/wgEncodeHaibMethyl450Gm12878SitesRep1.bed.gz}. 
 #' Illumina EPIC data were obtained from data package \code{minfiDataEPIC}.
 #' 
-#' @return An \code{\link{RatioSet}} or \code{\link{GenomicRatioSet}} containing 
+#' @return A \code{\link{RatioSet}} or \code{\link{GenomicRatioSet}} containing 
 #' beta value and M value of the methylation data.
 #'
 #' @examples

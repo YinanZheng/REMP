@@ -28,7 +28,6 @@ by both Illumina 450k and EPIC array. The variables are as follows:
   \item Index internal index
 }
 
-Scripts for genereating this object are contained in the \code{scripts} directory.
+Scripts for generating this object are contained in the \code{scripts} directory.
 }
 \keyword{datasets}
-

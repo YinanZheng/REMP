@@ -16,7 +16,7 @@ about all records in the hub.}
 }
 \value{
 A single \code{\link{GRanges}} (for main refgene data) object or a list incorporating 
-both \code{GRanges} object (for main refgene data)  and \code{\link{GRangesList}} obejct 
+both \code{GRanges} object (for main refgene data)  and \code{\link{GRangesList}} object 
 (for gene regions data).
 }
 \description{
@@ -27,7 +27,7 @@ When \code{mainOnly = FALSE}, only the transcript location information will be r
 Otherwise, a \code{\link{GRangesList}} object containing gene regions 
 information will be added. Gene regions include: 2000 base pair upstream of the transcript 
 start site (\code{$tss})), 5'UTR (\code{$fiveUTR})), coding sequence (\code{$cds})), 
-exon (\code{$exon})), and 3'UTR (\code{$threeUTR})). The \code{index} column is a internal 
+exon (\code{$exon})), and 3'UTR (\code{$threeUTR})). The \code{index} column is an internal 
 index that is used to facilitate data referral, which is meaningless for external use.
 }
 \examples{
@@ -36,4 +36,3 @@ refGene <- fetchRefSeqGene(ah, mainOnly = TRUE, verbose = TRUE)
 refGene
 
 }
-

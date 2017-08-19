@@ -41,7 +41,7 @@
 }
 
 .guessBetaorM <- function(methyDat) {
-  methyDat_sample <- methyDat[, sample(seq_len(ncol(methyDat)), min(10, ncol(methyDat))), drop = FALSE]
+  methyDat_sample <- methyDat[, sample(seq_len(ncol(methyDat)), min(5, ncol(methyDat))), drop = FALSE]
   rng <- range(methyDat_sample, na.rm = TRUE)
   if (rng[1] >= 0 & rng[2] <= 1 | 
       sum(methyDat_sample < 0 | methyDat_sample > 1, na.rm = TRUE) < 
