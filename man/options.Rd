@@ -48,6 +48,7 @@ The following options are supported
  using Radial basis function kernel.} 
 }
 }
+
 \examples{
 # Display all default settings
 remp_options()
@@ -59,4 +60,3 @@ remp_options(.default.max.flankWindow = 2000)
 remp_reset()
 
 }
-

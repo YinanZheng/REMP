@@ -19,7 +19,7 @@ If \code{NULL}, the function will retrive RepeatMasker RE database from \code{\l
 (build hg19).}
 
 \item{ncore}{Number of cores to run parallel computation. By default max number of cores 
-available in the machine will be utilized. If \code{ncore = 1}, no parallel computating is allowed.}
+available in the machine will be utilized. If \code{ncore = 1}, no parallel computation is allowed.}
 
 \item{BPPARAM}{An optional \code{\link{BiocParallelParam}} instance determining the parallel back-end to 
 be used during evaluation. If not specified, default back-end in the machine will be used.}
@@ -41,13 +41,13 @@ An \code{\link{REMParcel}} object containing data needed for RE methylation pred
 Two major RE types in human, Alu element (Alu) and LINE-1 (L1) are available.
 }
 \details{
-Currently we support two major types of RE in human, Alu and L1. The main purpose of 
+Currently, we support two major types of RE in human, Alu and L1. The main purpose of 
 \code{initREMP} is to generate and annotate CpG/RE data using the refSeq Gene 
 annotation database (provided by \code{\link{AnnotationHub}}). These annotation data are crucial to 
 RE methylation prediction in \code{\link{remp}}. Once generated, the data can be reused in the future 
-(data can be very large). Therefore, we recommand user to save the output from 
+(data can be very large). Therefore, we recommend user to save the output from 
 \code{initREMP} to the local machine, so that user only need to run this function once 
-as long as there is no change on the RE database. To minimize the size of resulting data file, the generated 
+as long as there is no change to the RE database. To minimize the size of resulting data file, the generated 
 annotation data are only for REs that contain RE-CpGs with neighboring profiled CpGs. By default, the 
 neighboring CpGs are confined within 1200 bp flanking window. This window size can be modified using 
 \code{\link{remp_options}}.
@@ -64,4 +64,3 @@ saveParcel(remparcel)
 \seealso{
 See \code{\link{remp}} for RE methylation prediction.
 }
-

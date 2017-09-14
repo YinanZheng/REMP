@@ -6,7 +6,7 @@
 #'
 #' @param ncore Number of cores to run parallel computation. By default max number 
 #' of cores available in the machine will be utilized. If \code{ncore = 1}, no 
-#' parallel computating is allowed.
+#' parallel computation is allowed.
 #' @param BPPARAM An optional \code{BiocParallelParam} instance determining the 
 #' parallel back-end to be used during evaluation. If not specified, default 
 #' back-end in the machine will be used.
@@ -57,7 +57,7 @@ getBackend <- function(ncore, BPPARAM = NULL, verbose = FALSE) {
 #' @title Get RE database from RepeatMasker
 #'
 #' @description
-#' \code{fetchRMSK} is used to obtain specified RE database from RepeatMasker Databse 
+#' \code{fetchRMSK} is used to obtain specified RE database from RepeatMasker Database 
 #' provided by AnnotationHub.
 #'
 #' @param ah An \code{\link{AnnotationHub}} object. Use \code{AnnotationHub()} to 
@@ -67,7 +67,7 @@ getBackend <- function(ncore, BPPARAM = NULL, verbose = FALSE) {
 #' 
 #' @return A \code{\link{GRanges}} object containing RE database. 'name' column 
 #' indicates the RE subfamily; 'score' 
-#' column indicate the SW score; 'Index' is a interal index for RE to faciliate data 
+#' column indicates the SW score; 'Index' is an internal index for RE to facilitate data 
 #' referral, which is meaningless for external use.
 #'
 #' @examples
@@ -114,11 +114,11 @@ fetchRMSK <- function(ah, REtype, verbose = FALSE) {
 #' Otherwise, a \code{\link{GRangesList}} object containing gene regions 
 #' information will be added. Gene regions include: 2000 base pair upstream of the transcript 
 #' start site (\code{$tss})), 5'UTR (\code{$fiveUTR})), coding sequence (\code{$cds})), 
-#' exon (\code{$exon})), and 3'UTR (\code{$threeUTR})). The \code{index} column is a internal 
+#' exon (\code{$exon})), and 3'UTR (\code{$threeUTR})). The \code{index} column is an internal 
 #' index that is used to facilitate data referral, which is meaningless for external use.
 #' 
 #' @return A single \code{\link{GRanges}} (for main refgene data) object or a list incorporating 
-#' both \code{GRanges} object (for main refgene data)  and \code{\link{GRangesList}} obejct 
+#' both \code{GRanges} object (for main refgene data)  and \code{\link{GRangesList}} object 
 #' (for gene regions data).
 #' 
 #' @examples
@@ -337,7 +337,7 @@ findRECpG <- function(RE.hg19, REtype = c("Alu", "L1"), be = NULL, verbose = FAL
 #' @details
 #' The annotated gene region information includes: protein coding gene (InNM), 
 #' noncoding RNA gene (InNR), 2000 base pair upstream of the transcript start site (InTSS),
-#' 5'UTR (In5UTR), coding sequence (InCDS), exon (InExon), and 3'UTR (In3UTR). The integenic 
+#' 5'UTR (In5UTR), coding sequence (InCDS), exon (InExon), and 3'UTR (In3UTR). The intergenic 
 #' and intron regions can then be represented by the combination of these region data. 
 #' The number shown in these columns represent the row number or 'index' column in the 
 #' main refgene database obtained by \code{\link{fetchRefSeqGene}}.

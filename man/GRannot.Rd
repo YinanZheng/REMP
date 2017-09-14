@@ -25,7 +25,7 @@ information using refseq gene database
 \details{
 The annotated gene region information includes: protein coding gene (InNM), 
 noncoding RNA gene (InNR), 2000 base pair upstream of the transcript start site (InTSS),
-5'UTR (In5UTR), coding sequence (InCDS), exon (InExon), and 3'UTR (In3UTR). The integenic 
+5'UTR (In5UTR), coding sequence (InCDS), exon (InExon), and 3'UTR (In3UTR). The intergenic 
 and intron regions can then be represented by the combination of these region data. 
 The number shown in these columns represent the row number or 'index' column in the 
 main refgene database obtained by \code{\link{fetchRefSeqGene}}.
@@ -38,4 +38,3 @@ Alu.demo.refGene <- GRannot(Alu.demo, refgene.hg19, verbose = TRUE)
 Alu.demo.refGene
 
 }
-

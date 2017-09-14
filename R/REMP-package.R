@@ -1,7 +1,7 @@
 #' @title Repetitive Element Methylation Prediction
 #'
 #' @description
-#' Machine learing-based tools to predict DNA methylation of locus-specific repetitive elements (RE) 
+#' Machine learning-based tools to predict DNA methylation of locus-specific repetitive elements (RE) 
 #' by learning surrounding genetic and epigenetic information. These tools provide genomewide and 
 #' single-base resolution of DNA methylation prediction on RE that are difficult to measure using 
 #' array-based or sequencing-based platforms, which enables epigenome-wide association study (EWAS) 
@@ -16,7 +16,9 @@
 #' @section Overview - standard procedure: 
 #' \describe{
 #'     \item{Step 1}{Start out generating required dataset for prediction using \code{\link{initREMP}}. 
-#'     It is recommended to save these generated data to working directory so they can be used in the future.}
+#'     The datasets include RE information, RE-CpG (i.e. CpGs located in RE region) information, 
+#'     and gene annotation, which are maintained in a \code{\link{REMParcel}} object. 
+#'     It is recommended to save these generated data to the working directory so they can be used in the future.}
 #'     \item{Step 2}{Clean Illumina methylation dataset using \code{\link{grooMethy}}. This function 
 #'     can help identify and fix abnormal values and automatically impute missing values, which are 
 #'     essential for downstream prediction.}
@@ -34,7 +36,9 @@
 #' 
 #' Maintainer: Yinan Zheng \email{y-zheng@@northwestern.edu}
 #' 
-#' @references Manuscript in review (Nucleic Acids Research)
+#' @references Zheng Y, Joyce BT, Liu L, Zhang Z, Kibbe WA, Zhang W, Hou L. 
+#' Prediction of genome-wide DNA methylation in repetitive elements. 
+#' Nucleic Acids Res 2017. http://dx.doi.org/10.1093/nar/gkx587.
 #' 
 #' @keywords package
 #' 
@@ -47,7 +51,6 @@
 #' @import IlluminaHumanMethylationEPICanno.ilm10b2.hg19
 #' 
 #' @importFrom quantregForest quantregForest
-#' @importFrom SummarizedExperiment SummarizedExperiment rowRanges assays rowData colData
 #' @importFrom settings stop_if_reserved reset options_manager
 #' @importFrom stats setNames density predict
 #' @importFrom utils download.file read.table data
@@ -63,6 +66,7 @@
 #' @importFrom doParallel registerDoParallel
 #' @importFrom BiocGenerics mget
 #' @importFrom BSgenome getSeq 
+#' @importFrom SummarizedExperiment SummarizedExperiment rowRanges assays rowData colData
 #' @importFrom minfi getAnnotation getBeta getM MethylSet RatioSet GenomicRatioSet IlluminaMethylationAnnotation
 #' @importFrom Biostrings DNAString vmatchPattern
 

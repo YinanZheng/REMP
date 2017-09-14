@@ -11,12 +11,12 @@ getGM12878(arrayType = c("450k", "EPIC"), mapGenome = FALSE)
 \item{arrayType}{Illumina methylation array type. Currently \code{"450k"} 
 and \code{"EPIC"} are supported. Default = \code{"450k"}.}
 
-\item{mapGenome}{logical parameter. If \code{TRUE}, function will return 
-a \code{\link{GenomicRatioSet}} object instead of an \code{link{RatioSet}} 
+\item{mapGenome}{Logical parameter. If \code{TRUE}, function will return 
+a \code{\link{GenomicRatioSet}} object instead of a \code{link{RatioSet}} 
 object.}
 }
 \value{
-An \code{\link{RatioSet}} or \code{\link{GenomicRatioSet}} containing 
+A \code{\link{RatioSet}} or \code{\link{GenomicRatioSet}} containing 
 beta value and M value of the methylation data.
 }
 \description{
@@ -34,4 +34,3 @@ GM12878_EPIC <- getGM12878('EPIC')
 GM12878_EPIC
 
 }
-

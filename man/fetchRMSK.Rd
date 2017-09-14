@@ -17,11 +17,11 @@ retrive information about all records in the hub.}
 \value{
 A \code{\link{GRanges}} object containing RE database. 'name' column 
 indicates the RE subfamily; 'score' 
-column indicate the SW score; 'Index' is a interal index for RE to faciliate data 
+column indicates the SW score; 'Index' is an internal index for RE to facilitate data 
 referral, which is meaningless for external use.
 }
 \description{
-\code{fetchRMSK} is used to obtain specified RE database from RepeatMasker Databse 
+\code{fetchRMSK} is used to obtain specified RE database from RepeatMasker Database 
 provided by AnnotationHub.
 }
 \examples{
@@ -30,4 +30,3 @@ L1 <- fetchRMSK(ah, 'L1', verbose = TRUE)
 L1
 
 }
-

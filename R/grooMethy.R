@@ -2,32 +2,37 @@
 #'
 #' @description
 #' \code{grooMethy} is used to automatically detect and fix data issues including zero beta 
-#' value, missing value, and inifinate value.
+#' value, missing value, and infinite value.
 #'
-#' @param methyDat An \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
+#' @param methyDat A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
 #' data.table, data.frame, or matrix of Illumina methylation data.
 #' @param impute If \code{TRUE}, K-Nearest Neighbouring imputation will be applied to fill 
-#' the missing values. If the imputed value is out of the original range, mean value will 
-#' be used instead. Default = \code{TRUE}.
-#' @param mapGenome Logical parameter. If \code{TRUE}, function will return a 
-#' \code{\link{GenomicRatioSet}} object instead of \code{\link{RatioSet}}.
+#' the missing values. If the imputed value is out of the original range (which is possible when
+#'  \code{imputebyrow = FALSE}), mean value will be used instead. Default = \code{TRUE}. Warning: imputed 
+#'  values for multimodal distributed CpGs may not be correct. Please check package \code{ENmix} to
+#'  identify the CpGs with multimodal distribution.
+#' @param imputebyrow If \code{TRUE}, missing values will be imputed using similar values in row 
+#' (i.e., across samples); if \code{FALSE}, missing values will be imputed using similar values 
+#' in column (i.e., across CpGs). Default is \code{TRUE}.
+#' @param mapGenome Logical parameter. If \code{TRUE}, function will return a \code{\link{GenomicRatioSet}} 
+#' object instead of a \code{\link{RatioSet}}.
 #' @param verbose Logical parameter. Should the function be verbose?
 #' 
 #' @details
-#' For methylation data in beta value, if zero value exist, the logit transformation 
-#' from beta to M-value will produce negative inifinite value. Therefore, zero beta value 
+#' For methylation data in beta value, if zero value exists, the logit transformation 
+#' from beta to M value will produce negative infinite value. Therefore, zero beta value 
 #' will be replaced with the smallest non-zero beta value found in the dataset. \code{grooMethy} 
 #' can also handle missing value (i.e. \code{NA} or \code{NaN}) using KNN imputation (see 
-#' \code{\link{impute.knn}}). Infinite value will be also treated as missing value for imputation. 
-#' If original dataset is in beta value, \code{grooMethy} will first transform it to M-value 
-#' before imputation is carried out. Since there is possibility that KNN imputation 
+#' \code{\link{impute.knn}}). The infinite value will be also treated as missing value for imputation. 
+#' If the original dataset is in beta value, \code{grooMethy} will first transform it to M value 
+#' before imputation is carried out. Since there is a possibility that KNN imputation 
 #' could produce imputed data that are not reliable (i.e. values that are out of the original 
-#' data range across samples), \code{grooMethy} will try to replace the unreliable imputation 
-#' (if any) by the average of the original methylation data across samples. Please note that
-#' \code{grooMethy} is also embedded in \code{\link{remp}} so user can run \code{\link{remp}}
-#' directly without explicitly running \code{grooMethy}.
+#' data range across samples, if the imputation is conducted by column), \code{grooMethy} will 
+#' try to replace the unreliable imputation (if any) by the average of the original methylation data 
+#' across samples. Please note that \code{grooMethy} is also embedded in \code{\link{remp}} so the 
+#' user can run \code{\link{remp}} directly without explicitly running \code{grooMethy}.
 #'
-#' @return An \code{\link{RatioSet}} or \code{\link{GenomicRatioSet}} containing beta value and 
+#' @return A \code{\link{RatioSet}} or \code{\link{GenomicRatioSet}} containing beta value and 
 #' M value of the methylation data.
 #'
 #' @examples
@@ -36,7 +41,7 @@
 #' grooMethy(minfi::getBeta(GM12878_450k), verbose = TRUE)
 #' 
 #' @export
-grooMethy <- function(methyDat, impute = TRUE, mapGenome = FALSE, verbose = FALSE) {
+grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = FALSE, verbose = FALSE) {
   methyDat_work <- methyDat
   
   if (is(methyDat_work, "RatioSet") || is(methyDat_work, "GenomicRatioSet")) 
@@ -86,7 +91,7 @@ grooMethy <- function(methyDat, impute = TRUE, mapGenome = FALSE, verbose = FALS
       methyDat_work[is.infinite(methyDat_work)] <- NA
       
       if (verbose) 
-        message("A total of ", sum(is.na(methyDat)), " NA/NaN/Inf values are found.")
+        message("A total of ", sum(is.na(methyDat_work)), " NA/NaN/Inf values are found.")
     } else {
       impute <- FALSE
     }
@@ -106,6 +111,7 @@ grooMethy <- function(methyDat, impute = TRUE, mapGenome = FALSE, verbose = FALS
   }
   
   if (impute) {
+    if(imputebyrow) mdata = t(mdata)
     ## Impute the data!
     if (verbose) 
       message("Imputing missing values using KNN method ...")
@@ -126,16 +132,20 @@ grooMethy <- function(methyDat, impute = TRUE, mapGenome = FALSE, verbose = FALS
     ## If so then use mean to fix them
     if (nrow(idx) > 0) {
       if (verbose) 
-        message("Fixing ", nrow(idx), " probes with imputed values that are out of the original data range ....")
+        message("Fixing ", nrow(idx), " imputed probes that are out of the original data range ....")
       m <- apply(mdata[idx[, 1], ], 1, function(x) mean(x, na.rm = TRUE))  ## calculate the mean of the original data
       for (i in 1:nrow(idx)) {
         imputed_mdata[idx[i, 1], idx[i, 2]] <- m[i]
       }
+    } else {
+      if (verbose) 
+        message("All imputed probes are within the original data range.")
     }
     
     if(verbose) message("Done.")
     
     ## Update with imputed data
+    if(imputebyrow) imputed_mdata = t(imputed_mdata)
     mdata <- imputed_mdata
     betadata <- .toBeta(mdata)
   }
