@@ -44,3 +44,7 @@
 # REMP 1.0.2
 
 * Bug fixed. 
+
+# REMP 1.0.3
+
+* Use package 'ranger' to boost computation speed for random forest.
