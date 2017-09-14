@@ -84,8 +84,7 @@ GM12878_450k <- getGM12878('450k')
 # Make sure you have run intREMP before running remp.
 
 # Run prediction (grooMethy will be run implicitly)
-remp.res <- remp(GM12878_450k, REtype = 'Alu', autoTune = FALSE,
-param = 6, ncore = 1)
+remp.res <- remp(GM12878_450k, REtype = 'Alu', ncore = 1)
 
 # Check the results
 remp.res

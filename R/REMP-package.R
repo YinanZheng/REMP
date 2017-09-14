@@ -50,6 +50,7 @@
 #' @import IlluminaHumanMethylation450kanno.ilmn12.hg19
 #' @import IlluminaHumanMethylationEPICanno.ilm10b2.hg19
 #' 
+#' @import ranger ranger
 #' @importFrom quantregForest quantregForest
 #' @importFrom settings stop_if_reserved reset options_manager
 #' @importFrom stats setNames density predict
