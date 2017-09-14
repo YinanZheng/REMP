@@ -64,8 +64,7 @@
 #' # Make sure you have run intREMP before running remp.
 #' 
 #' # Run prediction (grooMethy will be run implicitly)
-#' remp.res <- remp(GM12878_450k, REtype = 'Alu', autoTune = FALSE,
-#' param = 6, ncore = 1)
+#' remp.res <- remp(GM12878_450k, REtype = 'Alu', ncore = 1)
 #' 
 #' # Check the results
 #' remp.res
@@ -89,18 +88,24 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
   if (is.null(ncore)) 
     ncore <- parallel::detectCores()
   
-  if(method == "rf" & ncore > 1)
-    method <- "parRF" # switch to parallel RF
+  if(method == "rf")
+  {
+    autoTune <- FALSE # No need to tune RF mtry
+    param <- round(length(remp_options(".default.predictors"))/3) # one third of number of predictors
+    if (verbose) 
+      message("Note: Auto-tune is disabled for random forest and mtry is set to one third of number of predictors (", param, ").")
+  }
   
   ## Setup backend for paralell computing
   be <- getBackend(ncore, BPPARAM, verbose)
+  ncore <- BiocParallel::bpworkers(be)
   
   message("Start RE methylation prediction with ", BiocParallel::bpworkers(be), 
           " core(s) ...", .timeTrace(t))
   
   if (method != "naive" & !autoTune & is.null(param)) {
     message("Tuning parameter for method = '", method, "' is missing!")
-    stop("You turned off the auto-tuning functionality. Please specify parameter.")
+    stop("You turned off auto-tune. Please specify parameter.")
   }
   
   ## Groom methylation data
@@ -245,10 +250,10 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
     method_text <- "Naive (nearest CpG)"
     QCname_text <- "N/A"
   }
-  if (method %in% c("rf","parRF")) {
+  if ("rf" == method) {
     BEST_TUNE <- DataFrame(matrix(NA, nrow = sampleN, ncol = 1))
     colnames(BEST_TUNE) <- "mtry"
-    libToLoad <- c("randomForest", "quantregForest", "e1071", "foreach")
+    libToLoad <- c("quantregForest", "foreach")
     method_text <- "Random Forest"
     QCname_text <- "Quantile Regression Forest"
   }
@@ -325,34 +330,49 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
       }
     }
     
-    newdata <- as.data.frame(mcols(RE_unprf_neib)[, remp_options(".default.predictors")])
-    # newdata <- as.data.frame(mcols(RE_prf_neib)[, .default.predictors])
+    ##############################################################################################
     
-    if (method != "naive" & BiocParallel::bpworkers(be) > 1) {
-      bpstart(be)
-      .bploadLibraryQuiet(libToLoad, be)
-      ITER <- .iblkrow(newdata, chunks = ncore)
+    newdata <- as.data.frame(mcols(RE_unprf_neib)[, remp_options(".default.predictors")])
+
+    # Other model available in caret
+    if (!method %in% c("naive", "rf")) {
+      if (ncore > 1)
+      {
+        BiocParallel::bpstart(be)
+        .bploadLibraryQuiet(libToLoad, be)
+        ITER <- .iblkrow(newdata, chunks = ncore)
+        REMP_PREDICT_CpG[, i] <- BiocParallel::bpiterate(ITER, .predictREMP, 
+                                                         model = P_basic$model, 
+                                                         BPPARAM = be, 
+                                                         REDUCE = c, 
+                                                         reduce.in.order = TRUE)
+        BiocParallel::bpstop(be)
+      } else {
+        REMP_PREDICT_CpG[, i] <- .predictREMP(newdata, P_basic$model)
+      }
+    }
+    
+    # Random forest: Prediction + QC
+    if (method == "rf")
+    {
+      REMP_PREDICT_CpG[, i] <- predict(P_basic$model, newdata, type = "response", num.threads = ncore)$predictions
       
-      REMP_PREDICT_CpG[, i] <- BiocParallel::bpiterate(ITER, .predictREMP, 
-                                                       model = P_basic$model, 
-                                                       BPPARAM = be, 
-                                                       REDUCE = c, 
-                                                       reduce.in.order = TRUE)
-      if (!is.null(P_basic$QC)) {
+      if (ncore > 1)
+      {
+        BiocParallel::bpstart(be)
+        .bploadLibraryQuiet(libToLoad, be)
         ITER <- .iblkrow(newdata, chunks = ncore)
         REMP_PREDICT_QC[, i] <- BiocParallel::bpiterate(ITER, .predictQC, 
                                                         model = P_basic$QC, 
                                                         BPPARAM = be, 
                                                         REDUCE = c, 
                                                         reduce.in.order = TRUE)
-      }
-      bpstop(be)
-    } else {
-      REMP_PREDICT_CpG[, i] <- .predictREMP(newdata, P_basic$model)
-      if (!is.null(P_basic$QC)) 
+        BiocParallel::bpstop(be)
+      } else {
         REMP_PREDICT_QC[, i] <- .predictQC(newdata, P_basic$QC)
+      }
     }
-    
+
     message("    ", samplenames[i], " completed! ", sampleN - i, 
             " sample(s) left ...", .timeTrace(t))
     # message(rep('-',60))
@@ -419,17 +439,6 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
   } else {
     
     # set up the tuning grid
-    if (method %in% c("rf","parRF")) {
-      if (autoTune) {
-        mtry <- remp_options(".default.mtry.tune")
-      } else {
-        mtry <- param
-      }
-      grid <- expand.grid(mtry = mtry)
-      text <- "mtry"
-      doQC <- TRUE
-    }
-    
     if (method == "svmLinear") {
       if (autoTune) {
         C <- remp_options(".default.C.svmLinear.tune")
@@ -462,22 +471,40 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
       trC.repeats <- NA
     }
     
-    if (ncore > 1) {
-      trC <- caret::trainControl(method = trC.method, number = trC.number, 
-                          repeats = trC.repeats, allowParallel = TRUE)
-      doParallel::registerDoParallel(ncore)
-      model.tune <- caret::train(Methy ~ ., data = d, method = method, 
-                          tuneGrid = grid, trControl = trC, importance = TRUE)
-      closeAllConnections()
+    if (method == "rf") {
+      text <- "mtry"
+      doQC <- TRUE
+      model.tune <- ranger::ranger(Methy ~ ., data = d, mtry = param, num.threads = ncore,
+                                   importance = "permutation", keep.inbag = FALSE,
+                                   scale.permutation.importance = TRUE)
+      var_imp <- ranger::importance(model.tune)
+      var_imp <- data.frame(Predictor = names(var_imp), 
+                            Overall = var_imp)
+      best_param <- model.tune$mtry
+      model <- model.tune
     } else {
-      trC <- caret::trainControl(method = trC.method, number = trC.number, 
-                          repeats = trC.repeats, allowParallel = FALSE)
-      model.tune <- caret::train(Methy ~ ., data = d, method = method, 
-                          tuneGrid = grid, trControl = trC, importance = TRUE)
+      if (ncore > 1) {
+        trC <- caret::trainControl(method = trC.method, number = trC.number, 
+                                   repeats = trC.repeats, allowParallel = TRUE)
+        cluster <- parallel::makeCluster(ncore)
+        doParallel::registerDoParallel(cluster)
+        model.tune <- caret::train(Methy ~ ., data = d, method = method, 
+                                   tuneGrid = grid, trControl = trC, importance = TRUE)
+        parallel::stopCluster(cluster)
+        foreach::registerDoSEQ()
+      } else {
+        trC <- caret::trainControl(method = trC.method, number = trC.number, 
+                                   repeats = trC.repeats, allowParallel = FALSE)
+        model.tune <- caret::train(Methy ~ ., data = d, method = method, 
+                                   tuneGrid = grid, trControl = trC, importance = TRUE)
+      }
+      
+      var_imp <- caret::varImp(model.tune)
+      var_imp <- data.frame(Predictor = rownames(var_imp$importance), 
+                            Overall = var_imp$importance)
+      best_param <- model.tune$bestTune
+      model = model.tune$finalModel
     }
-    
-    var_imp <- caret::varImp(model.tune)
-    best_param <- model.tune$bestTune
     
     if (autoTune) {
       if (verbose) 
@@ -485,7 +512,7 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
                 paste(paste(text, unlist(best_param), sep = " = "), collapse = ", "))
     } else {
       if (verbose) 
-        message("    User specified tuning parameter: ", 
+        message("    Pre-specified tuning parameter: ", 
                 paste(paste(text, unlist(best_param), sep = " = "), collapse = ", "))
     }
     
@@ -497,10 +524,9 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
       qrf <- NULL
     }
     
-    modelFit <- list(model = model.tune$finalModel, 
+    modelFit <- list(model = model, 
                      QC = qrf, 
-                     importance = data.frame(Predictor = rownames(var_imp$importance), 
-                                             Overall = var_imp$importance), 
+                     importance = var_imp, 
                      bestTune = best_param, 
                      name = method)
   }
@@ -516,7 +542,6 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
     newdata$Methy.min
   } else {
     if(any(class(model) %in% c("ksvm","vm"))) kernlab::predict(model, newdata) #kernlab has its own predict function
-    else predict(model, newdata) #randomForest has generic prediction function
   }
 }
 
