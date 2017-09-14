@@ -29,7 +29,7 @@ getBackend <- function(ncore, BPPARAM = NULL, verbose = FALSE) {
   if (ncore > parallel::detectCores()) 
     ncore <- parallel::detectCores()
   if (ncore == 1) {
-    backend <- SerialParam()
+    backend <- BiocParallel::SerialParam()
     if (verbose) 
       message("You have successfully set non-parallel mode (single worker).")
   } else {

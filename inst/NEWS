@@ -40,3 +40,7 @@
 # REMP 1.0.1
 
 * In groomethy, changed the default KNN imputation direction from "by-column" to "by-row" to avoid out-of-range imputation results. 
+
+# REMP 1.0.2
+
+* Bug fixed. 
