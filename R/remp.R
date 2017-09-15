@@ -491,7 +491,7 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
         model.tune <- caret::train(Methy ~ ., data = d, method = method, 
                                    tuneGrid = grid, trControl = trC, importance = TRUE)
         parallel::stopCluster(cluster)
-        foreach::registerDoSEQ()
+        registerDoSEQ()
       } else {
         trC <- caret::trainControl(method = trC.method, number = trC.number, 
                                    repeats = trC.repeats, allowParallel = FALSE)

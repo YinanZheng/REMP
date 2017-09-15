@@ -122,8 +122,8 @@ Without specifying working directory using option \Rfunarg{work.dir}, the annota
 Once the annotation data are ready, user can pass the annotation data parcel to \Rfunction{remp} for prediction:
 
 <<rempredict, eval=TRUE>>=
-remp.res <- remp(GM12878_450k, REtype = 'Alu', parcel = remparcel,
-                 autoTune = FALSE, param = 6, ncore = 1)
+remp.res <- remp(GM12878_450k, REtype = 'Alu', 
+                 parcel = remparcel, ncore = 1)
 @
 
 If \Rfunarg{parcel} is missing, \Rfunction{remp} will then try to search the REMParcel data file in the directory indicated by \Rfunarg{work.dir} (use \Rfunction{tempdir()} if not specified).

@@ -50,7 +50,7 @@
 #' @import IlluminaHumanMethylation450kanno.ilmn12.hg19
 #' @import IlluminaHumanMethylationEPICanno.ilm10b2.hg19
 #' 
-#' @import ranger ranger
+#' @importFrom ranger ranger importance
 #' @importFrom quantregForest quantregForest
 #' @importFrom settings stop_if_reserved reset options_manager
 #' @importFrom stats setNames density predict
@@ -65,6 +65,7 @@
 #' @importFrom IRanges IRanges IRangesList CharacterList NumericList subsetByOverlaps
 #' @importFrom parallel detectCores
 #' @importFrom doParallel registerDoParallel
+#' @importFrom foreach registerDoSEQ
 #' @importFrom BiocGenerics mget
 #' @importFrom BSgenome getSeq 
 #' @importFrom SummarizedExperiment SummarizedExperiment rowRanges assays rowData colData
