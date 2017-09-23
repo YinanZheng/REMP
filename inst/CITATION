@@ -12,5 +12,5 @@ c(bibentry(bibtype = "Article",
            ),
            year = 2017,
            journal = "Nucleic Acids Research",
-           pubmed = "",
+           pubmed = "28911103",
            header = "REMP R pacakge"))

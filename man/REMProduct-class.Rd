@@ -31,7 +31,7 @@ REMProduct(REtype = "Unknown", platform = "Unknown", win = "Unknown",
   rempB = NULL, rempQC = NULL, cpgRanges = GRanges(),
   sampleInfo = DataFrame(), REannotation = GRanges(), RECpG = GRanges(),
   regionCode = DataFrame(), refGene = GRanges(), varImp = DataFrame(),
-  REStats = DataFrame(), GeneStats = DataFrame())
+  REStats = DataFrame(), GeneStats = DataFrame(), Seed = NULL)
 
 rempM(object)
 
@@ -107,6 +107,8 @@ model is used in \code{\link{remp}}.}
 \item{REStats}{RE coverage statistics, which is internally generated in \code{\link{remp}}.}
 
 \item{GeneStats}{Gene coverage statistics, which is internally generated in \code{\link{remp}}.}
+
+\item{Seed}{Random seed for Random Forest model for reproducible prediction results.}
 
 \item{object}{A \code{REMProduct} object.}
 

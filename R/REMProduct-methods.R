@@ -51,13 +51,16 @@ setMethod("plot", signature(x = "REMProduct", y = "missing"),
   type <- match.arg(type)
   default_main <- ""
   default_xlab <- "Methylation value (beta)"
+  default_xlim <- c(0,1)
   dotdotdot <- list(...)
   if(!hasArg(main))
     dotdotdot$main <- default_main
   if(!hasArg(xlab))
     dotdotdot$xlab <- default_xlab
-
-  Bval <- assays(x)[["rempB"]]
+  if(!hasArg(xlim))
+    dotdotdot$xlim <- default_xlim
+    
+  Bval <- rempB(x)
 
   if(type == "individual")
   {
