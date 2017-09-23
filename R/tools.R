@@ -131,7 +131,6 @@ fetchRefSeqGene <- function(ah, mainOnly = FALSE, verbose = FALSE) {
   if (verbose) {
     message("Loading refseq gene (hg19) database from AnnotationHub: ", 
             remp_options(".default.AH.refgene.hg19"))
-    
   }
   
   refgene <- suppressWarnings(suppressMessages(ah[[remp_options(".default.AH.refgene.hg19")]]))  
@@ -330,8 +329,9 @@ findRECpG <- function(RE.hg19, REtype = c("Alu", "L1"), be = NULL, verbose = FAL
 #' information using refseq gene database
 #'
 #' @param object.GR An \code{\link{GRanges}} object of a genomic location database.
-#' @param refgene.hg19 A complete refGene annotation database returned by 
+#' @param refgene A complete refGene annotation database returned by 
 #' \code{\link{fetchRefSeqGene}} (with parameter \code{mainOnly = FALSE}).
+#' @param symbol Logical parameter. Should the annotation return gene symbol?
 #' @param verbose Logical parameter. Should the function be verbose?
 #' 
 #' @details
@@ -353,7 +353,7 @@ findRECpG <- function(RE.hg19, REtype = c("Alu", "L1"), be = NULL, verbose = FAL
 #' Alu.demo.refGene
 #' 
 #' @export
-GRannot <- function(object.GR, refgene.hg19, verbose = FALSE) {
+GRannot <- function(object.GR, refgene, symbol = FALSE, verbose = FALSE) {
   
   ## Check if the object.GR contains a metadata column called "Index"
   if(!"Index" %in% colnames(mcols(object.GR)))
@@ -362,49 +362,65 @@ GRannot <- function(object.GR, refgene.hg19, verbose = FALSE) {
   if(any(duplicated(as.character(object.GR$Index))))
     stop("The 'Index' column provided in the GRanges object must be unique.")
   
+  main <- refgene$main
+  
   ####### InNM
-  NM.GR <-  refgene.hg19$main[refgene.hg19$main$type == "NM"]
+  NM.GR <-  main[main$type == "NM"]
   NM.GR <- .oneWayFlank(NM.GR, 2000, start = TRUE)
   object.GR <- .addannot(object.GR, 
                          NM.GR, 
+                         main, 
+                         symbol, 
                          "InNM", 
                          verbose)
   
   ####### InNR
-  NR.GR <-  refgene.hg19$main[refgene.hg19$main$type == "NR"]
+  NR.GR <-  main[main$type == "NR"]
   NR.GR <- .oneWayFlank(NR.GR, 2000, start = TRUE)
   object.GR <- .addannot(object.GR, 
-                         NR.GR, 
+                         NR.GR,
+                         main, 
+                         symbol,  
                          "InNR", 
                          verbose)
   
   ####### InTSS2000
   object.GR <- .addannot(object.GR, 
-                         refgene.hg19$regions$tss, 
+                         refgene$regions$tss, 
+                         main, 
+                         symbol, 
                          "InTSS", 
                          verbose)
   
   ####### In5UTR
   object.GR <- .addannot(object.GR, 
-                         refgene.hg19$regions$fiveUTR, 
+                         refgene$regions$fiveUTR, 
+                         main, 
+                         symbol, 
                          "In5UTR", 
                          verbose)
   
   ####### InCDS
   object.GR <- .addannot(object.GR, 
-                         refgene.hg19$regions$cds, 
+                         refgene$regions$cds, 
+                         main, 
+                         symbol, 
                          "InCDS", 
                          verbose)
   
   ####### InExon
   object.GR <- .addannot(object.GR, 
-                         refgene.hg19$regions$exon, 
+                         refgene$regions$exon, 
+                         main, 
+                         symbol, 
                          "InExon", 
                          verbose)
   
   ####### In3UTR
   object.GR <- .addannot(object.GR, 
-                         refgene.hg19$regions$threeUTR, 
+                         refgene$regions$threeUTR, 
+                         main, 
+                         symbol, 
                          "In3UTR", 
                          verbose)
   
@@ -423,20 +439,28 @@ GRannot <- function(object.GR, refgene.hg19, verbose = FALSE) {
 .clps <- function(x) paste0(x, collapse = "|")
 
 # Used by GRannot
-.addannot <- function(object.GR, annot.GR, annotName, verbose) {
+.addannot <- function(object.GR, annot.GR, main, symbol, annotName, verbose) {
   if (verbose) 
     message("    ", annotName, " ... ", appendLF = FALSE)
   
   object_annot_Hit <- findOverlaps(object.GR, annot.GR, ignore.strand = TRUE)
   object_raw <- DataFrame(InRegion = annot.GR[subjectHits(object_annot_Hit)]$index)
-  object_agg <- aggregate(object_raw, list(Index = as.character(object.GR$Index[queryHits(object_annot_Hit)])), 
-                          .clps)
-  
   InRegion <- rep(NA, length(object.GR))
-  InRegion[match(object_agg$Index, object.GR$Index)] <- object_agg$InRegion
   
+  if(nrow(object_raw) >0)
+  {
+    if(symbol)
+      object_raw$InRegion <- main$GeneSymbol[as.integer(object_raw$InRegion)]
+    
+    object_agg <- aggregate(object_raw, 
+                            list(Index = as.character(object.GR$Index[queryHits(object_annot_Hit)])), 
+                            .clps)
+    InRegion[match(object_agg$Index, object.GR$Index)] <- object_agg$InRegion
+  }
+ 
   object.GR$newRegion <- InRegion
-  mcols(object.GR) <- .changeColNames(mcols(object.GR), "newRegion", 
+  mcols(object.GR) <- .changeColNames(mcols(object.GR), 
+                                      "newRegion", 
                                       annotName)
   
   if (verbose) 

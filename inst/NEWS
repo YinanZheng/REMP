@@ -43,4 +43,8 @@
 
 # REMP 1.0.4
 
-* Use package 'ranger' to boost computation speed for random forest.
+* Use package 'ranger' to boost computation speed for Random Forest.
+
+# REMP 1.0.5
+
+* Allow random seed for reproducible results using Random Forest.

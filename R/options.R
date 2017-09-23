@@ -50,8 +50,6 @@ REMPOPTIONS <- options_manager(
                           "N.nbr", "distance.mean", "distance.std", "distance.min", "distance.min2", 
                           "Methy.min", "Methy.min2", "Methy.mean", "Methy.std"),
   
-  .default.mtry.tune = c(3, 6, 12),
-  
   .default.C.svmLinear.tune = 2^seq(-15, 3, 2),
   
   .default.sigma.svmRadial.tune = 2^seq(-9, 1, 2),
@@ -86,7 +84,6 @@ REMPOPTIONS <- options_manager(
 #'  array annotation dataset.}
 #'  \item{\code{.default.genomicRegionColNames}}{Define the names of the genomic regions for prediction.}
 #'  \item{\code{.default.predictors}}{Define the names of predictors for RE methylation prediction.}
-#'  \item{\code{.default.mtry.tune}}{Define the default \code{mtry} parameter for Random Forest model.}
 #'  \item{\code{.default.C.svmLinear.tune}}{Define the default \code{C} (Cost) parameter for Support 
 #'  Vector Machine (SVM) using linear kernel.}
 #'  \item{\code{.default.sigma.svmRadial.tune}}{Define the default \code{sigma} parameter for SVM

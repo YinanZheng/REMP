@@ -31,7 +31,9 @@ and differentially methylated region (DMR) analysis on RE.
 \references{
 Zheng Y, Joyce BT, Liu L, Zhang Z, Kibbe WA, Zhang W, Hou L. 
 Prediction of genome-wide DNA methylation in repetitive elements. 
-Nucleic Acids Res 2017. http://dx.doi.org/10.1093/nar/gkx587.
+Nucleic Acids Res. 2017;45(15):8697-711. 
+PubMed PMID: 28911103; PMCID: PMC5587781.
+http://dx.doi.org/10.1093/nar/gkx587.
 }
 \author{
 Yinan Zheng \email{y-zheng@northwestern.edu},

@@ -4,13 +4,15 @@
 \alias{GRannot}
 \title{Annotate genomic ranges data with gene region information.}
 \usage{
-GRannot(object.GR, refgene.hg19, verbose = FALSE)
+GRannot(object.GR, refgene, symbol = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{object.GR}{An \code{\link{GRanges}} object of a genomic location database.}
 
-\item{refgene.hg19}{A complete refGene annotation database returned by 
+\item{refgene}{A complete refGene annotation database returned by 
 \code{\link{fetchRefSeqGene}} (with parameter \code{mainOnly = FALSE}).}
+
+\item{symbol}{Logical parameter. Should the annotation return gene symbol?}
 
 \item{verbose}{Logical parameter. Should the function be verbose?}
 }

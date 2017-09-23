@@ -66,13 +66,15 @@ initREMP <- function(arrayType = c("450k", "EPIC"), REtype = c("Alu", "L1"), RE 
   be <- getBackend(ncore, BPPARAM, verbose)
   
   if (arrayType == "450k") {
-    requireNamespace("IlluminaHumanMethylation450kanno.ilmn12.hg19", quietly = TRUE)
-    ILMN.GR <- minfi::getLocations(
-      IlluminaHumanMethylation450kanno.ilmn12.hg19::IlluminaHumanMethylation450kanno.ilmn12.hg19)
+    if (requireNamespace("IlluminaHumanMethylation450kanno.ilmn12.hg19", quietly = TRUE)) {
+      ILMN.GR <- minfi::getLocations(
+        IlluminaHumanMethylation450kanno.ilmn12.hg19::IlluminaHumanMethylation450kanno.ilmn12.hg19)
+      }
   } else if (arrayType == "EPIC") {
-    requireNamespace("IlluminaHumanMethylation450kanno.ilmn12.hg19", quietly = TRUE)
-    ILMN.GR <- minfi::getLocations(
-      IlluminaHumanMethylationEPICanno.ilm10b2.hg19::IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
+    if (requireNamespace("IlluminaHumanMethylationEPICanno.ilm10b2.hg19", quietly = TRUE)) {
+      ILMN.GR <- minfi::getLocations(
+        IlluminaHumanMethylationEPICanno.ilm10b2.hg19::IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
+      }
   } else stop("Wrong Illumina platform type. Can be either '450k' or 'EPIC'.")
   ILMN.GR <- ILMN.GR[substring(names(ILMN.GR), 1, 2) != "ch"]
   ILMN.GR$Index <- names(ILMN.GR)

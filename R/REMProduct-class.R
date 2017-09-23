@@ -26,6 +26,7 @@
 #' @param varImp Importance of the predictors.
 #' @param REStats RE coverage statistics, which is internally generated in \code{\link{remp}}.
 #' @param GeneStats Gene coverage statistics, which is internally generated in \code{\link{remp}}.
+#' @param Seed Random seed for Random Forest model for reproducible prediction results.
 #' @param type For \code{plot} and \code{decodeAnnot}: see Utilities.
 #' @param ncore For \code{decodeAnnot}: number of cores to run parallel computation. By default max number of cores available 
 #' in the machine will be utilized. If \code{ncore = 1}, no parallel computation is allowed (not recommended).
@@ -83,7 +84,8 @@ REMProduct <- function(REtype = "Unknown", platform = "Unknown", win = "Unknown"
                        regionCode = DataFrame(), 
                        refGene = GRanges(),
                        varImp = DataFrame(),
-                       REStats = DataFrame(), GeneStats = DataFrame())
+                       REStats = DataFrame(), GeneStats = DataFrame(),
+                       Seed = NULL)
 {
   rempInfo <- CharacterList(REtype = REtype,
                             platform = platform,
@@ -100,7 +102,8 @@ REMProduct <- function(REtype = "Unknown", platform = "Unknown", win = "Unknown"
                   refGene = refGene,
                   varImp = varImp,
                   REStats = REStats,
-                  GeneStats = GeneStats)
+                  GeneStats = GeneStats,
+                  Seed = Seed)
   new("REMProduct",
       REMPInfo = rempInfo,
       SummarizedExperiment(

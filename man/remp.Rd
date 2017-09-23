@@ -7,7 +7,7 @@
 remp(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
   work.dir = tempdir(), groom = TRUE, win = 1000, method = c("rf",
   "svmLinear", "svmRadial", "naive"), autoTune = TRUE, param = NULL,
-  ncore = NULL, BPPARAM = NULL, verbose = FALSE)
+  seed = NULL, ncore = NULL, BPPARAM = NULL, verbose = FALSE)
 }
 \arguments{
 \item{methyDat}{A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}}, 
@@ -31,19 +31,22 @@ avoid repeated check.}
 \item{win}{An integer specifying window size to confine the upstream and downstream flanking 
 region centered on the predicted CpG in RE for prediction. Default = \code{1000}. See Details.}
 
-\item{method}{Name of model/approach for prediction. Currently \code{"rf"} (random forest),
+\item{method}{Name of model/approach for prediction. Currently \code{"rf"} (Random Forest),
 \code{"svmLinear"} (SVM with linear kernel), \code{"svmRadial"} (SVM with linear kernel), and
 \code{"naive"} (carrying over methylation values of the closest CpG site) are available. 
-Default = \code{"rf"} (random forest). Names of the machine learning models will be passed
-to the argument \code{method} in \code{train} (package \code{caret}). See Details.}
+Default = \code{"rf"} (Random Forest). See Details.}
 
 \item{autoTune}{Logical parameter. If \code{TRUE}, a 3-time repeated 5-fold cross validation 
 will be performed to determine the best model parameter. If \code{FALSE}, the \code{param} option 
-(see below) must be specified. Default = \code{TRUE}. See Details.}
+(see below) must be specified. Default = \code{TRUE}. Auto-tune will be disabled using Random Forest. 
+See Details.}
 
-\item{param}{A number or a vector specifying the model tuning parameter(s). For random forest, 
-\code{param} represents 'mtry'; for SVM, \code{param} represents 'Cost' (for linear kernel) or 'Sigma'
+\item{param}{A number or a vector specifying the model tuning parameter(s) (not applicable for Random Forest).
+For SVM, \code{param} represents 'Cost' (for linear kernel) or 'Sigma'
 and 'Cost' (for radial basis function kernel). This parameter is valid only when \code{autoTune = FALSE}.}
+
+\item{seed}{Random seed for Random Forest model for reproducible prediction results. 
+Default is \code{NULL}, which generates a seed.}
 
 \item{ncore}{Number of cores to run parallel computation. By default, max number of cores available 
 in the machine will be utilized. If \code{ncore = 1}, no parallel computation is allowed.}
@@ -73,22 +76,38 @@ for prediction but introduce noise. Random Forest model (\code{method = "rf"}) i
 as it offers more accurate prediction and it also enables prediction reliability functionality. 
 Prediction reliability is estimated by conditional standard deviation using Quantile Regression Forest 
 (see package \code{\link{quantregForest}} for more details). Please note that if parallel computing 
-is allowed, parallel random forest (\code{parRF} in package \code{caret}) will be used automatically.
-If \code{autoTune = TRUE}, preset tuning parameter search grid can be access and modified 
-using \code{\link{remp_options}}.
+is allowed, parallel Random Forest (powered by package \code{ranger}) will be used automatically. 
+The performance of Random Forest model is often relatively insensitive to the choice of \code{mtry}.
+Therefore, auto-tune will be turned off using Random Forest and \code{mtry} will be set to one third 
+of the total number of predictors. For SVM, if \code{autoTune = TRUE}, preset tuning parameter 
+search grid can be access and modified using \code{\link{remp_options}}.
 }
 \examples{
 # Obtain example Illumina example data (450k)
 GM12878_450k <- getGM12878('450k')
 
-# Make sure you have run intREMP before running remp.
+# Make sure you have run 'initREMP'. See ?initREMP.
 
 # Run prediction (grooMethy will be run implicitly)
 remp.res <- remp(GM12878_450k, REtype = 'Alu', ncore = 1)
-
-# Check the results
 remp.res
 details(remp.res)
+
+# Extract CpG location information (inherit from class 'RangedSummarizedExperiment')
+rowRanges(remp.res) 
+
+# RE annotation information
+annotation(remp.res)
+
+# Add gene annotation
+remp.res <- decodeAnnot(remp.res, type = "symbol", ncore = 1)
+annotation(remp.res)
+
+# Density plot across predicted CpGs in RE
+plot(remp.res)
+
+# Trim off less reliable prediction
+remp.res <- trim(remp.res)
 plot(remp.res)
 
 }

@@ -128,7 +128,7 @@ remp.res <- remp(GM12878_450k, REtype = 'Alu',
 
 If \Rfunarg{parcel} is missing, \Rfunction{remp} will then try to search the REMParcel data file in the directory indicated by \Rfunarg{work.dir} (use \Rfunction{tempdir()} if not specified).
 
-By default, \Rfunction{remp} uses Random Forest (\Rfunarg{method = 'rf'}) model (package \Rpkg{randomForest}) for prediction. Random Forest model is recommended because it offers more accurate prediction results and it automatically enables Quantile Regression Forest (package \Rpkg{quantregForest}) for prediction reliability evaluation. \Rfunction{remp} constructs 19 predictors to carry out the prediction. For Random Forest model, the tuning parameter \Rfunarg{param = 6} (i.e. \Rfunarg{mtry} in \Rpkg{randomForest}) indicates how many predictors will be randomly selected for building the individual trees. To speed up the prediction process, user can turn off the tuning functionality by \Rfunarg{autoTune = FALSE} and specify the tuning parameter by \Rfunarg{param = 6} - this is about one third of the total number of predictors, which is also default in package \Rpkg{randomForest}). The performance of Random Forest model is often relatively insensitive to the choice of \Rfunarg{mtry}.
+By default, \Rfunction{remp} uses Random Forest (\Rfunarg{method = 'rf'}) model (package \Rpkg{randomForest}) for prediction. Random Forest model is recommended because it offers more accurate prediction results and it automatically enables Quantile Regression Forest (package \Rpkg{quantregForest}) for prediction reliability evaluation. \Rfunction{remp} constructs 19 predictors to carry out the prediction. For Random Forest model, the tuning parameter \Rfunarg{param = 6} (i.e. \Rfunarg{mtry} in \Rpkg{randomForest}) indicates how many predictors will be randomly selected for building the individual trees. The performance of random forest model is often relatively insensitive to the choice of \Rfunarg{mtry}. Therefore, auto-tune will be turned off using random forest and \Rfunarg{mtry} will be set to one third of the total number of predictors. 
 
 \Rfunction{remp} will return a \Rclass{REMPset} object, which inherits Bioconductor's \Rclass{RangedSummarizedExperiment} class:
 
@@ -143,13 +143,13 @@ Prediction results can be obtained by accessors:
 
 <<rempaccessors, eval=TRUE>>=
 # Predicted RE-CpG methylation value (Beta value)
-head(rempB(remp.res))
+rempB(remp.res)
 
 # Predicted RE-CpG methylation value (M value)
-head(rempM(remp.res))
+rempM(remp.res)
 
 # Genomic location information of the predicted RE-CpG
-head(rowRanges(remp.res))
+rowRanges(remp.res)
 @
 
 Trim off less reliable predicted results:
@@ -165,7 +165,7 @@ To add genomic regions annotation of the predicted REs:
 
 <<rempdecodeAnnot, eval=FALSE>>=
 # By default gene symbol annotation will be added
-remp.res <- decodeAnnot(remp.res)
+remp.res <- decodeAnnot(remp.res, ncore = 1)
 annotation(remp.res)
 @
 
