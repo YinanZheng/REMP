@@ -1,41 +1,40 @@
 # REMP 0.99.0
 
-* Initial submission to Bioconductor
+* Initial submission to Bioconductor.
 
 # REMP 0.99.14
 
-* Revisions based on the comments to the initial submission
+* Revisions based on the comments to the initial submission.
 
 # REMP 0.99.16
 
-* Package accepted by Bioconductor
+* Package accepted by Bioconductor.
 
 # REMP 0.99.20
 
-* Added trim(REMProduct) functionality to trim predicted CpGs based on quality score (only for Random Forest model)
-* Fixed bugs
+* Added trim(REMProduct) functionality to trim predicted CpGs based on quality score (only for Random Forest model).
 
 # REMP 0.99.21
 
-* Improved the robustness of function GRannot() when indicator column "Index" is not provided
-* Fixed the inaccurate RE statistics calculation after function trim() is applied
+* Improved the robustness of function GRannot() when indicator column "Index" is not provided.
+* Fixed the inaccurate RE statistics calculation after function trim() is applied.
 
 # REMP 0.99.22
 
-* Enabled parallel computing in function decodeAnnot(REMProduct)
+* Enabled parallel computing in function decodeAnnot(REMProduct).
 
 # REMP 0.99.24
 
 * Vignettes updated
-* Fixed bugs for Mac OS and Linux system
+* Fixed bugs for Mac OS and Linux system.
 
 # REMP 0.99.25
 
-* Fixed timeout issue encountered in the build system
+* Fixed timeout issue encountered in the build system.
 
 # REMP 1.0.0
 
-* Initial release on Bioconductor
+* Initial release on Bioconductor.
 
 # REMP 1.0.1
 
@@ -45,6 +44,7 @@
 
 * Use package 'ranger' to boost computation speed for Random Forest.
 
-# REMP 1.0.5
+# REMP 1.0.7
 
 * Allow random seed for reproducible results using Random Forest.
+* Use package 'ranger' to simplfy the code and boost computation speed for Quantile Regression Forest.

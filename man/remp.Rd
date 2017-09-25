@@ -74,10 +74,10 @@ prediction accuracy at the cost of less predicted RE. Window size greater than 1
 recommended as the machine learning models would not be able to learn much userful information 
 for prediction but introduce noise. Random Forest model (\code{method = "rf"}) is recommented 
 as it offers more accurate prediction and it also enables prediction reliability functionality. 
-Prediction reliability is estimated by conditional standard deviation using Quantile Regression Forest 
-(see package \code{\link{quantregForest}} for more details). Please note that if parallel computing 
-is allowed, parallel Random Forest (powered by package \code{ranger}) will be used automatically. 
-The performance of Random Forest model is often relatively insensitive to the choice of \code{mtry}.
+Prediction reliability is estimated by conditional standard deviation using Quantile Regression Forest. 
+Please note that if parallel computing is allowed, parallel Random Forest 
+(powered by package \code{\link{ranger}}) will be used automatically. The performance of 
+Random Forest model is often relatively insensitive to the choice of \code{mtry}.
 Therefore, auto-tune will be turned off using Random Forest and \code{mtry} will be set to one third 
 of the total number of predictors. For SVM, if \code{autoTune = TRUE}, preset tuning parameter 
 search grid can be access and modified using \code{\link{remp_options}}.

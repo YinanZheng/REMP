@@ -7,10 +7,7 @@
 #' @param methyDat A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
 #' data.table, data.frame, or matrix of Illumina methylation data.
 #' @param impute If \code{TRUE}, K-Nearest Neighbouring imputation will be applied to fill 
-#' the missing values. If the imputed value is out of the original range (which is possible when
-#'  \code{imputebyrow = FALSE}), mean value will be used instead. Default = \code{TRUE}. Warning: imputed 
-#'  values for multimodal distributed CpGs may not be correct. Please check package \code{ENmix} to
-#'  identify the CpGs with multimodal distribution.
+#' the missing values. Default = \code{TRUE}. See Details.
 #' @param imputebyrow If \code{TRUE}, missing values will be imputed using similar values in row 
 #' (i.e., across samples); if \code{FALSE}, missing values will be imputed using similar values 
 #' in column (i.e., across CpGs). Default is \code{TRUE}.
@@ -25,12 +22,12 @@
 #' can also handle missing value (i.e. \code{NA} or \code{NaN}) using KNN imputation (see 
 #' \code{\link{impute.knn}}). The infinite value will be also treated as missing value for imputation. 
 #' If the original dataset is in beta value, \code{grooMethy} will first transform it to M value 
-#' before imputation is carried out. Since there is a possibility that KNN imputation 
-#' could produce imputed data that are not reliable (i.e. values that are out of the original 
-#' data range across samples, if the imputation is conducted by column), \code{grooMethy} will 
-#' try to replace the unreliable imputation (if any) by the average of the original methylation data 
-#' across samples. Please note that \code{grooMethy} is also embedded in \code{\link{remp}} so the 
-#' user can run \code{\link{remp}} directly without explicitly running \code{grooMethy}.
+#' before imputation is carried out. If the imputed value is out of the original range (which is possible when
+#' \code{imputebyrow = FALSE}), mean value will be used instead. Warning: imputed 
+#' values for multimodal distributed CpGs (across samples) may not be correct. Please check package \code{ENmix} to
+#' identify the CpGs with multimodal distribution. Please note that \code{grooMethy} is 
+#' also embedded in \code{\link{remp}} so the user can run \code{\link{remp}} directly without 
+#' explicitly running \code{grooMethy}.
 #'
 #' @return A \code{\link{RatioSet}} or \code{\link{GenomicRatioSet}} containing beta value and 
 #' M value of the methylation data.

@@ -51,11 +51,13 @@
 #' @import IlluminaHumanMethylation450kanno.ilmn12.hg19
 #' @import IlluminaHumanMethylationEPICanno.ilm10b2.hg19
 #' 
+#' @importFrom SummarizedExperiment SummarizedExperiment rowRanges assays rowData colData
+#' @importFrom minfi getAnnotation getBeta getM MethylSet RatioSet GenomicRatioSet IlluminaMethylationAnnotation
 #' @importFrom impute impute.knn
+#' @importFrom kernlab predict
 #' @importFrom ranger ranger importance
-#' @importFrom quantregForest quantregForest
 #' @importFrom settings stop_if_reserved reset options_manager
-#' @importFrom stats setNames density predict
+#' @importFrom stats setNames density
 #' @importFrom utils download.file read.table data
 #' @importFrom graphics lines plot
 #' @importFrom AnnotationHub AnnotationHub getAnnotationHubOption setAnnotationHubOption
@@ -70,8 +72,6 @@
 #' @importFrom foreach registerDoSEQ
 #' @importFrom BiocGenerics mget
 #' @importFrom BSgenome getSeq 
-#' @importFrom SummarizedExperiment SummarizedExperiment rowRanges assays rowData colData
-#' @importFrom minfi getAnnotation getBeta getM MethylSet RatioSet GenomicRatioSet IlluminaMethylationAnnotation
 #' @importFrom Biostrings DNAString vmatchPattern
 
 NULL
