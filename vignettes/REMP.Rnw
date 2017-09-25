@@ -93,7 +93,7 @@ GM12878_450k <- grooMethy(GM12878_450k, verbose = TRUE)
 GM12878_450k
 @
 
-For zero beta values, \Rfunction{grooMethy} will replace them with smallest non-zero beta value. For \Rcode{NA}/\Rcode{NaN}/\Rcode{Inf} values, \Rfunction{grooMethy} will treat them as missing values and then apply KNN-imputation to complete the dataset. It is noteworthy that KNN-imputation can sometimes generate a few imputed values that are out of the original data range across samples. For these "bad" imputed value, \Rfunction{grooMethy} will instead use the mean value across samples to do the imputation.
+For zero beta values, \Rfunction{grooMethy} will replace them with smallest non-zero beta value. For \Rcode{NA}/\Rcode{NaN}/\Rcode{Inf} values, \Rfunction{grooMethy} will treat them as missing values and then apply KNN-imputation to complete the dataset. If the imputed value is out of the original range (which is possible when \Rcode{imputebyrow = FALSE}), mean value will be used instead. Warning: imputed values for multimodal distributed CpGs (across samples) may not be correct. Please check package \Rpkg{ENmix} to identify the CpGs with multimodal distribution. 
 
 \subsection{Prepare annotation data}
 To run \Rpkg{REMP} for RE methylation prediction, user first needs to prepare some annotation datasets. The function \Rfunction{initREMP} is designed to do the job.
@@ -123,12 +123,12 @@ Once the annotation data are ready, user can pass the annotation data parcel to 
 
 <<rempredict, eval=TRUE>>=
 remp.res <- remp(GM12878_450k, REtype = 'Alu', 
-                 parcel = remparcel, ncore = 1)
+                 parcel = remparcel, ncore = 1, seed = 777)
 @
 
 If \Rfunarg{parcel} is missing, \Rfunction{remp} will then try to search the REMParcel data file in the directory indicated by \Rfunarg{work.dir} (use \Rfunction{tempdir()} if not specified).
 
-By default, \Rfunction{remp} uses Random Forest (\Rfunarg{method = 'rf'}) model (package \Rpkg{randomForest}) for prediction. Random Forest model is recommended because it offers more accurate prediction results and it automatically enables Quantile Regression Forest (package \Rpkg{quantregForest}) for prediction reliability evaluation. \Rfunction{remp} constructs 19 predictors to carry out the prediction. For Random Forest model, the tuning parameter \Rfunarg{param = 6} (i.e. \Rfunarg{mtry} in \Rpkg{randomForest}) indicates how many predictors will be randomly selected for building the individual trees. The performance of random forest model is often relatively insensitive to the choice of \Rfunarg{mtry}. Therefore, auto-tune will be turned off using random forest and \Rfunarg{mtry} will be set to one third of the total number of predictors. 
+By default, \Rfunction{remp} uses Random Forest (\Rfunarg{method = 'rf'}) model (package \Rpkg{randomForest}) for prediction. Random Forest model is recommended because it offers more accurate prediction results and it automatically enables Quantile Regression Forest (Nicolai Meinshausen, 2006) for prediction reliability evaluation. \Rfunction{remp} constructs 19 predictors to carry out the prediction. For Random Forest model, the tuning parameter \Rfunarg{param = 6} (i.e. \Rfunarg{mtry} in \Rpkg{randomForest}) indicates how many predictors will be randomly selected for building the individual trees. The performance of random forest model is often relatively insensitive to the choice of \Rfunarg{mtry}. Therefore, auto-tune will be turned off using random forest and \Rfunarg{mtry} will be set to one third of the total number of predictors. It is recommended to specify a seed for reproducible prediction results.
 
 \Rfunction{remp} will return a \Rclass{REMPset} object, which inherits Bioconductor's \Rclass{RangedSummarizedExperiment} class:
 
@@ -149,7 +149,14 @@ rempB(remp.res)
 rempM(remp.res)
 
 # Genomic location information of the predicted RE-CpG
+# Function inherit from class 'RangedSummarizedExperiment'
 rowRanges(remp.res)
+
+# Standard error-scaled permutation importance of predictors
+imp(remp.res)
+
+# Retrive seed number used for the reesults
+metadata(remp.res)$Seed
 @
 
 Trim off less reliable predicted results:

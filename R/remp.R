@@ -49,10 +49,10 @@
 #' recommended as the machine learning models would not be able to learn much userful information 
 #' for prediction but introduce noise. Random Forest model (\code{method = "rf"}) is recommented 
 #' as it offers more accurate prediction and it also enables prediction reliability functionality. 
-#' Prediction reliability is estimated by conditional standard deviation using Quantile Regression Forest 
-#' (see package \code{\link{quantregForest}} for more details). Please note that if parallel computing 
-#' is allowed, parallel Random Forest (powered by package \code{ranger}) will be used automatically. 
-#' The performance of Random Forest model is often relatively insensitive to the choice of \code{mtry}.
+#' Prediction reliability is estimated by conditional standard deviation using Quantile Regression Forest. 
+#' Please note that if parallel computing is allowed, parallel Random Forest 
+#' (powered by package \code{\link{ranger}}) will be used automatically. The performance of 
+#' Random Forest model is often relatively insensitive to the choice of \code{mtry}.
 #' Therefore, auto-tune will be turned off using Random Forest and \code{mtry} will be set to one third 
 #' of the total number of predictors. For SVM, if \code{autoTune = TRUE}, preset tuning parameter 
 #' search grid can be access and modified using \code{\link{remp_options}}.
@@ -275,7 +275,7 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
   if ("rf" == method) {
     BEST_TUNE <- DataFrame(matrix(NA, nrow = sampleN, ncol = 1))
     colnames(BEST_TUNE) <- "mtry"
-    libToLoad <- c("quantregForest", "foreach")
+    libToLoad <- NULL
     method_text <- "Random Forest"
     QCname_text <- "Quantile Regression Forest"
   }
@@ -354,7 +354,7 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
     
     ##############################################################################################
     
-    newdata <- as.data.frame(mcols(RE_unprf_neib)[, remp_options(".default.predictors")])
+    newdata <- as.matrix(mcols(RE_unprf_neib)[, remp_options(".default.predictors")])
 
     # Other model available in caret
     if (!method %in% c("naive", "rf")) {
@@ -377,27 +377,18 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
     # Random forest: Prediction + QC
     if (method == "rf")
     {
-      REMP_PREDICT_CpG[, i] <- predict(P_basic$model, newdata, type = "response", num.threads = ncore)$predictions
-      
-      if (ncore > 1)
-      {
-        BiocParallel::bpstart(be)
-        .bploadLibraryQuiet(libToLoad, be)
-        ITER <- .iblkrow(newdata, chunks = ncore)
-        REMP_PREDICT_QC[, i] <- BiocParallel::bpiterate(ITER, .predictQC, 
-                                                        model = P_basic$QC, 
-                                                        BPPARAM = be, 
-                                                        REDUCE = c, 
-                                                        reduce.in.order = TRUE)
-        BiocParallel::bpstop(be)
-      } else {
-        REMP_PREDICT_QC[, i] <- .predictQC(newdata, P_basic$QC)
-      }
+      REMP_PREDICT_CpG[, i] <- predict(P_basic$model, newdata, type = "response", 
+                                       num.threads = ncore)$predictions
+      REMP_PREDICT_QC[, i] <- .QTF(rangerObj = P_basic$model, 
+                                   x = as.matrix(mcols(RE_prf_neib)[, remp_options(".default.predictors")]),
+                                   y = as.numeric(mcols(RE_prf_neib)[, "Methy"]),
+                                   newX = newdata, 
+                                   seed = seed, 
+                                   num.threads = ncore)
     }
 
     message("    ", samplenames[i], " completed! ", sampleN - i, 
             " sample(s) left ...", .timeTrace(t))
-    # message(rep('-',60))
   }
   
   message("Done.", .timeTrace(t))
@@ -452,7 +443,6 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
 
 .modelTrain <- function(d, varname, method, autoTune, param, 
                         be, seed, verbose) {
-  doQC = FALSE
   ncore <- BiocParallel::bpworkers(be)
   
   d <- as.data.frame(mcols(d)[, c("Methy", varname)])
@@ -540,18 +530,7 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
         message("    Pre-specified tuning parameter: ", 
                 paste(paste(text, unlist(best_param), sep = " = "), collapse = ", "))
     }
-    
-    if (doQC) {
-      set.seed(seed)
-      if (verbose) 
-        message("    Estimating prediction reliability ...")
-      qrf <- quantregForest::quantregForest(d[, varname], d[, "Methy"], nthreads = ncore)  # quantile random forest (qrf)
-    } else {
-      qrf <- NULL
-    }
-    
     modelFit <- list(model = model, 
-                     QC = qrf, 
                      importance = var_imp, 
                      bestTune = best_param, 
                      name = method)
@@ -559,8 +538,31 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
   return(modelFit)
 }
 
-.predictQC <- function(newdata, model) {
-  predict(model, newdata, sd)
+# Quantile random forest
+.QTF <- function(rangerObj, x, y, newX, seed, num.threads)
+{
+  nodesX <- predict(rangerObj, x, num.threads = num.threads, 
+                    type = "terminalNodes")$predictions
+  nnodes <- max(nodesX)
+  ntree <- ncol(nodesX)
+  n <- nrow(x)
+  valuesNodes  <- matrix(nrow=nnodes,ncol=ntree)
+  
+  set.seed(seed)
+  for (tree in 1:ntree){
+    shuffledNodes <- nodesX[rank(ind <- sample(1:n,n)),tree]
+    useNodes <- sort(unique(as.numeric(shuffledNodes)))
+    valuesNodes[useNodes,tree] <- y[ind[match(useNodes,shuffledNodes )]]
+  }
+  
+  predictNodes <- predict(rangerObj, newX, num.threads, 
+                          type = "terminalNodes")$predictions
+  valuesPredict <- 0*predictNodes
+  for (tree in 1:ntree){
+    valuesPredict[,tree] <- valuesNodes[ predictNodes[,tree],tree]
+  }
+  result <- apply(valuesPredict,1,sd)
+  return(result)
 }
 
 .predictREMP <- function(newdata, model) {
