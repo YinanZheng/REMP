@@ -48,3 +48,9 @@
 
 * Allow random seed for reproducible results using Random Forest.
 * Use package 'ranger' to simplfy the code and boost computation speed for Quantile Regression Forest.
+
+# REMP 1.0.8
+
+* Added "rempAggregate" method to "REMProduct" class to enable aggregation algorithm.
+* Function name changed: annotation --> rempAnnot, trim --> rempTrim, imp --> rempImp.
+* Fixed a bug when using "naive" method.

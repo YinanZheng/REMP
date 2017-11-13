@@ -8,22 +8,24 @@
 \alias{rempM}
 \alias{rempB}
 \alias{rempQC}
-\alias{annotation}
-\alias{imp}
-\alias{stats}
+\alias{rempAnnot}
+\alias{rempImp}
+\alias{rempStats}
 \alias{details}
 \alias{decodeAnnot}
-\alias{trim}
+\alias{rempTrim}
+\alias{rempAggregate}
 \alias{rempM,REMProduct-method}
 \alias{rempB,REMProduct-method}
 \alias{rempQC,REMProduct-method}
-\alias{imp,REMProduct-method}
-\alias{annotation,REMProduct-method}
-\alias{stats,REMProduct-method}
+\alias{rempImp,REMProduct-method}
+\alias{rempAnnot,REMProduct-method}
+\alias{rempStats,REMProduct-method}
 \alias{plot,REMProduct,missing-method}
 \alias{details,REMProduct-method}
 \alias{decodeAnnot,REMProduct-method}
-\alias{trim,REMProduct-method}
+\alias{rempTrim,REMProduct-method}
+\alias{rempAggregate,REMProduct-method}
 \title{REMProduct instances}
 \usage{
 REMProduct(REtype = "Unknown", platform = "Unknown", win = "Unknown",
@@ -39,17 +41,19 @@ rempB(object)
 
 rempQC(object)
 
-annotation(object)
+rempAnnot(object)
 
-imp(object)
+rempImp(object)
 
-stats(object)
+rempStats(object)
 
 details(object)
 
 decodeAnnot(object, ...)
 
-trim(object, ...)
+rempTrim(object, ...)
+
+rempAggregate(object, ...)
 
 \S4method{rempM}{REMProduct}(object)
 
@@ -57,11 +61,11 @@ trim(object, ...)
 
 \S4method{rempQC}{REMProduct}(object)
 
-\S4method{imp}{REMProduct}(object)
+\S4method{rempImp}{REMProduct}(object)
 
-\S4method{annotation}{REMProduct}(object)
+\S4method{rempAnnot}{REMProduct}(object)
 
-\S4method{stats}{REMProduct}(object)
+\S4method{rempStats}{REMProduct}(object)
 
 \S4method{plot}{REMProduct,missing}(x, type = c("individual", "overall"), ...)
 
@@ -70,7 +74,9 @@ trim(object, ...)
 \S4method{decodeAnnot}{REMProduct}(object, type = c("symbol", "entrez"),
   ncore = NULL, BPPARAM = NULL)
 
-\S4method{trim}{REMProduct}(object, threshold = 1.7, missingRate = 0.2)
+\S4method{rempTrim}{REMProduct}(object, threshold = 1.7, missingRate = 0.2)
+
+\S4method{rempAggregate}{REMProduct}(object, NCpG = 2)
 }
 \arguments{
 \item{REtype}{Type of RE (\code{"Alu"} or \code{"L1"}).}
@@ -124,9 +130,11 @@ in the machine will be utilized. If \code{ncore = 1}, no parallel computation is
 \item{BPPARAM}{For \code{decodeAnnot}: an optional \code{\link{BiocParallelParam}} instance determining the parallel back-end to 
 be used during evaluation. If not specified, default back-end in the machine will be used.}
 
-\item{threshold}{For \code{trim}: see Utilities.}
+\item{threshold}{For \code{rempTrim}: see Utilities.}
 
-\item{missingRate}{For \code{trim}: see Utilities.}
+\item{missingRate}{For \code{rempTrim}: see Utilities.}
+
+\item{NCpG}{For \code{rempAggregate}: see Utilities.}
 }
 \value{
 An object of class \code{REMProduct} for the constructor.
@@ -141,9 +149,9 @@ Class \code{REMProduct} is to maintain RE methylation prediction results.
     \item{\code{rempM(object)}}{Return M value of the prediction.}
     \item{\code{rempB(object)}}{Return beta value of the prediction.}
     \item{\code{rempQC(object)}}{Return prediction quality scores.}
-    \item{\code{imp(object)}}{Return relative importance of predictors.}
-    \item{\code{stats(object)}}{Return RE and gene coverage statistics.}
-    \item{\code{annotation(object)}}{Return annotation data for the predicted RE.}     
+    \item{\code{rempImp(object)}}{Return relative importance of predictors.}
+    \item{\code{rempStats(object)}}{Return RE and gene coverage statistics.}
+    \item{\code{rempAnnot(object)}}{Return annotation data for the predicted RE.}     
     }
 }
 
@@ -159,10 +167,13 @@ Class \code{REMProduct} is to maintain RE methylation prediction results.
     RE annotation data by Gene Symbol (when \code{type = "Symbol"}) or Entrez Gene 
     (when \code{type = "Entrez"}).Default \code{type = "Symbol"}. Annotation data are provided by 
     \code{\link{org.Hs.eg.db}}.}
-    \item{\code{trim(object, threshold = 1.7, missingRate = 0.2)}}{Any predicted CpG values with 
+    \item{\code{rempTrim(object, threshold = 1.7, missingRate = 0.2)}}{Any predicted CpG values with 
     quality score < threshold (default = 1.7) will be replaced with NA. CpGs contain more than 
     missingRate * 100% (default = 20%) missing rate across samples will be discarded. Relavant statistics
     will be re-evaluated.}
+    \item{\code{rempAggregate(object, NCpG = 2)}}{Aggregate the predicted RE-CpG methylation by RE using mean. To 
+    ensure the reliability of the aggregation, by default only RE with at least 2 predicted CpG sites will be
+    aggregated.}
     }
 }
 

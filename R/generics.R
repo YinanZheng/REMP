@@ -36,16 +36,16 @@ setGeneric("rempB", function(object) standardGeneric("rempB"))
 setGeneric("rempQC", function(object) standardGeneric("rempQC"))
 
 #' @rdname REMProduct-class
-#' @exportMethod annotation
-setGeneric("annotation", function(object) standardGeneric("annotation"))
+#' @exportMethod rempAnnot
+setGeneric("rempAnnot", function(object) standardGeneric("rempAnnot"))
 
 #' @rdname REMProduct-class
-#' @exportMethod imp
-setGeneric("imp", function(object) standardGeneric("imp"))
+#' @exportMethod rempImp
+setGeneric("rempImp", function(object) standardGeneric("rempImp"))
 
 #' @rdname REMProduct-class
-#' @exportMethod stats
-setGeneric("stats", function(object) standardGeneric("stats"))
+#' @exportMethod rempStats
+setGeneric("rempStats", function(object) standardGeneric("rempStats"))
 
 #' @rdname REMProduct-class
 #' @exportMethod details
@@ -56,5 +56,9 @@ setGeneric("details", function(object) standardGeneric("details"))
 setGeneric("decodeAnnot", function(object, ...) standardGeneric("decodeAnnot"))
 
 #' @rdname REMProduct-class
-#' @exportMethod trim
-setGeneric("trim", function(object, ...) standardGeneric("trim"))
+#' @exportMethod rempTrim
+setGeneric("rempTrim", function(object, ...) standardGeneric("rempTrim"))
+
+#' @rdname REMProduct-class
+#' @exportMethod rempAggregate
+setGeneric("rempAggregate", function(object, ...) standardGeneric("rempAggregate"))

@@ -97,17 +97,22 @@ details(remp.res)
 rowRanges(remp.res) 
 
 # RE annotation information
-annotation(remp.res)
+rempAnnot(remp.res)
 
 # Add gene annotation
 remp.res <- decodeAnnot(remp.res, type = "symbol", ncore = 1)
-annotation(remp.res)
+rempAnnot(remp.res)
 
-# Density plot across predicted CpGs in RE
-plot(remp.res)
+# (Recommended) Trim off less reliable prediction
+remp.res <- rempTrim(remp.res)
 
-# Trim off less reliable prediction
-remp.res <- trim(remp.res)
+# (Recommended) Obtain RE-level methylation (aggregate by mean)
+remp.res <- rempAggregate(remp.res)
+
+# Extract RE location information 
+rowRanges(remp.res)
+
+# Density plot across predicted RE
 plot(remp.res)
 
 }

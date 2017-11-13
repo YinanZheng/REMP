@@ -1,8 +1,6 @@
-
 ## REMProduct methods
 
 #### Accessors
-
 #' @rdname REMProduct-class
 setMethod("rempM", signature(object = "REMProduct"), function(object) {
   M <- assays(object)[["rempM"]]
@@ -25,23 +23,23 @@ setMethod("rempQC", signature(object = "REMProduct"), function(object) {
 # rempQC(object)
 
 #' @rdname REMProduct-class
-setMethod("imp", signature(object = "REMProduct"), function(object) {
+setMethod("rempImp", signature(object = "REMProduct"), function(object) {
   return(metadata(object)$varImp)
 })
-# imp(object)
+# rempImp(object)
 
 #' @rdname REMProduct-class
-setMethod("annotation", signature(object = "REMProduct"), function(object) {
+setMethod("rempAnnot", signature(object = "REMProduct"), function(object) {
   return(metadata(object)$REannotation)
 })
-# annotation(object)
+# rempAnnot(object)
 
 #' @rdname REMProduct-class
-setMethod("stats", signature(object = "REMProduct"), function(object) {
+setMethod("rempStats", signature(object = "REMProduct"), function(object) {
   return(list(RE_Statistics = metadata(object)$REStats,
               Gene_Statistics = metadata(object)$GeneStats))
 })
-# stats(object)
+# rempStats(object)
 
 
 #### Utilities
@@ -53,11 +51,11 @@ setMethod("plot", signature(x = "REMProduct", y = "missing"),
   default_xlab <- "Methylation value (beta)"
   default_xlim <- c(0,1)
   dotdotdot <- list(...)
-  if(!hasArg(main))
+  if(!hasArg("main"))
     dotdotdot$main <- default_main
-  if(!hasArg(xlab))
+  if(!hasArg("xlab"))
     dotdotdot$xlab <- default_xlab
-  if(!hasArg(xlim))
+  if(!hasArg("xlim"))
     dotdotdot$xlim <- default_xlim
     
   Bval <- rempB(x)
@@ -84,14 +82,31 @@ setMethod("plot", signature(x = "REMProduct", y = "missing"),
 
 #' @rdname REMProduct-class
 setMethod("details", signature(object = "REMProduct"), function(object) {
+  REtype = object@REMPInfo[["REtype"]]
+  notAggregated <- TRUE
+  if(grepl("aggregated", REtype)) notAggregated <- FALSE
+  
+  method = object@REMPInfo[["predictModel"]]
+  notTrimmed <- TRUE
+  notNaive <- TRUE
+  if(grepl("trimmed", method)) notTrimmed <- FALSE
+  if(grepl("Naive", method)) notNaive <- FALSE
+  
   .showREMPinfo(object)
   cat("\n")
   
   .showCpGcountbyChr(object)
   cat("\n")
   
+  if(notAggregated & notTrimmed & notNaive)
+  {
+    cat("Training information:\n")
+    .showTrainingStats(metadata(object)$REStats, object@REMPInfo[["REtype"]], "cat", "  ")
+    cat("\n")
+  }
+  
   cat("Coverage information:\n")
-  .showREStats(metadata(object)$REStats, object@REMPInfo[["REtype"]], "cat", "  ")
+  .showREStats(metadata(object)$REStats, object@REMPInfo[["REtype"]], "cat", "  ", notAggregated)
   .showGeneStats(metadata(object)$GeneStats, object@REMPInfo[["REtype"]], "cat", "  ")
   cat("\n")
   
@@ -101,7 +116,6 @@ setMethod("details", signature(object = "REMProduct"), function(object) {
     .showQCSummary(object)
   }
 })
-# details(object)
 
 #' @rdname REMProduct-class
 setMethod("decodeAnnot", signature(object = "REMProduct"), 
@@ -157,16 +171,9 @@ setMethod("decodeAnnot", signature(object = "REMProduct"),
   }
   return(object)
 })
-# annotation(object)
-# remptest <- decodeAnnot(object)
-# annotation(remptest)
-# remptest <- decodeAnnot(remptest)
-# annotation(remptest)
-# remptest <- decodeAnnot(remptest, type = "entrez")
-# annotation(remptest)
 
 #' @rdname REMProduct-class
-setMethod("trim", signature(object = "REMProduct"), 
+setMethod("rempTrim", signature(object = "REMProduct"), 
           function(object, threshold = 1.7, missingRate = 0.2) {
             method <- object@REMPInfo[["predictModel"]]
             
@@ -184,27 +191,27 @@ setMethod("trim", signature(object = "REMProduct"),
             
             if(!grepl("Random Forest", method))
             {
-              message("Trim is only applicable to prediction using Random Forest model. No changes made.")
+              message("rempTrim() is only applicable to prediction using Random Forest model. No changes made.")
               return(object)
             }
             
             REtype = object@REMPInfo[["REtype"]]
-            beta <- as.matrix(rempB(object))
+            # beta <- as.matrix(rempB(object))
             M <- as.matrix(rempM(object))
             QC <- as.matrix(rempQC(object))
             badInd <- QC > threshold
             QC[badInd] <- NA
-            beta[badInd] <- NA
+            # beta[badInd] <- NA
             M[badInd] <- NA
             
             removeCpG <- rowMeans(badInd) > missingRate
             
-            RE_annotation <- annotation(object)
+            RE_annotation <- rempAnnot(object)
             RE_CpG_ILMN <-  metadata(object)$RECpG
             regionCode <-  metadata(object)$regionCode
             refgene_main <- metadata(object)$refGene
 
-            beta <- beta[!removeCpG,,drop = FALSE]
+            # beta <- beta[!removeCpG,,drop = FALSE]
             M <- M[!removeCpG,,drop = FALSE]
             QC <- QC[!removeCpG,,drop = FALSE]
             cpgRanges <- rowRanges(object)[!removeCpG, ]
@@ -231,16 +238,119 @@ setMethod("trim", signature(object = "REMProduct"),
                                       win = object@REMPInfo[["win"]],
                                       predictModel = paste0(object@REMPInfo[["predictModel"]], " - trimmed (", threshold, ")"),  
                                       QCModel = object@REMPInfo[["QCModel"]], 
-                                      rempM = M, rempB = beta, rempQC = QC,
+                                      rempM = M, rempQC = QC,
                                       cpgRanges = cpgRanges, sampleInfo = colData(object),
                                       REannotation = RE_annotation, 
                                       RECpG = RE_CpG_ILMN,
                                       regionCode = regionCode,
                                       refGene = refgene_main,
-                                      varImp = imp(object), 
-                                      REStats = RE_COVERAGE, GeneStats = GENE_COVERAGE)
+                                      varImp = rempImp(object), 
+                                      REStats = RE_COVERAGE, GeneStats = GENE_COVERAGE,
+                                      Seed = metadata(object)$Seed)
             
             return(object_trim)
           })
-# object_trim <- trim(object)
-# details(object_trim)
+
+#' @rdname REMProduct-class
+setMethod("rempAggregate", signature(object = "REMProduct"), 
+          function(object, NCpG = 2) {
+            REtype = object@REMPInfo[["REtype"]]
+            method <- object@REMPInfo[["predictModel"]]
+            
+            if(grepl("aggregated", REtype))
+            {
+              message("The results are already aggregated. No changes made.")
+              return(object) 
+            }
+            
+            # If it is random forest prediction, then it has to be trimmed 
+            # Otherwise it is fine.
+            if(grepl("Random Forest", method))
+            {
+              if(!grepl("trimmed", method))
+              {
+                stop("Please first trim the results (using function 'rempTrim()').") 
+              }
+            }
+
+            #The NCpG has to be >=2 
+            if(NCpG < 2)
+            {
+              stop("The minimum number of CpGs must be >=2.")
+            }
+            
+            M <- rempM(object)
+            QC <- rempQC(object)
+            RE_annotation <- rempAnnot(object)
+            regionCode <-  metadata(object)$regionCode
+            mcols(RE_annotation) <- cbind(mcols(RE_annotation), regionCode)
+            GR <- rowRanges(object)
+            
+            ## Aggregate
+            M_df <- DataFrame(M, Index = GR$RE.Index)
+            M_df_MEAN <- aggregate(.~Index, M_df, function(x) mean(x, na.rm = TRUE))
+            RE_annotation <- RE_annotation[match(M_df_MEAN$Index, RE_annotation$Index)]
+            
+            ## Remove RE with less than NCpG predicted
+            count <- as.numeric(table(M_df$Index))
+            M_df_MEAN <- M_df_MEAN[count>=NCpG,]
+            
+            M <- as.matrix(M_df_MEAN[,-1, drop = FALSE])
+
+            ## Only works for random forest
+            if(grepl("Random Forest", method))
+            {
+              QC_df <- DataFrame(QC, Index = GR$RE.Index)
+              QC_df_MEAN <- aggregate(.~Index, QC_df, function(x) mean(x, na.rm = TRUE))
+              QC_df_MEAN <- QC_df_MEAN[count>=NCpG,]
+              QC <- as.matrix(QC_df_MEAN[,-1, drop = FALSE])
+            } else {
+              QC = NULL
+            }
+            
+            RE_annotation <- RE_annotation[count>=NCpG]
+            message(sum(count<NCpG), " ", REtype, " that have less than ", NCpG, " CpGs predicted are not aggretated.")
+            
+            RE_annotation_name <- colnames(mcols(RE_annotation))
+            regionCode <- mcols(RE_annotation)[remp_options(".default.genomicRegionColNames")]
+            RE_annotation <- RE_annotation[, RE_annotation_name[!RE_annotation_name %in% 
+                                                                  remp_options(".default.genomicRegionColNames")]]
+            cpgRanges <- granges(RE_annotation) # cpgRanges is now identical to RE ranges
+            cpgRanges$RE.Index <- RE_annotation$Index
+
+            refgene_main <- metadata(object)$refGene
+            RE_CpG_ILMN <-  metadata(object)$RECpG
+            
+            ## Add rownames (RE index)
+            RE_index <- as.character(cpgRanges$RE.Index)
+            rownames(M) <- RE_index
+            if(grepl("Random Forest", method))
+            {
+              rownames(QC) <- RE_index
+            }
+
+            ## Updated RE coverage
+            RE_COVERAGE <- .coverageStats_RE(RE_annotation, regionCode, cpgRanges, RE_CpG_ILMN, 
+                                             REtype, indent = "    ", FALSE)
+            
+            # Updated Gene coverage
+            GENE_COVERAGE <- .coverageStats_GENE(regionCode, refgene_main, 
+                                                 REtype, indent = "    ", FALSE)
+            
+            ## Update object
+            object_aggregated <- REMProduct(REtype = paste0(REtype, " (aggregated by mean: min # of CpGs: ", NCpG, ")"), 
+                                            platform = object@REMPInfo[["platform"]], 
+                                            win = object@REMPInfo[["win"]],
+                                            predictModel = method,  
+                                            QCModel = object@REMPInfo[["QCModel"]], 
+                                            rempM = M, rempQC = QC,
+                                            cpgRanges = cpgRanges, sampleInfo = colData(object),
+                                            REannotation = RE_annotation, 
+                                            RECpG = RE_CpG_ILMN,
+                                            regionCode = regionCode,
+                                            refGene = metadata(object)$refGene,
+                                            varImp = rempImp(object), 
+                                            REStats = RE_COVERAGE, GeneStats = GENE_COVERAGE,
+                                            Seed = metadata(object)$Seed)
+            return(object_aggregated)
+          })

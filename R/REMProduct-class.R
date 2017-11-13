@@ -33,8 +33,9 @@
 #' @param BPPARAM For \code{decodeAnnot}: an optional \code{\link{BiocParallelParam}} instance determining the parallel back-end to 
 #' be used during evaluation. If not specified, default back-end in the machine will be used.
 #' @param x For \code{plot}: an \code{REMProduct} object.
-#' @param threshold For \code{trim}: see Utilities.
-#' @param missingRate For \code{trim}: see Utilities.
+#' @param threshold For \code{rempTrim}: see Utilities.
+#' @param missingRate For \code{rempTrim}: see Utilities.
+#' @param NCpG For \code{rempAggregate}: see Utilities.
 #' @param ... For \code{plot}: \code{\link{graphical parameters}} to be passed to the \code{plot} method.
 #' 
 #' @return An object of class \code{REMProduct} for the constructor.
@@ -44,9 +45,9 @@
 #'     \item{\code{rempM(object)}}{Return M value of the prediction.}
 #'     \item{\code{rempB(object)}}{Return beta value of the prediction.}
 #'     \item{\code{rempQC(object)}}{Return prediction quality scores.}
-#'     \item{\code{imp(object)}}{Return relative importance of predictors.}
-#'     \item{\code{stats(object)}}{Return RE and gene coverage statistics.}
-#'     \item{\code{annotation(object)}}{Return annotation data for the predicted RE.}     
+#'     \item{\code{rempImp(object)}}{Return relative importance of predictors.}
+#'     \item{\code{rempStats(object)}}{Return RE and gene coverage statistics.}
+#'     \item{\code{rempAnnot(object)}}{Return annotation data for the predicted RE.}     
 #'     }
 #'     
 #' @section Utilities:
@@ -60,10 +61,13 @@
 #'     RE annotation data by Gene Symbol (when \code{type = "Symbol"}) or Entrez Gene 
 #'     (when \code{type = "Entrez"}).Default \code{type = "Symbol"}. Annotation data are provided by 
 #'     \code{\link{org.Hs.eg.db}}.}
-#'     \item{\code{trim(object, threshold = 1.7, missingRate = 0.2)}}{Any predicted CpG values with 
+#'     \item{\code{rempTrim(object, threshold = 1.7, missingRate = 0.2)}}{Any predicted CpG values with 
 #'     quality score < threshold (default = 1.7) will be replaced with NA. CpGs contain more than 
 #'     missingRate * 100% (default = 20%) missing rate across samples will be discarded. Relavant statistics
 #'     will be re-evaluated.}
+#'     \item{\code{rempAggregate(object, NCpG = 2)}}{Aggregate the predicted RE-CpG methylation by RE using mean. To 
+#'     ensure the reliability of the aggregation, by default only RE with at least 2 predicted CpG sites will be
+#'     aggregated.}
 #'     }
 #' 
 #' @examples

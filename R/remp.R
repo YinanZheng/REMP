@@ -76,17 +76,22 @@
 #' rowRanges(remp.res) 
 #' 
 #' # RE annotation information
-#' annotation(remp.res)
+#' rempAnnot(remp.res)
 #' 
 #' # Add gene annotation
 #' remp.res <- decodeAnnot(remp.res, type = "symbol", ncore = 1)
-#' annotation(remp.res)
+#' rempAnnot(remp.res)
 #' 
-#' # Density plot across predicted CpGs in RE
-#' plot(remp.res)
+#' # (Recommended) Trim off less reliable prediction
+#' remp.res <- rempTrim(remp.res)
 #' 
-#' # Trim off less reliable prediction
-#' remp.res <- trim(remp.res)
+#' # (Recommended) Obtain RE-level methylation (aggregate by mean)
+#' remp.res <- rempAggregate(remp.res)
+#' 
+#' # Extract RE location information 
+#' rowRanges(remp.res)
+#' 
+#' # Density plot across predicted RE
 #' plot(remp.res)
 #' 
 #' @export
@@ -269,6 +274,7 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
   if ("naive" == method) {
     BEST_TUNE <- DataFrame(matrix(NA, ncol = sampleN, nrow = 1)) 
     colnames(BEST_TUNE) <- "Not_Applicable"
+    libToLoad <- NULL
     method_text <- "Naive (nearest CpG)"
     QCname_text <- "N/A"
   }
@@ -356,8 +362,7 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
     
     newdata <- as.matrix(mcols(RE_unprf_neib)[, remp_options(".default.predictors")])
 
-    # Other model available in caret
-    if (!method %in% c("naive", "rf")) {
+    if (method != "rf") {
       if (ncore > 1)
       {
         BiocParallel::bpstart(be)
@@ -371,12 +376,9 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
         BiocParallel::bpstop(be)
       } else {
         REMP_PREDICT_CpG[, i] <- .predictREMP(newdata, P_basic$model)
-      }
-    }
-    
-    # Random forest: Prediction + QC
-    if (method == "rf")
-    {
+      } 
+      REMP_PREDICT_QC <- NULL
+    } else {
       REMP_PREDICT_CpG[, i] <- predict(P_basic$model, newdata, type = "response", 
                                        num.threads = ncore)$predictions
       REMP_PREDICT_QC[, i] <- .QTF(rangerObj = P_basic$model, 
@@ -538,7 +540,7 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
   return(modelFit)
 }
 
-# Quantile random forest
+# Prediction reliability based on Quantile random forest
 .QTF <- function(rangerObj, x, y, newX, seed, num.threads)
 {
   nodesX <- predict(rangerObj, x, num.threads = num.threads, 
@@ -567,7 +569,7 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
 
 .predictREMP <- function(newdata, model) {
   if (is.null(model)) {
-    newdata$Methy.min
+    data.frame(newdata)$Methy.min #newdata is matrix
   } else {
     if(any(class(model) %in% c("ksvm","vm"))) kernlab::predict(model, newdata) #kernlab has its own predict function
   }
@@ -607,10 +609,10 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
                              .countREByGene(cpgRanges, cvr_unRE_win_list)
   ))
   
-  colnames(REStats) <- c("Train_RE", "Train_RECpG", "Predict_RE", "Predict_RECpG")
+  colnames(REStats) <- c("Trained_RE", "Trained_RECpG", "Predict_RE", "Predict_RECpG")
   
   if (verbose) {
-    .showREStats(REStats, REtype, "message", indent)
+    .showREStats(REStats, REtype, "message", indent, TRUE)
   }
   
   return(REStats)
@@ -649,5 +651,6 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
   if (verbose) {
     .showGeneStats(GeneStats, REtype, "message", indent)
   }
+  
   return(GeneStats)
 }

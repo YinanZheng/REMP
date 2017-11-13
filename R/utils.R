@@ -102,16 +102,34 @@
   cat("Number of RE-CpG:", length(object@RECpG), "\n")
 }
 
-.showREStats <- function(REStats, REtype, printType, indent) {
-  p <- rep(NA, 3)
+.showTrainingStats <- function(REStats, REtype, printType, indent) {
+  if(!isEmpty(REStats))
+  {
+    p <- rep(NA, 2)
+    
+    p[1] <- paste0(indent, REStats[1, 1], " profiled ", 
+                   REtype, " by Illumina array are used for model training.")
+    p[2] <- paste0(indent, REStats[1, 2], 
+                   " RE-CpGs that have at least 2 neighboring profiled CpGs are used for model training.")
+  } else {
+    p <- "N/A"
+  } 
   
-  p[1] <- paste0(indent, "There are ", REStats[1, 1], " profiled ", 
-                 REtype, " by Illumina array.")
-  p[2] <- paste0(indent, "There are ", REStats[1, 2], 
-                 " RE-CpGs that have neighboring profiled CpGs are used for model training.")
-  p[3] <- paste0(indent, "In total, REMP predicts ", REStats[1, 3], " ", REtype, 
-                 " (", REStats[1, 4], " RE-CpG).")
+  if(printType == "message")
+    trashbin <- sapply(p, message)
+  if(printType == "cat")
+    trashbin <- sapply(p, function(x) cat(x, "\n"))
+}
 
+.showREStats <- function(REStats, REtype, printType, indent, notAggregated) {
+  if(!isEmpty(REStats))
+  {
+    p <- paste0(indent, "REMP predicts ", REStats[1, 3], " ", REtype)
+    if(notAggregated) p <- paste0(p, " (", REStats[1, 4], " RE-CpG).")
+  } else {
+    p <- "N/A"
+  } 
+  
   if(printType == "message")
     trashbin <- sapply(p, message)
   if(printType == "cat")
@@ -119,22 +137,26 @@
 }
 
 .showGeneStats <- function(GeneStats, REtype, printType, indent) {
-  p <- rep(NA, 4)
-  
-  p[1] <- paste0(indent, "Gene coverage by predicted ", REtype, " (out of total refSeq Gene):")
-  p[2] <- paste0(indent, indent, GeneStats[2, 3], 
-          " (", round(GeneStats[2, 3]/GeneStats[1, 3] * 100, 2), "%) total genes;")
-  p[3] <- paste0(indent, indent, GeneStats[2, 1], 
-          " (", round(GeneStats[2, 1]/GeneStats[1, 1] * 100, 2), "%) protein-coding genes;")
-  p[4] <- paste0(indent, indent, GeneStats[2, 2], 
-          " (", round(GeneStats[2, 2]/GeneStats[1, 2] * 100, 2), "%) non-coding RNA genes.")
+  if(!isEmpty(GeneStats))
+  {
+    p <- rep(NA, 4)
+    
+    p[1] <- paste0(indent, "Gene coverage by predicted ", REtype, " (out of total refSeq Gene):")
+    p[2] <- paste0(indent, indent, GeneStats[2, 3], 
+                   " (", round(GeneStats[2, 3]/GeneStats[1, 3] * 100, 2), "%) total genes;")
+    p[3] <- paste0(indent, indent, GeneStats[2, 1], 
+                   " (", round(GeneStats[2, 1]/GeneStats[1, 1] * 100, 2), "%) protein-coding genes;")
+    p[4] <- paste0(indent, indent, GeneStats[2, 2], 
+                   " (", round(GeneStats[2, 2]/GeneStats[1, 2] * 100, 2), "%) non-coding RNA genes.")
+  } else {
+    p <- "N/A"
+  } 
   
   if(printType == "message")
     trashbin <- sapply(p, message)
   if(printType == "cat")
     trashbin <- sapply(p, function(x) cat(x, "\n"))
 }
-
 
 .showSampleID <- function(object, indent) {
   x <- object@sampleID
@@ -150,14 +172,22 @@
 
 .showREMPinfo <- function(object) {
   info <- object@REMPInfo
-  restats <- metadata(object)$REStats
   cat("RE type:", info[["REtype"]], "\n")
   cat("Methylation profiling platform:", info[["platform"]], "\n")
   cat("Flanking window size:", info[["win"]], "\n")
   cat("Prediction model:", info[["predictModel"]], "\n")
+  if(grepl("Random Forest", info[["predictModel"]]))
+  {
+    cat("Using seed:", metadata(object)$Seed, "\n")
+  }
   cat("QC model:", info[["QCModel"]], "\n")
-  cat("Predicted", restats[1,4], "CpG sites in", 
-      restats[1,3], info[["REtype"]], "\n")
+  
+  restats <- metadata(object)$REStats
+  if(!isEmpty(restats))
+  {
+    cat("Predicted", restats[1,4], "CpG sites in", 
+        restats[1,3], info[["REtype"]], "\n")
+  }
 }
 
 .showCpGcountbyChr <- function(object){
@@ -208,7 +238,7 @@
 }
 
 .toM <- function(beta) {
-  log2(beta) - log2(1 - beta)
+  log2(beta / (1 - beta))
 }
 
 
