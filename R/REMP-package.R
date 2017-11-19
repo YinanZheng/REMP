@@ -57,7 +57,7 @@
 #' @importFrom kernlab predict
 #' @importFrom ranger ranger importance
 #' @importFrom settings stop_if_reserved reset options_manager
-#' @importFrom stats setNames density
+#' @importFrom stats setNames density na.pass
 #' @importFrom utils download.file read.table data
 #' @importFrom graphics lines plot
 #' @importFrom AnnotationHub AnnotationHub getAnnotationHubOption setAnnotationHubOption

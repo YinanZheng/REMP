@@ -429,7 +429,7 @@ setMethod("rempCombine", signature(object1 = "REMProduct", object2 = "REMProduct
             QC1 <- as.matrix(rempQC(object1))
             QC2 <- as.matrix(rempQC(object2))
             
-            QCModel = object@REMPInfo[["QCModel"]]
+            QCModel = object1@REMPInfo[["QCModel"]]
             
             cpgranges1 <- rowRanges(object1)
             sampleinfo1 <- colData(object1)
@@ -464,7 +464,7 @@ setMethod("rempCombine", signature(object1 = "REMProduct", object2 = "REMProduct
             RE_annotation <- RE_annotation[, RE_annotation_name[!RE_annotation_name %in% 
                                                                   remp_options(".default.genomicRegionColNames")]]
             
-            refgene_main <- metadata(object)$refGene
+            refgene_main <- metadata(object1)$refGene
             
             ## Updated RE coverage
             RE_COVERAGE <- .coverageStats_RE(RE_annotation, regionCode, cpgRanges, RE_CpG_ILMN, 
