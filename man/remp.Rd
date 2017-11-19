@@ -104,10 +104,10 @@ remp.res <- decodeAnnot(remp.res, type = "symbol", ncore = 1)
 rempAnnot(remp.res)
 
 # (Recommended) Trim off less reliable prediction
-remp.res <- rempTrim(remp.res)
+remp.res <- rempTrim(remp.res, threshold = 1.7, missingRate = 0.2)
 
 # (Recommended) Obtain RE-level methylation (aggregate by mean)
-remp.res <- rempAggregate(remp.res)
+remp.res <- rempAggregate(remp.res, NCpG = 2, ncore = 1)
 
 # Extract RE location information 
 rowRanges(remp.res)

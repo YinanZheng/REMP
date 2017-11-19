@@ -55,7 +55,7 @@
 * Function name changed: annotation --> rempAnnot, trim --> rempTrim, imp --> rempImp.
 * Fixed a bug when using "naive" method.
 
-# REMP 1.2.2
+# REMP 1.2.3
 
 * Allows parallel computing in "rempAggregate" method.
 * Added "rempCombine" method to combine two "REMProduct" objects by column.
