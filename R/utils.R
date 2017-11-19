@@ -32,6 +32,31 @@
   nextEl
 }
 
+.iblkrow_dup <- function(M, chunks, index_col_name) {
+  i <- 1
+  ind <- which(colnames(M) == index_col_name)
+  index <- M[,ind]
+  unique_index <- unique(index)
+  unique_length <- length(unique_index)
+  
+  it <- idiv(unique_length, chunks = chunks)
+  
+  nextEl <- function() {
+    if (i == unique_length + 1) 
+      return(NULL)
+    n <- nextElem(it)
+    r <- seq(i, length = n)
+    i <<- i + n
+    M[index %in% unique_index[r], , drop = FALSE]
+  }
+  nextEl
+}
+
+.aggregateREMP <- function(dat, index_col_name)
+{
+  eval(parse(text = paste0("aggregate(.~",index_col_name,", dat, mean, na.rm = TRUE, na.action = na.pass)")))
+}
+
 .guessArrayType <- function(methyDat) {
   nProbes <- nrow(methyDat)
   if (nProbes <= 485577) 

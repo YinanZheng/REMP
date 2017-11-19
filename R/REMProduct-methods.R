@@ -150,7 +150,7 @@ setMethod("decodeAnnot", signature(object = "REMProduct"),
   
   if(!skip)
   {
-    bpstart(be)
+    BiocParallel::bpstart(be)
     .bploadLibraryQuiet("IRanges", be)
     # message("Pacakge loaded!")
     for (region in remp_options(".default.genomicRegionColNames")) {
@@ -167,7 +167,7 @@ setMethod("decodeAnnot", signature(object = "REMProduct"),
                                paste(region, type, sep = "."))
     }
     metadata(object)$REannotation <- annot
-    bpstop(be)
+    BiocParallel::bpstop(be)
   }
   return(object)
 })
@@ -217,7 +217,7 @@ setMethod("rempTrim", signature(object = "REMProduct"),
             cpgRanges <- rowRanges(object)[!removeCpG, ]
             
             mcols(RE_annotation) <- cbind(mcols(RE_annotation), regionCode)
-            RE_annotation <- subsetByOverlaps(RE_annotation, cpgRanges)
+            RE_annotation <- subsetByOverlaps(RE_annotation, cpgRanges) #RE_annotation is updated here
             RE_annotation_name <- colnames(mcols(RE_annotation))
             regionCode <- mcols(RE_annotation)[remp_options(".default.genomicRegionColNames")]
             RE_annotation <- RE_annotation[, RE_annotation_name[!RE_annotation_name %in% 
@@ -250,10 +250,15 @@ setMethod("rempTrim", signature(object = "REMProduct"),
             
             return(object_trim)
           })
-
+            
 #' @rdname REMProduct-class
 setMethod("rempAggregate", signature(object = "REMProduct"), 
-          function(object, NCpG = 2) {
+          function(object, NCpG = 2, ncore = NULL, BPPARAM = NULL) {
+            if (is.null(ncore))
+              ncore <- parallel::detectCores()
+            
+            be <- getBackend(ncore, BPPARAM, TRUE)
+            
             REtype = object@REMPInfo[["REtype"]]
             method <- object@REMPInfo[["predictModel"]]
             
@@ -286,31 +291,62 @@ setMethod("rempAggregate", signature(object = "REMProduct"),
             mcols(RE_annotation) <- cbind(mcols(RE_annotation), regionCode)
             GR <- rowRanges(object)
             
-            ## Aggregate
-            M_df <- DataFrame(M, Index = GR$RE.Index)
-            M_df_MEAN <- aggregate(.~Index, M_df, function(x) mean(x, na.rm = TRUE))
-            RE_annotation <- RE_annotation[match(M_df_MEAN$Index, RE_annotation$Index)]
-            
             ## Remove RE with less than NCpG predicted
-            count <- as.numeric(table(M_df$Index))
-            M_df_MEAN <- M_df_MEAN[count>=NCpG,]
+            M_df <- data.frame(M, Index = GR$RE.Index, check.names = FALSE)
+            RE_annotation <- RE_annotation[match(unique(M_df$Index), RE_annotation$Index)]
+            select_RE <- RE_annotation$Index
+            count <- as.numeric(table((M_df$Index)))
+            RE_annotation <- RE_annotation[count>=NCpG]
+            select_RE <- as.character(select_RE[count>=NCpG])
+            M_df <- M_df[M_df$Index %in% select_RE,]
             
+            ## Aggregate predicted M values
+            if (ncore > 1)
+            {
+              BiocParallel::bpstart(be)
+              ITER <- .iblkrow_dup(M_df, chunks = ncore, index_col_name = "Index")
+              M_df_MEAN <- BiocParallel::bpiterate(ITER, .aggregateREMP, 
+                                                       index_col_name = "Index",
+                                                       BPPARAM = be, 
+                                                       REDUCE = rbind, 
+                                                       reduce.in.order = TRUE)
+              BiocParallel::bpstop(be)
+            } else {
+              M_df_MEAN <- aggregate(.~Index, M_df, mean, na.rm = TRUE, na.action = na.pass)
+            }
+            # identical(M_df_MEAN_par, M_df_MEAN)
             M <- as.matrix(M_df_MEAN[,-1, drop = FALSE])
 
-            ## Only works for random forest
+            ## Aggregate QC only works for random forest
             if(grepl("Random Forest", method))
             {
-              QC_df <- DataFrame(QC, Index = GR$RE.Index)
-              QC_df_MEAN <- aggregate(.~Index, QC_df, function(x) mean(x, na.rm = TRUE))
-              QC_df_MEAN <- QC_df_MEAN[count>=NCpG,]
+              QC_df <- data.frame(QC, Index = GR$RE.Index, check.names=FALSE)
+              QC_df <- QC_df[QC_df$Index %in% select_RE,]
+              
+              if (ncore > 1)
+              {
+                BiocParallel::bpstart(be)
+                ITER <- .iblkrow_dup(QC_df, chunks = ncore, index_col_name = "Index")
+                QC_df_MEAN <- BiocParallel::bpiterate(ITER, .aggregateREMP, 
+                                                     index_col_name = "Index",
+                                                     BPPARAM = be, 
+                                                     REDUCE = rbind, 
+                                                     reduce.in.order = TRUE)
+                BiocParallel::bpstop(be)
+              } else {
+                QC_df_MEAN <- aggregate(.~Index, QC_df, mean, na.rm = TRUE, na.action = na.pass)
+              }
+              # identical(QC_df_MEAN_par, QC_df_MEAN)
               QC <- as.matrix(QC_df_MEAN[,-1, drop = FALSE])
             } else {
               QC = NULL
             }
+            # identical(QC_df_MEAN$Index, M_df_MEAN$Index)
+            # identical(as.character(RE_annotation$Index), as.character(M_df_MEAN$Index))
             
-            RE_annotation <- RE_annotation[count>=NCpG]
             message(sum(count<NCpG), " ", REtype, " that have less than ", NCpG, " CpGs predicted are not aggretated.")
             
+            ## Wrapping up
             RE_annotation_name <- colnames(mcols(RE_annotation))
             regionCode <- mcols(RE_annotation)[remp_options(".default.genomicRegionColNames")]
             RE_annotation <- RE_annotation[, RE_annotation_name[!RE_annotation_name %in% 
@@ -348,9 +384,111 @@ setMethod("rempAggregate", signature(object = "REMProduct"),
                                             REannotation = RE_annotation, 
                                             RECpG = RE_CpG_ILMN,
                                             regionCode = regionCode,
-                                            refGene = metadata(object)$refGene,
+                                            refGene = refgene_main,
                                             varImp = rempImp(object), 
                                             REStats = RE_COVERAGE, GeneStats = GENE_COVERAGE,
                                             Seed = metadata(object)$Seed)
             return(object_aggregated)
+          })
+
+#' @rdname REMProduct-class
+setMethod("rempCombine", signature(object1 = "REMProduct", object2 = "REMProduct"), 
+          function(object1, object2) {
+            
+            REtype1 <- object1@REMPInfo[["REtype"]]
+            method1 <- object1@REMPInfo[["predictModel"]]
+            platform1 <- object1@REMPInfo[["platform"]]
+            win1 <- object1@REMPInfo[["win"]]
+            seed1 <- metadata(object1)$Seed
+            cnames1 <- colnames(object1)
+            
+            REtype2 <- object2@REMPInfo[["REtype"]]
+            method2 <- object2@REMPInfo[["predictModel"]]
+            platform2 <- object2@REMPInfo[["platform"]]
+            win2 <- object2@REMPInfo[["win"]]
+            seed2 <- metadata(object2)$Seed
+            cnames2 <- colnames(object2)
+            
+            duplicated_samples <- intersect(cnames1, cnames2)
+            
+            if(!identical(REtype1, REtype2)) stop(paste0("You cannot combine ", REtype1, " methylation data with ", REtype2, " methylation data."))
+            if(!identical(method1, method2)) stop(paste0("You cannot combine ", method1, " prediction with ", method2, " prediction."))
+            if(!identical(platform1, platform2)) stop(paste0("You cannot combine ", platform1, " array with ", platform2, " array."))
+            if(!identical(win1, win2)) stop(paste0("You cannot combine prediction with flanking window size = ", win1, " with size = ", win2, "."))
+            if(!identical(seed1, seed2)) stop(paste0("You cannot combine prediction with using seed = ", win1, " with seed = ", win2, "."))
+            if(length(duplicated_samples)>0) stop(paste0("Duplicated samples detected: ", paste0(duplicated_samples, collapse = ", ")))
+            
+            M1 <- as.matrix(rempM(object1))
+            M2 <- as.matrix(rempM(object2))
+            nrow1 <- nrow(M1); nrow2 <- nrow(M2)
+            if(nrow1 != nrow2) stop("Number of rows does mot match!")
+            
+            B1 <- as.matrix(rempB(object1))
+            B2 <- as.matrix(rempB(object2))
+            
+            QC1 <- as.matrix(rempQC(object1))
+            QC2 <- as.matrix(rempQC(object2))
+            
+            QCModel = object@REMPInfo[["QCModel"]]
+            
+            cpgranges1 <- rowRanges(object1)
+            sampleinfo1 <- colData(object1)
+            reannot1 <- rempAnnot(object1)
+            regionCode1 <-  metadata(object1)$regionCode
+            mcols(reannot1) <- cbind(mcols(reannot1), regionCode1)
+            RE_CpG_ILMN1 <-  metadata(object1)$RECpG
+            varimp1 <- rempImp(object1)
+            
+            cpgranges2 <- rowRanges(object2)
+            sampleinfo2 <- colData(object2)
+            reannot2 <- rempAnnot(object2)
+            regionCode2 <-  metadata(object2)$regionCode
+            mcols(reannot2) <- cbind(mcols(reannot2), regionCode2)
+            RE_CpG_ILMN2 <-  metadata(object2)$RECpG
+            varimp2 <- rempImp(object2)
+            
+            ## Combine:
+            M = cbind(M1, M2)
+            B = cbind(B1, B2)
+            QC = cbind(QC1, QC2)
+            cpgRanges = cpgranges1
+            sampleinfo = rbind(sampleinfo1, sampleinfo2)
+            varimp = DataFrame(varimp1, varimp2, check.names = FALSE)
+
+            RE_annotation = unique(c(reannot1, reannot2))
+            RE_CpG_ILMN = unique(c(RE_CpG_ILMN1, RE_CpG_ILMN2))
+            
+            ## Wrapping up
+            RE_annotation_name <- colnames(mcols(RE_annotation))
+            regionCode <- mcols(RE_annotation)[remp_options(".default.genomicRegionColNames")]
+            RE_annotation <- RE_annotation[, RE_annotation_name[!RE_annotation_name %in% 
+                                                                  remp_options(".default.genomicRegionColNames")]]
+            
+            refgene_main <- metadata(object)$refGene
+            
+            ## Updated RE coverage
+            RE_COVERAGE <- .coverageStats_RE(RE_annotation, regionCode, cpgRanges, RE_CpG_ILMN, 
+                                             REtype1, indent = "    ", FALSE)
+            
+            # Updated Gene coverage
+            GENE_COVERAGE <- .coverageStats_GENE(regionCode, refgene_main, 
+                                                 REtype1, indent = "    ", FALSE)
+
+
+            ## Update object
+            object_combined <- REMProduct(REtype = REtype1, 
+                                          platform = platform1, 
+                                          win = win1,
+                                          predictModel = method1,  
+                                          QCModel = object1@REMPInfo[["QCModel"]], 
+                                          rempM = M, rempB = B, rempQC = QC,
+                                          cpgRanges = cpgRanges, sampleInfo = sampleinfo,
+                                          REannotation = RE_annotation, 
+                                          RECpG = RE_CpG_ILMN,
+                                          regionCode = regionCode,
+                                          refGene = refgene_main,
+                                          varImp = varimp, 
+                                          REStats = RE_COVERAGE, GeneStats = GENE_COVERAGE,
+                                          Seed = seed1)
+            return(object_combined)
           })
