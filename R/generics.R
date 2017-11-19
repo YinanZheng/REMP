@@ -62,3 +62,7 @@ setGeneric("rempTrim", function(object, ...) standardGeneric("rempTrim"))
 #' @rdname REMProduct-class
 #' @exportMethod rempAggregate
 setGeneric("rempAggregate", function(object, ...) standardGeneric("rempAggregate"))
+
+#' @rdname REMProduct-class
+#' @exportMethod rempCombine
+setGeneric("rempCombine", function(object1, object2) standardGeneric("rempCombine"))

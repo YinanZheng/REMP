@@ -162,24 +162,29 @@ metadata(remp.res)$Seed
 Trim off less reliable predicted results:
 
 <<remptrim, eval=TRUE>>=
-# Any predicted CpG values with quality score < threshold (default = 1.7) will be replaced with NA. CpGs contain more than missingRate * 100% (default = 20%) missing rate across samples will be discarded. 
-# For mechanism study, more stringent cutoff is recommended.
-remp.res <- rempTrim(remp.res)
+# Any predicted CpG values with quality score less than
+# threshold (default = 1.7) will be replaced with NA. 
+# CpGs contain more than missingRate * 100% (default = 20%) 
+# missing rate across samples will be discarded. 
+remp.res <- rempTrim(remp.res, threshold = 1.7, missingRate = 0.2)
 details(remp.res)
 @
 
 Aggregate the predicted methylation of CpGs in RE by averaging them to obtain the RE-specific methylation level:
 
 <<rempaggregate, eval=TRUE>>=
-# It is recommended to aggregate the predicted CpG methylation by RE to obtain RE-wise methylation level. This is beneficial because 1) it greatly reduces the data dimension for downstream analysis and 2) it produces more robust RE methylation estimation. Note that by default, RE with 2 or more predicted CpG sites will be aggregated. Therefore, the downside of doing this is the reduced coverage of RE. The assumption of doing this is the CpG methylation level within each RE are similar.
-remp.res <- rempAggregate(remp.res, NCpG = 2)
+# (ncore is set to 1 only for demostration)
+remp.res <- rempAggregate(remp.res, NCpG = 2, ncore = 1)
 details(remp.res)
 @
+
+It is recommended to aggregate the predicted CpG methylation by RE to obtain RE-wise methylation level. This is beneficial because 1) it greatly reduces the data dimension for downstream analysis and 2) it produces more robust RE methylation estimation. Note that by default, RE with 2 or more predicted CpG sites will be aggregated. Therefore, the downside of doing this is the reduced coverage of RE. The assumption of doing this is the CpG methylation level within each RE are similar.
 
 To add genomic regions annotation of the predicted REs:
 
 <<rempdecodeAnnot, eval=FALSE>>=
-# By default gene symbol annotation will be added (ncore is set to 1 only for demostration)
+# By default gene symbol annotation will be added 
+# (ncore is set to 1 only for demostration)
 remp.res <- decodeAnnot(remp.res, ncore = 1)
 rempAnnot(remp.res)
 @

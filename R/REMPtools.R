@@ -278,10 +278,10 @@ findRECpG <- function(RE.hg19, REtype = c("Alu", "L1"), be = NULL, verbose = FAL
     message("    Identifying CpG sites in ", REtype, " sequence ...")
   
   if (BiocParallel::bpworkers(be) > 1) {
-    bpstart(be)
+    BiocParallel::bpstart(be)
     .bploadLibraryQuiet("Biostrings", be)
     RE.CpG <- bpvec(SEQ.RE, .vRECpGPos, CpG = DNAString("CG"), BPPARAM = be)
-    bpstop(be)
+    BiocParallel::bpstop(be)
   } else {
     RE.CpG <- .vRECpGPos(SEQ.RE, CpG = DNAString("CG"))
   }

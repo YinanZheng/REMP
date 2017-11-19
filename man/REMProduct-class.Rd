@@ -15,6 +15,7 @@
 \alias{decodeAnnot}
 \alias{rempTrim}
 \alias{rempAggregate}
+\alias{rempCombine}
 \alias{rempM,REMProduct-method}
 \alias{rempB,REMProduct-method}
 \alias{rempQC,REMProduct-method}
@@ -26,6 +27,7 @@
 \alias{decodeAnnot,REMProduct-method}
 \alias{rempTrim,REMProduct-method}
 \alias{rempAggregate,REMProduct-method}
+\alias{rempCombine,REMProduct,REMProduct-method}
 \title{REMProduct instances}
 \usage{
 REMProduct(REtype = "Unknown", platform = "Unknown", win = "Unknown",
@@ -55,6 +57,8 @@ rempTrim(object, ...)
 
 rempAggregate(object, ...)
 
+rempCombine(object1, object2)
+
 \S4method{rempM}{REMProduct}(object)
 
 \S4method{rempB}{REMProduct}(object)
@@ -76,7 +80,10 @@ rempAggregate(object, ...)
 
 \S4method{rempTrim}{REMProduct}(object, threshold = 1.7, missingRate = 0.2)
 
-\S4method{rempAggregate}{REMProduct}(object, NCpG = 2)
+\S4method{rempAggregate}{REMProduct}(object, NCpG = 2, ncore = NULL,
+  BPPARAM = NULL)
+
+\S4method{rempCombine}{REMProduct,REMProduct}(object1, object2)
 }
 \arguments{
 \item{REtype}{Type of RE (\code{"Alu"} or \code{"L1"}).}
@@ -120,14 +127,18 @@ model is used in \code{\link{remp}}.}
 
 \item{...}{For \code{plot}: \code{\link{graphical parameters}} to be passed to the \code{plot} method.}
 
+\item{object1}{A \code{REMProduct} object.}
+
+\item{object2}{A \code{REMProduct} object.}
+
 \item{x}{For \code{plot}: an \code{REMProduct} object.}
 
 \item{type}{For \code{plot} and \code{decodeAnnot}: see Utilities.}
 
-\item{ncore}{For \code{decodeAnnot}: number of cores to run parallel computation. By default max number of cores available 
+\item{ncore}{For \code{decodeAnnot} and \code{}: number of cores to run parallel computation. By default max number of cores available 
 in the machine will be utilized. If \code{ncore = 1}, no parallel computation is allowed (not recommended).}
 
-\item{BPPARAM}{For \code{decodeAnnot}: an optional \code{\link{BiocParallelParam}} instance determining the parallel back-end to 
+\item{BPPARAM}{For \code{decodeAnnot} and \code{rempAggregate}: an optional \code{\link{BiocParallelParam}} instance determining the parallel back-end to 
 be used during evaluation. If not specified, default back-end in the machine will be used.}
 
 \item{threshold}{For \code{rempTrim}: see Utilities.}
@@ -171,9 +182,10 @@ Class \code{REMProduct} is to maintain RE methylation prediction results.
     quality score < threshold (default = 1.7) will be replaced with NA. CpGs contain more than 
     missingRate * 100% (default = 20%) missing rate across samples will be discarded. Relavant statistics
     will be re-evaluated.}
-    \item{\code{rempAggregate(object, NCpG = 2)}}{Aggregate the predicted RE-CpG methylation by RE using mean. To 
+    \item{\code{rempAggregate(object, NCpG = 2, ncore = NULL, BPPARAM = NULL)}}{Aggregate the predicted RE-CpG methylation by RE using mean. To 
     ensure the reliability of the aggregation, by default only RE with at least 2 predicted CpG sites will be
     aggregated.}
+    \item{\code{rempCombine(object1, object2)}}{Combine two \code{REMProduct} objects by column.}
     }
 }
 
