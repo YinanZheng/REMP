@@ -34,30 +34,21 @@ setMethod("saveParcel", signature(object = "REMParcel"), function(object, work.d
   
   message("REMParcel has been saved under the directory:\n", data.dir)
 })
-# saveParcel(remparcel)
-# saveParcel(remparcel, verbose = TRUE)
 
 #' @rdname REMParcel-class
 setMethod("getRefGene", signature(object = "REMParcel"), function(object) {
     return(object@RefGene)
 })
-# getRefSeqGene(remparcel)
-# getRefSeqGene(remparcel, main = TRUE)
-
 
 #' @rdname REMParcel-class
 setMethod("getRE", signature(object = "REMParcel"), function(object) {
     return(object@RE)
 })
-# getRE(remparcel)
-
 
 #' @rdname REMParcel-class
 setMethod("getRECpG", signature(object = "REMParcel"), function(object) {
   return(object@RECpG)
 })
-# getRECpG(remparcel)
-
 
 #' @rdname REMParcel-class
 setMethod("getILMN", signature(object = "REMParcel"), function(object, REonly = FALSE) {
@@ -67,5 +58,3 @@ setMethod("getILMN", signature(object = "REMParcel"), function(object, REonly = 
   else
     return(ilmn)
 })
-# getILMN(remparcel)
-# getILMN(remparcel, REonly = TRUE)

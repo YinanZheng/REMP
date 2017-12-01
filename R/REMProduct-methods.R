@@ -87,8 +87,10 @@ setMethod("details", signature(object = "REMProduct"), function(object) {
   if(grepl("aggregated", REtype)) notAggregated <- FALSE
   
   method = object@REMPInfo[["predictModel"]]
+  notProfiled <- TRUE
   notTrimmed <- TRUE
   notNaive <- TRUE
+  if(grepl("Profiled", method)) notProfiled <- FALSE
   if(grepl("trimmed", method)) notTrimmed <- FALSE
   if(grepl("Naive", method)) notNaive <- FALSE
   
@@ -98,7 +100,7 @@ setMethod("details", signature(object = "REMProduct"), function(object) {
   .showCpGcountbyChr(object)
   cat("\n")
   
-  if(notAggregated & notTrimmed & notNaive)
+  if(notProfiled & notAggregated & notTrimmed & notNaive)
   {
     cat("Training information:\n")
     .showTrainingStats(metadata(object)$REStats, object@REMPInfo[["REtype"]], "cat", "  ")
@@ -119,12 +121,9 @@ setMethod("details", signature(object = "REMProduct"), function(object) {
 
 #' @rdname REMProduct-class
 setMethod("decodeAnnot", signature(object = "REMProduct"), 
-          function(object, type = c("symbol", "entrez"), ncore = NULL, BPPARAM = NULL) {
+          function(object, type = c("symbol", "entrez"), ncore = 1, BPPARAM = NULL) {
   .isREMProductOrStop(object)
             
-  if (is.null(ncore)) 
-    ncore <- parallel::detectCores()
-  
   be <- getBackend(ncore, BPPARAM, TRUE)
   
   skip <- TRUE  
@@ -253,10 +252,8 @@ setMethod("rempTrim", signature(object = "REMProduct"),
             
 #' @rdname REMProduct-class
 setMethod("rempAggregate", signature(object = "REMProduct"), 
-          function(object, NCpG = 2, ncore = NULL, BPPARAM = NULL) {
-            if (is.null(ncore))
-              ncore <- parallel::detectCores()
-            
+          function(object, NCpG = 2, ncore = 1, BPPARAM = NULL) {
+
             be <- getBackend(ncore, BPPARAM, TRUE)
             
             REtype = object@REMPInfo[["REtype"]]
@@ -451,6 +448,8 @@ setMethod("rempCombine", signature(object1 = "REMProduct", object2 = "REMProduct
             M = cbind(M1, M2)
             B = cbind(B1, B2)
             QC = cbind(QC1, QC2)
+            if(nrow(QC) == 0) QC = NULL
+          
             cpgRanges = cpgranges1
             sampleinfo = rbind(sampleinfo1, sampleinfo2)
             varimp = DataFrame(varimp1, varimp2, check.names = FALSE)

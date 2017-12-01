@@ -138,11 +138,10 @@ initREMP <- function(arrayType = c("450k", "EPIC"), REtype = c("Alu", "L1"), RE 
   ## Narrow down Illumina CpG Probe using RE.CpG flanking region
   RE.CpG.flanking <- .twoWayFlank(RE.CpG, remp_options(".default.max.flankWindow"))
   ILMN.GR <- subsetByOverlaps(ILMN.GR, RE.CpG.flanking, ignore.strand = TRUE)
-  # ILMN.GR <- GRannot(ILMN.GR, refgene.hg19, verbose)
-  
+
   ###----------------------------------------------------------------------------------------------------
   ### Annotate RE
-  RE.refGene <- GRannot(RE.hg19, refgene.hg19, verbose)
+  RE.refGene <- GRannot(RE.hg19, refgene.hg19, symbol = FALSE, verbose = verbose)
   
   ###----------------------------------------------------------------------------------------------------
   ### RE-CpG covered by ILMN

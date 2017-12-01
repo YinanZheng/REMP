@@ -5,7 +5,8 @@
 #' Two major RE types in human, Alu element (Alu) and LINE-1 (L1) are available.
 #'
 #' @param methyDat A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}}, 
-#' \code{data.table}, \code{data.frame}, or \code{matrix} of methylation dataset. See Details.
+#' \code{data.table}, \code{data.frame}, or \code{matrix} of Illumina BeadChip methylation data 
+#' (450k or EPIC array). See Details.
 #' @param REtype Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.
 #' @param parcel An \code{\link{REMParcel}} object containing necessary data to carry out the
 #' prediction. If \code{NULL}, the function will search the \code{.rds} data file in \code{work.dir} 
@@ -14,9 +15,6 @@
 #' are saved. Valid when the argument \code{parcel} is missing. If not specified, temporary directory 
 #' \code{tempdir()} will be used. If specified, the directory path has to be the same as the 
 #' one specified in \code{\link{initREMP}} or in \code{\link{saveParcel}}.
-#' @param groom Should the function run \code{\link{grooMethy}} implicitly to check and fix the data? 
-#' Default = \code{TRUE}. If \code{\link{grooMethy}} has been run in advance, let \code{groom = FALSE} can 
-#' avoid repeated check.
 #' @param win An integer specifying window size to confine the upstream and downstream flanking 
 #' region centered on the predicted CpG in RE for prediction. Default = \code{1000}. See Details.
 #' @param method Name of model/approach for prediction. Currently \code{"rf"} (Random Forest),  
@@ -57,7 +55,7 @@
 #' of the total number of predictors. For SVM, if \code{autoTune = TRUE}, preset tuning parameter 
 #' search grid can be access and modified using \code{\link{remp_options}}.
 #' 
-#' @return An \code{\link{REMProduct}} object containing prediction results.
+#' @return A \code{\link{REMProduct}} object containing predicted RE methylation results.
 #' 
 #' @seealso See \code{\link{initREMP}} to prepare necessary annotation database before running \code{remp}.
 #'
@@ -67,10 +65,11 @@
 #' 
 #' # Make sure you have run 'initREMP'. See ?initREMP.
 #' 
-#' # Run prediction (grooMethy will be run implicitly)
+#' # Run prediction
 #' remp.res <- remp(GM12878_450k, REtype = 'Alu', ncore = 1)
 #' remp.res
 #' details(remp.res)
+#' rempB(remp.res) # Methylation data (beta value)
 #' 
 #' # Extract CpG location information (inherit from class 'RangedSummarizedExperiment')
 #' rowRanges(remp.res) 
@@ -79,14 +78,15 @@
 #' rempAnnot(remp.res)
 #' 
 #' # Add gene annotation
-#' remp.res <- decodeAnnot(remp.res, type = "symbol", ncore = 1)
+#' remp.res <- decodeAnnot(remp.res, type = "symbol")
 #' rempAnnot(remp.res)
 #' 
 #' # (Recommended) Trim off less reliable prediction
-#' remp.res <- rempTrim(remp.res, threshold = 1.7, missingRate = 0.2)
+#' remp.res <- rempTrim(remp.res)
 #' 
 #' # (Recommended) Obtain RE-level methylation (aggregate by mean)
-#' remp.res <- rempAggregate(remp.res, NCpG = 2, ncore = 1)
+#' remp.res <- rempAggregate(remp.res)
+#' rempB(remp.res) # Methylation data (beta value)
 #' 
 #' # Extract RE location information 
 #' rowRanges(remp.res)
@@ -96,7 +96,7 @@
 #' 
 #' @export
 remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL, 
-                 work.dir = tempdir(), groom = TRUE,
+                 work.dir = tempdir(),
                  win = 1000, method = c("rf", "svmLinear", "svmRadial", "naive"), 
                  autoTune = TRUE, param = NULL, seed = NULL, ncore = NULL, BPPARAM = NULL, 
                  verbose = FALSE) {
@@ -114,7 +114,7 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
   if(method == "rf")
   {
     if (is.null(seed))
-      seed = sample(.Random.seed,1)
+      seed = sample(.Random.seed, 1)
     message("Using random seed = ", seed)
     
     autoTune <- FALSE # No need to tune RF mtry
@@ -136,16 +136,15 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
   }
   
   ## Groom methylation data
-  if(groom)
-  {
-    methyDat <- grooMethy(methyDat, verbose)
-  }
+  methyDat <- grooMethy(methyDat, verbose = verbose)
   
   methyDat <- minfi::getM(methyDat)
   
   arrayType <- .guessArrayType(methyDat)
-  if (verbose) 
-    message("Illumina ", arrayType, " array detected.")
+  if (arrayType == "27k")
+    stop("Illumina 27k array is not supported.")
+  if (arrayType == "UNKNOWN") 
+    stop("Unknown methylation array type.")
   
   subDirName <- paste0("REMP.data.", arrayType)
   work.dir <- .forwardSlashPath(work.dir)
@@ -230,8 +229,7 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
   
   ## Part 1: RE-CpG
   RE_NeibCpG <- RE_CpG[queryHits(HITS), ]
-  ## Total RE that can be predicted (contains neighboring CpGs within
-  ## given window)
+  ## Total RE that can be predicted (contains neighboring CpGs within given window)
   
   ## Part 2: Neighboring ILMN CpG
   RE_NeibCpG_ILMN <- ILMN[subjectHits(HITS), ]
@@ -272,7 +270,7 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
   ####################################### 
   
   if ("naive" == method) {
-    BEST_TUNE <- DataFrame(matrix(NA, ncol = sampleN, nrow = 1)) 
+    BEST_TUNE <- DataFrame(matrix(NA, nrow = sampleN, ncol = 1)) 
     colnames(BEST_TUNE) <- "Not_Applicable"
     libToLoad <- NULL
     method_text <- "Naive (nearest CpG)"
@@ -329,7 +327,7 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
   
   ## Prediction
   for (i in seq_len(sampleN)) {
-    message("Predicting sample ", samplenames[i], " ...", .timeTrace(t))
+    message("Predicting sample ", samplenames[i], " ...")
     RE_CpG_ILMN_OneMethyDat <- RE_CpG_ILMN_DATA[, samplenames[i]]
     # identical(RE_CpG_ILMN$Index, names(RE_CpG_ILMN_OneMethyDat))
     
@@ -635,6 +633,7 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
   return(c(NM = NM, NR = NR, Gene = Gene))
 }
 
+# indent = "    "
 .coverageStats_GENE <- function(regionCode, refgene_main, 
                                 REtype, indent, verbose) {
   ## Count the total number of gene (protein coding gene and noncoding RNA

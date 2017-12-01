@@ -59,14 +59,21 @@
 
 .guessArrayType <- function(methyDat) {
   nProbes <- nrow(methyDat)
-  if (nProbes <= 485577) 
+  if (nProbes <= remp_options(".default.27k.total.probes"))
+    return("27k")
+  if (nProbes > remp_options(".default.27k.total.probes") & 
+      nProbes <= remp_options(".default.450k.total.probes"))
     return("450k")
-  if (nProbes > 485577) 
+  if (nProbes > remp_options(".default.450k.total.probes") & 
+      nProbes <= remp_options(".default.epic.total.probes")) 
     return("EPIC")
+  if (nProbes > remp_options(".default.epic.total.probes")) 
+    return("UNKNOWN")
 }
 
 .guessBetaorM <- function(methyDat) {
-  methyDat_sample <- methyDat[, sample(seq_len(ncol(methyDat)), min(5, ncol(methyDat))), drop = FALSE]
+  methyDat_sample <- methyDat[sample(seq_len(nrow(methyDat)), min(5000, nrow(methyDat))), 
+                              sample(seq_len(ncol(methyDat)), min(5, ncol(methyDat))), drop = FALSE]
   rng <- range(methyDat_sample, na.rm = TRUE)
   if (rng[1] >= 0 & rng[2] <= 1 | 
       sum(methyDat_sample < 0 | methyDat_sample > 1, na.rm = TRUE) < 
@@ -122,9 +129,9 @@
   cat("REMParcel object\n")
   cat("RE type:", info[["REtype"]], "\n")
   cat("Illumina platform:", info[["platform"]], "\n")
-  cat("Valid (max) RE-CpG flanking window size:", info[["max.win"]], "\n")
+  cat("Valid (max)", paste0(info[["REtype"]], "-CpG"), "flanking window size:", info[["max.win"]], "\n")
   cat("Number of RE:", length(object@RE), "\n")
-  cat("Number of RE-CpG:", length(object@RECpG), "\n")
+  cat("Number of", paste0(info[["REtype"]], "-CpG:"), length(object@RECpG), "\n")
 }
 
 .showTrainingStats <- function(REStats, REtype, printType, indent) {
@@ -135,7 +142,7 @@
     p[1] <- paste0(indent, REStats[1, 1], " profiled ", 
                    REtype, " by Illumina array are used for model training.")
     p[2] <- paste0(indent, REStats[1, 2], 
-                   " RE-CpGs that have at least 2 neighboring profiled CpGs are used for model training.")
+                   " ", REtype, "-CpGs that have at least 2 neighboring profiled CpGs are used for model training.")
   } else {
     p <- "N/A"
   } 
@@ -149,8 +156,8 @@
 .showREStats <- function(REStats, REtype, printType, indent, notAggregated) {
   if(!isEmpty(REStats))
   {
-    p <- paste0(indent, "REMP predicts ", REStats[1, 3], " ", REtype)
-    if(notAggregated) p <- paste0(p, " (", REStats[1, 4], " RE-CpG).")
+    p <- paste0(indent, "The data cover ", REStats[1, 3], " ", REtype)
+    if(notAggregated) p <- paste0(p, " (", REStats[1, 4], " ", REtype, "-CpG).")
   } else {
     p <- "N/A"
   } 
@@ -166,7 +173,7 @@
   {
     p <- rep(NA, 4)
     
-    p[1] <- paste0(indent, "Gene coverage by predicted ", REtype, " (out of total refSeq Gene):")
+    p[1] <- paste0(indent, "Gene coverage by ", REtype, " (out of total refSeq Gene):")
     p[2] <- paste0(indent, indent, GeneStats[2, 3], 
                    " (", round(GeneStats[2, 3]/GeneStats[1, 3] * 100, 2), "%) total genes;")
     p[3] <- paste0(indent, indent, GeneStats[2, 1], 
@@ -201,22 +208,32 @@
   cat("Methylation profiling platform:", info[["platform"]], "\n")
   cat("Flanking window size:", info[["win"]], "\n")
   cat("Prediction model:", info[["predictModel"]], "\n")
+  cat("QC model:", info[["QCModel"]], "\n")
   if(grepl("Random Forest", info[["predictModel"]]))
   {
-    cat("Using seed:", metadata(object)$Seed, "\n")
-  }
-  cat("QC model:", info[["QCModel"]], "\n")
-  
+    cat("Seed:", metadata(object)$Seed, "\n")
+  }  
   restats <- metadata(object)$REStats
   if(!isEmpty(restats))
   {
-    cat("Predicted", restats[1,4], "CpG sites in", 
-        restats[1,3], info[["REtype"]], "\n")
+    if(grepl("aggregated", info[["REtype"]]))
+    {
+      cat("Covered", restats[1,3], info[["REtype"]], "\n")
+    } else {
+      cat("Covered", restats[1,4], "CpG sites in", 
+          restats[1,3], info[["REtype"]], "\n")
+    }
   }
 }
 
 .showCpGcountbyChr <- function(object){
-  cat("Number of predicted CpGs by chromosome:")
+  info <- object@REMPInfo
+  if(grepl("aggregated", info[["REtype"]]))
+  {
+    cat("Number of", info[["REtype"]], "by chromosome:")
+  } else {
+    cat("Number of", paste0(info[["REtype"]],"-CpGs"), "by chromosome:")
+  }
   chr <- table(as.character(seqnames(rowRanges(object))))
   chr.name <- names(chr)
   chr.name[chr.name=="chrX"] = "chr23"
@@ -231,15 +248,19 @@
 }
 
 .showPredictionSummary <- function(object){
+  options(digits=10)
   Bvalue <- assays(object)[["rempB"]]
-  cat("Distribution of predicted methylation value (beta value):\n")
+  cat("Distribution of methylation value (beta value):", "\n")
   print(summary(as.numeric(Bvalue)))
+  options(digits=7)
 }
 
 .showQCSummary <- function(object){
+  options(digits=10)
   QC <- assays(object)[["rempQC"]]
-  cat("Distribution of prediction reliability score:\n")
+  cat("Distribution of reliability score:", "\n")
   print(summary(as.numeric(QC)))
+  options(digits=7)
 }
 
 

@@ -30,10 +30,11 @@
 #' @param GeneStats Gene coverage statistics, which is internally generated in \code{\link{remp}}.
 #' @param Seed Random seed for Random Forest model for reproducible prediction results.
 #' @param type For \code{plot} and \code{decodeAnnot}: see Utilities.
-#' @param ncore For \code{decodeAnnot} and \code{}: number of cores to run parallel computation. By default max number of cores available 
-#' in the machine will be utilized. If \code{ncore = 1}, no parallel computation is allowed (not recommended).
-#' @param BPPARAM For \code{decodeAnnot} and \code{rempAggregate}: an optional \code{\link{BiocParallelParam}} instance determining the parallel back-end to 
-#' be used during evaluation. If not specified, default back-end in the machine will be used.
+#' @param ncore For \code{decodeAnnot} and \code{rempAggregate}: number of cores to run parallel computation. 
+#' By default no parallel computation is allowed (\code{ncore = 1}).
+#' @param BPPARAM For \code{decodeAnnot} and \code{rempAggregate}: an optional \code{\link{BiocParallelParam}} 
+#' instance determining the parallel back-end to be used during evaluation. If not specified, default 
+#' back-end in the machine will be used.
 #' @param x For \code{plot}: an \code{REMProduct} object.
 #' @param threshold For \code{rempTrim}: see Utilities.
 #' @param missingRate For \code{rempTrim}: see Utilities.
@@ -64,12 +65,12 @@
 #'     (when \code{type = "Entrez"}).Default \code{type = "Symbol"}. Annotation data are provided by 
 #'     \code{\link{org.Hs.eg.db}}.}
 #'     \item{\code{rempTrim(object, threshold = 1.7, missingRate = 0.2)}}{Any predicted CpG values with 
-#'     quality score < threshold (default = 1.7) will be replaced with NA. CpGs contain more than 
-#'     missingRate * 100% (default = 20%) missing rate across samples will be discarded. Relavant statistics
-#'     will be re-evaluated.}
-#'     \item{\code{rempAggregate(object, NCpG = 2, ncore = NULL, BPPARAM = NULL)}}{Aggregate the predicted RE-CpG methylation by RE using mean. To 
-#'     ensure the reliability of the aggregation, by default only RE with at least 2 predicted CpG sites will be
-#'     aggregated.}
+#'     quality score < threshold (default = 1.7, specified by \code{threshold = 1.7}) will be replaced with NA. 
+#'     CpGs contain more than missingRate * 100% (default = 20%, specified by \code{missingRage = 0.2}) missing 
+#'     rate across samples will be discarded. Relavant statistics will be re-evaluated.}
+#'     \item{\code{rempAggregate(object, NCpG = 2, ncore = NULL, BPPARAM = NULL)}}{Aggregate the predicted RE-CpG 
+#'     methylation by RE using mean. To ensure the reliability of the aggregation, by default only RE with at 
+#'     least 2 predicted CpG sites (specified by \code{NCpG = 2}) will be aggregated.}
 #'     \item{\code{rempCombine(object1, object2)}}{Combine two \code{REMProduct} objects by column.}
 #'     }
 #' 

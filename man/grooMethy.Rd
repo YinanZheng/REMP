@@ -9,7 +9,7 @@ grooMethy(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = FALSE,
 }
 \arguments{
 \item{methyDat}{A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
-data.table, data.frame, or matrix of Illumina methylation data.}
+data.table, data.frame, or matrix of Illumina BeadChip methylation data (450k or EPIC array).}
 
 \item{impute}{If \code{TRUE}, K-Nearest Neighbouring imputation will be applied to fill 
 the missing values. Default = \code{TRUE}. See Details.}
