@@ -76,11 +76,11 @@ rempCombine(object1, object2)
 \S4method{details}{REMProduct}(object)
 
 \S4method{decodeAnnot}{REMProduct}(object, type = c("symbol", "entrez"),
-  ncore = NULL, BPPARAM = NULL)
+  ncore = 1, BPPARAM = NULL)
 
 \S4method{rempTrim}{REMProduct}(object, threshold = 1.7, missingRate = 0.2)
 
-\S4method{rempAggregate}{REMProduct}(object, NCpG = 2, ncore = NULL,
+\S4method{rempAggregate}{REMProduct}(object, NCpG = 2, ncore = 1,
   BPPARAM = NULL)
 
 \S4method{rempCombine}{REMProduct,REMProduct}(object1, object2)
@@ -135,11 +135,12 @@ model is used in \code{\link{remp}}.}
 
 \item{type}{For \code{plot} and \code{decodeAnnot}: see Utilities.}
 
-\item{ncore}{For \code{decodeAnnot} and \code{}: number of cores to run parallel computation. By default max number of cores available 
-in the machine will be utilized. If \code{ncore = 1}, no parallel computation is allowed (not recommended).}
+\item{ncore}{For \code{decodeAnnot} and \code{rempAggregate}: number of cores to run parallel computation. 
+By default no parallel computation is allowed (\code{ncore = 1}).}
 
-\item{BPPARAM}{For \code{decodeAnnot} and \code{rempAggregate}: an optional \code{\link{BiocParallelParam}} instance determining the parallel back-end to 
-be used during evaluation. If not specified, default back-end in the machine will be used.}
+\item{BPPARAM}{For \code{decodeAnnot} and \code{rempAggregate}: an optional \code{\link{BiocParallelParam}} 
+instance determining the parallel back-end to be used during evaluation. If not specified, default 
+back-end in the machine will be used.}
 
 \item{threshold}{For \code{rempTrim}: see Utilities.}
 
@@ -179,12 +180,12 @@ Class \code{REMProduct} is to maintain RE methylation prediction results.
     (when \code{type = "Entrez"}).Default \code{type = "Symbol"}. Annotation data are provided by 
     \code{\link{org.Hs.eg.db}}.}
     \item{\code{rempTrim(object, threshold = 1.7, missingRate = 0.2)}}{Any predicted CpG values with 
-    quality score < threshold (default = 1.7) will be replaced with NA. CpGs contain more than 
-    missingRate * 100% (default = 20%) missing rate across samples will be discarded. Relavant statistics
-    will be re-evaluated.}
-    \item{\code{rempAggregate(object, NCpG = 2, ncore = NULL, BPPARAM = NULL)}}{Aggregate the predicted RE-CpG methylation by RE using mean. To 
-    ensure the reliability of the aggregation, by default only RE with at least 2 predicted CpG sites will be
-    aggregated.}
+    quality score < threshold (default = 1.7, specified by \code{threshold = 1.7}) will be replaced with NA. 
+    CpGs contain more than missingRate * 100% (default = 20%, specified by \code{missingRage = 0.2}) missing 
+    rate across samples will be discarded. Relavant statistics will be re-evaluated.}
+    \item{\code{rempAggregate(object, NCpG = 2, ncore = NULL, BPPARAM = NULL)}}{Aggregate the predicted RE-CpG 
+    methylation by RE using mean. To ensure the reliability of the aggregation, by default only RE with at 
+    least 2 predicted CpG sites (specified by \code{NCpG = 2}) will be aggregated.}
     \item{\code{rempCombine(object1, object2)}}{Combine two \code{REMProduct} objects by column.}
     }
 }

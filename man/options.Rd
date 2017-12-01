@@ -33,6 +33,8 @@ The following options are supported
  \item{\code{.default.TSS.downstream}}{Define the downstream range of transcription start site region.}
  \item{\code{.default.max.flankWindow}}{Define the max size of the flanking window surrounding the 
  predicted RE-CpG.}
+ \item{\code{.default.450k.total.probes}}{Total number of probes designed in Illumina 450k array.}
+ \item{\code{.default.epic.total.probes}}{Total number of probes designed in Illumina EPIC array.}
  \item{\code{.default.450k.annotation}}{A character string associated with the Illumina 450k 
  array annotation dataset.}
  \item{\code{.default.epic.annotation}}{A character string associated with the Illumina EPIC 
@@ -51,6 +53,9 @@ The following options are supported
 \examples{
 # Display all default settings
 remp_options()
+
+# Display a specified setting
+remp_options(".default.max.flankWindow")
 
 # Change default maximum flanking window size to 2000
 remp_options(.default.max.flankWindow = 2000)

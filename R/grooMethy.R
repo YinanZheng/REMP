@@ -5,7 +5,7 @@
 #' value, missing value, and infinite value.
 #'
 #' @param methyDat A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
-#' data.table, data.frame, or matrix of Illumina methylation data.
+#' data.table, data.frame, or matrix of Illumina BeadChip methylation data (450k or EPIC array).
 #' @param impute If \code{TRUE}, K-Nearest Neighbouring imputation will be applied to fill 
 #' the missing values. Default = \code{TRUE}. See Details.
 #' @param imputebyrow If \code{TRUE}, missing values will be imputed using similar values in row 
@@ -49,20 +49,24 @@ grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = F
   type <- .guessBetaorM(methyDat_work)
   arrayType <- .guessArrayType(methyDat_work)
   
+  if (arrayType == "27k")
+    stop("Illumina 27k array is not supported.")
   if (arrayType == "450k") 
     annotationInfo <- c(array = "IlluminaHumanMethylation450k", annotation = remp_options(".default.450k.annotation"))
   if (arrayType == "EPIC") 
     annotationInfo <- c(array = "IlluminaHumanMethylationEPIC", annotation = remp_options(".default.epic.annotation"))
-  
+  if (arrayType == "UNKNOWN") 
+    stop("Unknown methylation array type.")
   
   if (verbose) 
     message("Illumina ", arrayType, " Methylation data in ", type, 
             " value detected.")
+  
   dc <- .dataCheck(methyDat_work, type)
   
   if (is.null(dc$code)) {
     if (verbose) 
-      message("No issue found in the methylation dataset.")
+      message("    No issue found in the methylation dataset.")
     impute = FALSE
   } else {
     ## If beta and any beta value is out of range
@@ -73,11 +77,11 @@ grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = F
     ## If any beta value = 0 is found
     if (2 %in% dc$code) {
       if (verbose) 
-        message("A total of ", sum(methyDat_work == 0, na.rm = TRUE), 
+        message("    A total of ", sum(methyDat_work == 0, na.rm = TRUE), 
                 " zero beta values are found.")
       smallBeta <- min(methyDat_work[methyDat_work > 0], na.rm = TRUE)
       if (verbose) 
-        message("Fixing zero beta values with the smallest beta value = ", 
+        message("    Fixing zero beta values with the smallest beta value = ", 
                 smallBeta, " ...")
       methyDat_work[methyDat_work == 0] <- smallBeta
     }
@@ -88,7 +92,7 @@ grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = F
       methyDat_work[is.infinite(methyDat_work)] <- NA
       
       if (verbose) 
-        message("A total of ", sum(is.na(methyDat_work)), " NA/NaN/Inf values are found.")
+        message("    A total of ", sum(is.na(methyDat_work)), " NA/NaN/Inf values are found.")
     } else {
       impute <- FALSE
     }
@@ -97,12 +101,12 @@ grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = F
   ## Prepare both beta and M value using corrected data
   if (type == "M") {
     if (verbose) 
-      message("Converting M value to beta value ...")
+      message("    Converting M value to beta value ...")
     betadata <- .toBeta(methyDat_work)
     mdata <- methyDat_work
   } else {
     if (verbose) 
-      message("Converting beta value to M value ...")
+      message("    Converting beta value to M value ...")
     betadata <- methyDat_work
     mdata <- .toM(methyDat_work)
   }
@@ -111,7 +115,7 @@ grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = F
     if(imputebyrow) mdata = t(mdata)
     ## Impute the data!
     if (verbose) 
-      message("Imputing missing values using KNN method ...")
+      message("    Imputing missing values using KNN method ...")
     if (ncol(mdata) == 1) 
       stop("KNN-imputation cannot be applied to single sample.")
     
@@ -129,17 +133,15 @@ grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = F
     ## If so then use mean to fix them
     if (nrow(idx) > 0) {
       if (verbose) 
-        message("Fixing ", nrow(idx), " imputed probes that are out of the original data range ....")
+        message("    Fixing ", nrow(idx), " imputed probes that are out of the original data range ....")
       m <- apply(mdata[idx[, 1], ], 1, function(x) mean(x, na.rm = TRUE))  ## calculate the mean of the original data
       for (i in 1:nrow(idx)) {
         imputed_mdata[idx[i, 1], idx[i, 2]] <- m[i]
       }
     } else {
       if (verbose) 
-        message("All imputed probes are within the original data range.")
+        message("    All imputed probes are within the original data range.")
     }
-    
-    if(verbose) message("Done.")
     
     ## Update with imputed data
     if(imputebyrow) imputed_mdata = t(imputed_mdata)
@@ -147,11 +149,11 @@ grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = F
     betadata <- .toBeta(mdata)
   }
   
-  if (verbose) 
-    message("Packaging data to [Genomic]RatioSet object ...")
   rset <- minfi::RatioSet(Beta = betadata, M = mdata, annotation = annotationInfo)
   if (mapGenome) 
     rset <- minfi::mapToGenome(rset)
+  
+  message("Methylation data grooming is completed.")
   
   return(rset)
 }  ## End of grooMethy

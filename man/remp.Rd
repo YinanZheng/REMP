@@ -5,13 +5,14 @@
 \title{Repetitive element methylation prediction}
 \usage{
 remp(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
-  work.dir = tempdir(), groom = TRUE, win = 1000, method = c("rf",
-  "svmLinear", "svmRadial", "naive"), autoTune = TRUE, param = NULL,
-  seed = NULL, ncore = NULL, BPPARAM = NULL, verbose = FALSE)
+  work.dir = tempdir(), win = 1000, method = c("rf", "svmLinear",
+  "svmRadial", "naive"), autoTune = TRUE, param = NULL, seed = NULL,
+  ncore = NULL, BPPARAM = NULL, verbose = FALSE)
 }
 \arguments{
 \item{methyDat}{A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}}, 
-\code{data.table}, \code{data.frame}, or \code{matrix} of methylation dataset. See Details.}
+\code{data.table}, \code{data.frame}, or \code{matrix} of Illumina BeadChip methylation data 
+(450k or EPIC array). See Details.}
 
 \item{REtype}{Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.}
 
@@ -23,10 +24,6 @@ exported by \code{\link{initREMP}} (with \code{export = TRUE}) or \code{\link{sa
 are saved. Valid when the argument \code{parcel} is missing. If not specified, temporary directory 
 \code{tempdir()} will be used. If specified, the directory path has to be the same as the 
 one specified in \code{\link{initREMP}} or in \code{\link{saveParcel}}.}
-
-\item{groom}{Should the function run \code{\link{grooMethy}} implicitly to check and fix the data? 
-Default = \code{TRUE}. If \code{\link{grooMethy}} has been run in advance, let \code{groom = FALSE} can 
-avoid repeated check.}
 
 \item{win}{An integer specifying window size to confine the upstream and downstream flanking 
 region centered on the predicted CpG in RE for prediction. Default = \code{1000}. See Details.}
@@ -57,7 +54,7 @@ be used during evaluation. If not specified, default back-end in the machine wil
 \item{verbose}{Logical parameter. Should the function be verbose?}
 }
 \value{
-An \code{\link{REMProduct}} object containing prediction results.
+A \code{\link{REMProduct}} object containing predicted RE methylation results.
 }
 \description{
 \code{remp} is used to predict genomewide methylation levels of locus-specific repetitive elements (RE).
@@ -88,10 +85,11 @@ GM12878_450k <- getGM12878('450k')
 
 # Make sure you have run 'initREMP'. See ?initREMP.
 
-# Run prediction (grooMethy will be run implicitly)
+# Run prediction
 remp.res <- remp(GM12878_450k, REtype = 'Alu', ncore = 1)
 remp.res
 details(remp.res)
+rempB(remp.res) # Methylation data (beta value)
 
 # Extract CpG location information (inherit from class 'RangedSummarizedExperiment')
 rowRanges(remp.res) 
@@ -100,14 +98,15 @@ rowRanges(remp.res)
 rempAnnot(remp.res)
 
 # Add gene annotation
-remp.res <- decodeAnnot(remp.res, type = "symbol", ncore = 1)
+remp.res <- decodeAnnot(remp.res, type = "symbol")
 rempAnnot(remp.res)
 
 # (Recommended) Trim off less reliable prediction
-remp.res <- rempTrim(remp.res, threshold = 1.7, missingRate = 0.2)
+remp.res <- rempTrim(remp.res)
 
 # (Recommended) Obtain RE-level methylation (aggregate by mean)
-remp.res <- rempAggregate(remp.res, NCpG = 2, ncore = 1)
+remp.res <- rempAggregate(remp.res)
+rempB(remp.res) # Methylation data (beta value)
 
 # Extract RE location information 
 rowRanges(remp.res)

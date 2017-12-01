@@ -107,15 +107,15 @@ remparcel <- initREMP(arrayType = "450k", REtype = "Alu",
 remparcel
 @
 
-For demonstration, we only use 500 selected Alu sequence dataset which comes along with the package (\Rcode{Alu.demo}). We specify \Rfunarg{RE = Alu.demo}, so that the annotation dataset will be generated for the 500 selected Alu sequences. In real-world prediction, specifying \Rfunarg{RE} is not necessary, as the function will pull up the complete RE sequence dataset from package \Rpkg{AnnotationHub}. 
+For demonstration, we only use 500 selected Alu sequence dataset which comes along with the package (\Rcode{Alu.demo}). We specify \Rfunarg{RE = Alu.demo}, so that the annotation dataset will be generated for the 500 selected Alu sequences. Most of the time, specifying \Rfunarg{RE} is not necessary, as the function will fetch the complete RE sequence dataset from package \Rpkg{AnnotationHub} using \Rfunction{fetchRMSK}. User can also use this argument \Rfunarg{RE} to provide customized RE dataset.
 
-All data are stored in the \Rclass{REMParcel} object. It is recommended to specify a working directory so that the data generated can be preserved for later use:
+All data are stored in the \Rclass{REMParcel} object:
 
 <<saveParcel, eval=TRUE>>=
 saveParcel(remparcel)
 @
 
-Without specifying working directory using option \Rfunarg{work.dir}, the annotation dataset will be created under the temporal directory \Rcode{tempdir()} by default. User can also turn on the \Rfunarg{export} parameter in \Rfunction{initREMP} to save the data automatically.
+It is recommended to specify a working directory using argument \Rfunarg{work.dir} so that the data generated can be preserved for later use. Without specifying working directory , the annotation dataset will be created under the temporal directory \Rcode{tempdir()} by default. User can also turn on the \Rfunarg{export} parameter in \Rfunction{initREMP} to save the data automatically.
 
 \subsection{Run prediction}
 
@@ -126,7 +126,7 @@ remp.res <- remp(GM12878_450k, REtype = 'Alu',
                  parcel = remparcel, ncore = 1, seed = 777)
 @
 
-If \Rfunarg{parcel} is missing, \Rfunction{remp} will then try to search the REMParcel data file in the directory indicated by \Rfunarg{work.dir} (use \Rfunction{tempdir()} if not specified).
+If \Rfunarg{parcel} is missing, \Rfunction{remp} will then try to search the REMParcel data file in the directory indicated by \Rfunarg{work.dir}. If \Rfunarg{work.dir} is also missing, \Rfunction{remp} will try to search the REMParcel data file in the temporal directory \Rcode{tempdir()}.
 
 By default, \Rfunction{remp} uses Random Forest (\Rfunarg{method = 'rf'}) model (package \Rpkg{randomForest}) for prediction. Random Forest model is recommended because it offers more accurate prediction results and it automatically enables Quantile Regression Forest (Nicolai Meinshausen, 2006) for prediction reliability evaluation. \Rfunction{remp} constructs 19 predictors to carry out the prediction. For Random Forest model, the tuning parameter \Rfunarg{param = 6} (i.e. \Rfunarg{mtry} in \Rpkg{randomForest}) indicates how many predictors will be randomly selected for building the individual trees. The performance of random forest model is often relatively insensitive to the choice of \Rfunarg{mtry}. Therefore, auto-tune will be turned off using random forest and \Rfunarg{mtry} will be set to one third of the total number of predictors. It is recommended to specify a seed for reproducible prediction results.
 
@@ -173,8 +173,7 @@ details(remp.res)
 Aggregate the predicted methylation of CpGs in RE by averaging them to obtain the RE-specific methylation level:
 
 <<rempaggregate, eval=TRUE>>=
-# (ncore is set to 1 only for demostration)
-remp.res <- rempAggregate(remp.res, NCpG = 2, ncore = 1)
+remp.res <- rempAggregate(remp.res, NCpG = 2)
 details(remp.res)
 @
 
@@ -182,10 +181,9 @@ It is recommended to aggregate the predicted CpG methylation by RE to obtain RE-
 
 To add genomic regions annotation of the predicted REs:
 
-<<rempdecodeAnnot, eval=FALSE>>=
+<<rempdecodeAnnot, eval=TRUE>>=
 # By default gene symbol annotation will be added 
-# (ncore is set to 1 only for demostration)
-remp.res <- decodeAnnot(remp.res, ncore = 1)
+remp.res <- decodeAnnot(remp.res)
 rempAnnot(remp.res)
 @
 
@@ -215,6 +213,20 @@ plot(remp.res, main = "Alu methylation (GM12878)", col = "blue")
 \end{figure}
 
 \pagebreak
+
+\section{Extract RE-CpG methylation profiled by Illumina BeadChip array}
+
+\Rpkg{REMP} offers a handy tool to extract methylation data of CpGs that are located in RE.
+
+<<remprofile, eval=TRUE>>=
+# Use Alu.demo for demonstration
+remp.res <- remprofile(GM12878_450k, REtype = "Alu", RE = Alu.demo)
+details(remp.res)
+
+# All accessors and utilites for REMProduct are applicable
+remp.res <- rempAggregate(remp.res)
+details(remp.res)
+@
 
 \section{Session Information}
 
