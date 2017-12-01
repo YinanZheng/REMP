@@ -60,7 +60,7 @@
 * Allows parallel computing in "rempAggregate" method.
 * Added "rempCombine" method to combine two "REMProduct" objects by column.
 
-# REMP 1.2.4
+# REMP 1.2.5
 
 * Added "remprofile" method to get the methylation data profiled in RE.
 * Minor bug fixes and improvements.
