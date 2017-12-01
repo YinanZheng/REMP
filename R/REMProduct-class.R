@@ -104,6 +104,8 @@ REMProduct <- function(REtype = "Unknown", platform = "Unknown", win = "Unknown"
   assays <- SimpleList(rempB = rempB, rempM = rempM, rempQC = rempQC)
   assays <- assays[!sapply(assays, is.null)]
   
+  stopifnot(identical(REannotation, unique(REannotation)))
+  
   metadata = list(REannotation = REannotation,
                   RECpG = RECpG,
                   regionCode = regionCode,

@@ -510,15 +510,16 @@ remprofile <- function(methyDat, REtype = c("Alu", "L1"), RE = NULL, verbose = F
   }
   
   ### RE-CpG covered by ILMN
-  RECpG_Platform.hits <- findOverlaps(ILMN.GR, RE.hg19, ignore.strand = TRUE)
-  
+  RECpG_Platform.hits <- findOverlaps(RE.hg19, ILMN.GR, ignore.strand = TRUE)
+
   #Update RE ranges
-  RE.hg19 <- RE.hg19[subjectHits(RECpG_Platform.hits)]
+  RE.hg19 <- RE.hg19[queryHits(RECpG_Platform.hits)]
   
   #Update CpG ranges
   mcols(ILMN.GR)$RE.Index <- Rle(NA)
-  ILMN.GR$RE.Index[queryHits(RECpG_Platform.hits)] <- RE.hg19$Index
+  ILMN.GR$RE.Index[subjectHits(RECpG_Platform.hits)] <- RE.hg19$Index
   RE_CpG_ILMN <- ILMN.GR[!is.na(ILMN.GR$RE.Index)]
+  RE_CpG_ILMN <- RE_CpG_ILMN[order(RE_CpG_ILMN$RE.Index)]
   
   cpgRanges <- RE_CpG_ILMN
   

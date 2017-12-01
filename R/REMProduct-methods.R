@@ -289,14 +289,21 @@ setMethod("rempAggregate", signature(object = "REMProduct"),
             GR <- rowRanges(object)
             
             ## Remove RE with less than NCpG predicted
-            M_df <- data.frame(M, Index = GR$RE.Index, check.names = FALSE)
-            RE_annotation <- RE_annotation[match(unique(M_df$Index), RE_annotation$Index)]
-            select_RE <- RE_annotation$Index
-            count <- as.numeric(table((M_df$Index)))
+            M_df <- data.frame(M, Index = as.character(GR$RE.Index),
+                               check.names = FALSE, stringsAsFactors = FALSE)
+            RE_annotation <- RE_annotation[match(unique(M_df$Index),
+                                                 runValue(RE_annotation$Index))]
+            # identical(runValue(RE_annotation$Index), unique(as.character(M_df$Index)))
+            select_RE <- runValue(RE_annotation$Index)
+            count_table <- table(M_df$Index)
+            count_table <- count_table[select_RE]
+            # identical(names(count_table), as.character(RE_annotation$Index))
+            count <- as.numeric(count_table)
             RE_annotation <- RE_annotation[count>=NCpG]
-            select_RE <- as.character(select_RE[count>=NCpG])
-            M_df <- M_df[M_df$Index %in% select_RE,]
-            
+            select_RE <- select_RE[count>=NCpG]
+            # identical(select_RE, as.character(RE_annotation$Index))
+            M_df <- M_df[M_df$Index %in% select_RE, ]
+
             ## Aggregate predicted M values
             if (ncore > 1)
             {
@@ -310,14 +317,17 @@ setMethod("rempAggregate", signature(object = "REMProduct"),
               BiocParallel::bpstop(be)
             } else {
               M_df_MEAN <- aggregate(.~Index, M_df, mean, na.rm = TRUE, na.action = na.pass)
+              M_df_MEAN <- M_df_MEAN[match(select_RE, M_df_MEAN$Index),]
             }
             # identical(M_df_MEAN_par, M_df_MEAN)
+            # identical(runValue(RE_annotation$Index), as.character(M_df_MEAN$Index))
             M <- as.matrix(M_df_MEAN[,-1, drop = FALSE])
 
             ## Aggregate QC only works for random forest
             if(grepl("Random Forest", method))
             {
-              QC_df <- data.frame(QC, Index = GR$RE.Index, check.names=FALSE)
+              QC_df <- data.frame(QC, Index = GR$RE.Index, check.names=FALSE,
+                                  stringsAsFactors = FALSE)
               QC_df <- QC_df[QC_df$Index %in% select_RE,]
               
               if (ncore > 1)
@@ -332,6 +342,7 @@ setMethod("rempAggregate", signature(object = "REMProduct"),
                 BiocParallel::bpstop(be)
               } else {
                 QC_df_MEAN <- aggregate(.~Index, QC_df, mean, na.rm = TRUE, na.action = na.pass)
+                QC_df_MEAN <- QC_df_MEAN[match(select_RE, QC_df_MEAN$Index),]
               }
               # identical(QC_df_MEAN_par, QC_df_MEAN)
               QC <- as.matrix(QC_df_MEAN[,-1, drop = FALSE])
@@ -355,7 +366,7 @@ setMethod("rempAggregate", signature(object = "REMProduct"),
             RE_CpG_ILMN <-  metadata(object)$RECpG
             
             ## Add rownames (RE index)
-            RE_index <- as.character(cpgRanges$RE.Index)
+            RE_index <- runValue(cpgRanges$RE.Index)
             rownames(M) <- RE_index
             if(grepl("Random Forest", method))
             {
