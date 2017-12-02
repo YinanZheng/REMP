@@ -5,7 +5,7 @@
 
 ## Installation 
 
-HIMA is now available in Bioconductor repository
+REMP is available in Bioconductor repository
 ```r
 ## To get the latest REMP, please first make sure you are using the latest Bioconductor
 biocLite("BiocUpgrade")
