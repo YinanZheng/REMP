@@ -7,12 +7,16 @@
 
 REMP is available in Bioconductor repository
 ```r
-## To get the latest REMP, please first make sure you are using the latest Bioconductor
-biocLite("BiocUpgrade")
 
 ## try http:// if https:// URLs are not supported
 source("https://bioconductor.org/biocLite.R")
+
+## To get the latest REMP, please first make sure you are using the latest Bioconductor
+biocLite("BiocUpgrade")
+
+## Install REMP
 biocLite("REMP")
+
 ```
 
 ## Citation:
