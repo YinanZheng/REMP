@@ -123,6 +123,12 @@
 
 #### Message display function
 
+.printMsgArray <- function(msg, printType)
+{
+  if(printType == "message") for(m in msg) message(m)
+  if(printType == "cat") for(m in msg) cat(m, "\n")
+}
+
 .showREMParceInfo <- function(object)
 {
   info <- object@REMParcelInfo
@@ -146,11 +152,7 @@
   } else {
     p <- "N/A"
   } 
-  
-  if(printType == "message")
-    trashbin <- sapply(p, message)
-  if(printType == "cat")
-    trashbin <- sapply(p, function(x) cat(x, "\n"))
+  .printMsgArray(p, printType)
 }
 
 .showREStats <- function(REStats, REtype, printType, indent, notAggregated) {
@@ -161,11 +163,7 @@
   } else {
     p <- "N/A"
   } 
-  
-  if(printType == "message")
-    trashbin <- sapply(p, message)
-  if(printType == "cat")
-    trashbin <- sapply(p, function(x) cat(x, "\n"))
+  .printMsgArray(p, printType)
 }
 
 .showGeneStats <- function(GeneStats, REtype, printType, indent) {
@@ -183,11 +181,7 @@
   } else {
     p <- "N/A"
   } 
-  
-  if(printType == "message")
-    trashbin <- sapply(p, message)
-  if(printType == "cat")
-    trashbin <- sapply(p, function(x) cat(x, "\n"))
+  .printMsgArray(p, printType)
 }
 
 .showSampleID <- function(object, indent) {

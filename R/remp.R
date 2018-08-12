@@ -549,8 +549,8 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
   valuesNodes  <- matrix(nrow=nnodes,ncol=ntree)
   
   set.seed(seed)
-  for (tree in 1:ntree){
-    shuffledNodes <- nodesX[rank(ind <- sample(1:n,n)),tree]
+  for (tree in seq_len(ntree)){
+    shuffledNodes <- nodesX[rank(ind <- sample(seq_len(n),n)),tree]
     useNodes <- sort(unique(as.numeric(shuffledNodes)))
     valuesNodes[useNodes,tree] <- y[ind[match(useNodes,shuffledNodes )]]
   }
@@ -558,7 +558,7 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
   predictNodes <- predict(rangerObj, newX, num.threads, 
                           type = "terminalNodes")$predictions
   valuesPredict <- 0*predictNodes
-  for (tree in 1:ntree){
+  for (tree in seq_len(ntree)){
     valuesPredict[,tree] <- valuesNodes[ predictNodes[,tree],tree]
   }
   result <- apply(valuesPredict,1,sd)
