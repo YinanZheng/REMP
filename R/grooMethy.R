@@ -111,20 +111,20 @@ grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = F
     mdata <- .toM(methyDat_work)
   }
   
+  ## Impute the data!
   if (impute) {
-    if(imputebyrow) mdata = t(mdata)
-    ## Impute the data!
     if (verbose) 
       message("    Imputing missing values using KNN method ...")
     if (ncol(mdata) == 1) 
       stop("KNN-imputation cannot be applied to single sample.")
     
-    resu <- impute::impute.knn(mdata)
+    if(imputebyrow) resu <- impute::impute.knn(t(mdata)) else resu <- impute::impute.knn(mdata)
     
     ## Error checking and imperfect fix (use mean to replace the
     ## out-of-range imputation)
     rg <- apply(mdata, 1, function(x) range(x, na.rm = TRUE))  # Calculate the range of the data before imputation
-    imputed_mdata <- resu$data
+    
+    if(imputebyrow) imputed_mdata <- t(resu$data) else imputed_mdata <- resu$data
     
     ## Check if any imputed data is out of the original range
     idx <- which(imputed_mdata < rg[1, ] | imputed_mdata > rg[2, ], 
@@ -135,7 +135,7 @@ grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = F
       if (verbose) 
         message("    Fixing ", nrow(idx), " imputed probes that are out of the original data range ....")
       m <- apply(mdata[idx[, 1], ], 1, function(x) mean(x, na.rm = TRUE))  ## calculate the mean of the original data
-      for (i in 1:nrow(idx)) {
+      for (i in seq_len(nrow(idx))) {
         imputed_mdata[idx[i, 1], idx[i, 2]] <- m[i]
       }
     } else {
@@ -144,7 +144,6 @@ grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = F
     }
     
     ## Update with imputed data
-    if(imputebyrow) imputed_mdata = t(imputed_mdata)
     mdata <- imputed_mdata
     betadata <- .toBeta(mdata)
   }
@@ -161,15 +160,12 @@ grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = F
 ## Internal functions
 .methyMatrix <- function(methyDat) {
   methyDat <- data.frame(methyDat, check.names = FALSE)
-  probeNameIndicator <- which(sapply(methyDat, class) %in% c("factor", 
-                                                             "character"))
+  probeNameIndicator <- which(vapply(methyDat, class, character(1)) %in% c("factor", "character"))
   if (length(probeNameIndicator) > 1) 
     stop("There are more than one character columns! Please only keep one column or just use row names to indicate Illumina probe names (i.e. cg00000029).")
   
-  containILMN <- "cg" %in% unique(substring(methyDat[1:10, probeNameIndicator], 
-                                            1, 2))
-  containRownames <- "cg" %in% unique(substring(rownames(methyDat)[1:10], 
-                                                1, 2))
+  containILMN <- "cg" %in% unique(substring(methyDat[seq_len(10), probeNameIndicator], 1, 2))
+  containRownames <- "cg" %in% unique(substring(rownames(methyDat)[seq_len(10)], 1, 2))
   if (!containILMN & !containRownames) 
     stop("Cannot find a column or row names that indicates Illumina probe names (i.e. cg00000029). Please fix it.")
   

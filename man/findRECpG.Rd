@@ -4,7 +4,8 @@
 \alias{findRECpG}
 \title{Find RE-CpG genomic location given RE ranges information}
 \usage{
-findRECpG(RE.hg19, REtype = c("Alu", "L1"), be = NULL, verbose = FALSE)
+findRECpG(RE.hg19, REtype = c("Alu", "L1"), be = NULL,
+  verbose = FALSE)
 }
 \arguments{
 \item{RE.hg19}{an \code{GRanges} object of RE genomic location database. This 

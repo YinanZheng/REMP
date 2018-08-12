@@ -33,9 +33,10 @@
 REMProduct(REtype = "Unknown", platform = "Unknown", win = "Unknown",
   predictModel = "Unknown", QCModel = "Unknown", rempM = NULL,
   rempB = NULL, rempQC = NULL, cpgRanges = GRanges(),
-  sampleInfo = DataFrame(), REannotation = GRanges(), RECpG = GRanges(),
-  regionCode = DataFrame(), refGene = GRanges(), varImp = DataFrame(),
-  REStats = DataFrame(), GeneStats = DataFrame(), Seed = NULL)
+  sampleInfo = DataFrame(), REannotation = GRanges(),
+  RECpG = GRanges(), regionCode = DataFrame(), refGene = GRanges(),
+  varImp = DataFrame(), REStats = DataFrame(),
+  GeneStats = DataFrame(), Seed = NULL)
 
 rempM(object)
 
@@ -71,14 +72,16 @@ rempCombine(object1, object2)
 
 \S4method{rempStats}{REMProduct}(object)
 
-\S4method{plot}{REMProduct,missing}(x, type = c("individual", "overall"), ...)
+\S4method{plot}{REMProduct,missing}(x, type = c("individual", "overall"),
+  ...)
 
 \S4method{details}{REMProduct}(object)
 
 \S4method{decodeAnnot}{REMProduct}(object, type = c("symbol", "entrez"),
   ncore = 1, BPPARAM = NULL)
 
-\S4method{rempTrim}{REMProduct}(object, threshold = 1.7, missingRate = 0.2)
+\S4method{rempTrim}{REMProduct}(object, threshold = 1.7,
+  missingRate = 0.2)
 
 \S4method{rempAggregate}{REMProduct}(object, NCpG = 2, ncore = 1,
   BPPARAM = NULL)

@@ -102,7 +102,7 @@ REMProduct <- function(REtype = "Unknown", platform = "Unknown", win = "Unknown"
                             QCModel = QCModel)
   if(is.null(rempB)) rempB <- .toBeta(rempM)
   assays <- SimpleList(rempB = rempB, rempM = rempM, rempQC = rempQC)
-  assays <- assays[!sapply(assays, is.null)]
+  assays <- assays[!vapply(assays, is.null, logical(1))]
   
   stopifnot(identical(REannotation, unique(REannotation)))
   
