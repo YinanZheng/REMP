@@ -17,8 +17,9 @@
 \alias{getILMN,REMParcel-method}
 \title{REMParcel instances}
 \usage{
-REMParcel(REtype = "Unknown", platform = "Unknown", RefGene = GRanges(),
-  RE = GRanges(), RECpG = GRanges(), ILMN = GRanges())
+REMParcel(REtype = "Unknown", platform = "Unknown",
+  RefGene = GRanges(), RE = GRanges(), RECpG = GRanges(),
+  ILMN = GRanges())
 
 getRefGene(object)
 

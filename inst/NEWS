@@ -64,3 +64,12 @@
 
 * Added "remprofile" method to get the methylation data profiled in RE.
 * Minor bug fixes and improvements.
+
+# REMP 1.4.0
+
+* Version number update (same as REMP 1.2.5). R-3.5.0. Bioconductor 3.7.
+
+# REMP 1.4.1
+
+* Fix bug in grooMethy
+* Added parameters to control the behaviors of imputation in "remprofile".

@@ -33,17 +33,16 @@ getBackend <- function(ncore, BPPARAM = NULL, verbose = FALSE) {
     if (verbose) 
       message("You have successfully set non-parallel mode (single worker).")
   } else {
-    if (is.null(BPPARAM)) 
-      bpparam <- BiocParallel::bpparam() else bpparam <- BPPARAM
+    if (is.null(BPPARAM)) bpparam <- BiocParallel::bpparam() else bpparam <- BPPARAM
       backend_class <- attributes(bpparam)$class
       if (!backend_class %in% names(BiocParallel::registered())) {
         stop("Back-end '", backend_class, "' is not supported on ", 
              Sys.info()["sysname"], "!")
       } else {
-        if (backend_class == "SnowParam") 
+        if ("MulticoreParam" %in% names(BiocParallel::registered())) 
+          backend <- BiocParallel::MulticoreParam(workers = ncore) 
+        else 
           backend <- BiocParallel::SnowParam(workers = ncore)
-        if (backend_class == "MulticoreParam") 
-          backend <- BiocParallel::MulticoreParam(workers = ncore)
         if (verbose) 
           message("You have successfully set parallel mode with ", 
                   BiocParallel::bpworkers(backend), " workers (", backend_class, ").")
@@ -286,7 +285,7 @@ findRECpG <- function(RE.hg19, REtype = c("Alu", "L1"), be = NULL, verbose = FAL
     RE.CpG <- .vRECpGPos(SEQ.RE, CpG = DNAString("CG"))
   }
   
-  noCpGind <- which(sapply(RE.CpG, length) == 0)  ## Remove sequence without CpG sites
+  noCpGind <- which(vapply(RE.CpG, length, integer(1)) == 0)  ## Remove sequence without CpG sites
   
   if (length(noCpGind) == 0) {
     if (verbose) 
@@ -439,6 +438,11 @@ GRannot <- function(object.GR, refgene, symbol = FALSE, verbose = FALSE) {
 #' @param RE A \code{\link{GRanges}} object containing user-specified RE genomic location information. 
 #' If \code{NULL}, the function will retrive RepeatMasker RE database from \code{\link{AnnotationHub}} 
 #' (build hg19).
+#' @param impute Parameter used by \code{\link{grooMethy}}. If \code{TRUE}, K-Nearest Neighbouring 
+#' imputation will be applied to fill the missing values. Default = \code{TRUE}.
+#' @param imputebyrow Parameter used by \code{\link{grooMethy}}. If \code{TRUE}, missing values will 
+#' be imputed using similar values in row (i.e., across samples); if \code{FALSE}, missing values 
+#' will be imputed using similar values in column (i.e., across CpGs). Default is \code{TRUE}.
 #' @param verbose Logical parameter. Should the function be verbose?
 #' 
 #' @return A \code{\link{REMProduct}} object containing profiled RE methylation results.
@@ -455,12 +459,12 @@ GRannot <- function(object.GR, refgene, symbol = FALSE, verbose = FALSE) {
 #' rempB(remp.res) # Methylation data (beta value)
 #' 
 #' @export
-remprofile <- function(methyDat, REtype = c("Alu", "L1"), RE = NULL, verbose = FALSE) {
+remprofile <- function(methyDat, REtype = c("Alu", "L1"), RE = NULL, impute = TRUE, imputebyrow = TRUE, verbose = FALSE) {
   
   REtype <- match.arg(REtype)
   
   ## Groom methylation data
-  methyDat <- grooMethy(methyDat, verbose = verbose)
+  methyDat <- grooMethy(methyDat, impute, verbose = verbose)
   methyDat <- minfi::getM(methyDat)
   probeNames <- rownames(methyDat)
   
