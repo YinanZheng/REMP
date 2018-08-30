@@ -55,8 +55,9 @@ knit_hooks$set(source=listing, output=listing)
 Install \Rpkg{REMP} (release version):
 
 <<bioconductorREMPrelease, eval=FALSE>>=
-source("http://bioconductor.org/biocLite.R")
-biocLite("REMP")
+if (!requireNamespace("BiocManager", quietly=TRUE))
+    install.packages("BiocManager")
+BiocManager::install("REMP")
 @
 
 To install devel version:

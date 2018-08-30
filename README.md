@@ -8,13 +8,14 @@
 REMP is available in Bioconductor repository
 ```r
 ## try http:// if https:// URLs are not supported
-source("https://bioconductor.org/biocLite.R")
+if (!requireNamespace("BiocManager", quietly=TRUE))
+    install.packages("BiocManager")
 
 ## To get the latest REMP, please first make sure you are using the latest Bioconductor
-biocLite("BiocUpgrade")
+BiocManager::install("BiocUpgrade")
 
 ## Install REMP
-biocLite("REMP")
+BiocManager::install("REMP")
 ```
 
 ## Citation:
