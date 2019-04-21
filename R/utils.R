@@ -1,8 +1,9 @@
 ## Internal functions:
 
 .timeTrace <- function(startTime, indent = "  ") {
-  t <- round(as.numeric(Sys.time() - startTime, units = "secs"), 0)
-  paste0(indent, "(", t, " sec.)")
+  t <- Sys.time()
+  return(list(t = t, 
+              t_text = paste0(indent, "(", round(as.numeric(t - startTime, units = "secs"), 0), " sec.)")))
 }
 
 .forwardSlashPath <- function(path) {

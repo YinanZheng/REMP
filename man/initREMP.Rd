@@ -53,12 +53,10 @@ neighboring CpGs are confined within 1200 bp flanking window. This window size c
 \code{\link{remp_options}}.
 }
 \examples{
-data(Alu.demo)
-remparcel <- initREMP(arrayType = '450k', REtype = 'Alu', RE = Alu.demo, ncore = 1)
-remparcel
-
-# Save the data for later use
-saveParcel(remparcel)
+if(!exists("remparcel")){
+ data(Alu.demo)
+ remparcel <- initREMP(arrayType = '450k', REtype = 'Alu', RE = Alu.demo, ncore = 1)
+}
 
 }
 \seealso{

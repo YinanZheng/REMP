@@ -1,5 +1,4 @@
 ## REMP: Repetitive Element Methylation Prediction
-[![GitHub release](https://img.shields.io/badge/release-v1.4.0-blue.svg)](https://www.bioconductor.org/packages/release/bioc/html/REMP.html)
 
 *REMP* provides machine learning-based tools to predict DNA methylation of locus-specific repetitive elements (RE) by learning surrounding genetic and epigenetic information. These tools provide genomewide and single-base resolution of DNA methylation prediction on RE that are difficult to measure using array-based or sequencing-based platforms, which enables epigenome-wide association study (EWAS) and differentially methylated region (DMR) analysis on RE. 
 
@@ -11,8 +10,7 @@ REMP is available in Bioconductor repository
 if (!requireNamespace("BiocManager", quietly=TRUE))
     install.packages("BiocManager")
 
-## To get the latest REMP, please first make sure you are using the latest Bioconductor
-BiocManager::install("BiocUpgrade")
+## To get the latest version of REMP, please make sure you are using the latest Bioconductor
 
 ## Install REMP
 BiocManager::install("REMP")

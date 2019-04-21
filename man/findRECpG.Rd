@@ -8,7 +8,7 @@ findRECpG(RE.hg19, REtype = c("Alu", "L1"), be = NULL,
   verbose = FALSE)
 }
 \arguments{
-\item{RE.hg19}{an \code{GRanges} object of RE genomic location database. This 
+\item{RE.hg19}{A \code{\link{GRanges}} object of RE genomic location database. This 
 can be obtained by \code{\link{fetchRMSK}}.}
 
 \item{REtype}{Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.}

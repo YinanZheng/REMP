@@ -34,7 +34,7 @@ A \code{\link{REMProduct}} object containing profiled RE methylation results.
 }
 \examples{
 data(Alu.demo)
-GM12878_450k <- getGM12878('450k')
+if(!exists("GM12878_450k")) GM12878_450k <- getGM12878('450k')
 remp.res <- remprofile(GM12878_450k, REtype = "Alu", RE = Alu.demo)
 details(remp.res)
 rempB(remp.res) # Methylation data (beta value)

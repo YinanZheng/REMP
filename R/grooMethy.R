@@ -39,6 +39,9 @@
 #' 
 #' @export
 grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = FALSE, verbose = FALSE) {
+  
+  t <- Sys.time()
+  
   methyDat_work <- methyDat
   
   if (is(methyDat_work, "RatioSet") || is(methyDat_work, "GenomicRatioSet")) 
@@ -152,7 +155,7 @@ grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = F
   if (mapGenome) 
     rset <- minfi::mapToGenome(rset)
   
-  message("Methylation data grooming is completed.")
+  if (verbose) message("Methylation data grooming is completed.", .timeTrace(t)$t_text)
   
   return(rset)
 }  ## End of grooMethy
