@@ -45,11 +45,12 @@ getBackend <- function(ncore, BPPARAM = NULL, verbose = FALSE) {
           backend <- BiocParallel::SnowParam(workers = ncore)
         if (verbose) 
           message("You have successfully set parallel mode with ", 
-                  BiocParallel::bpworkers(backend), " workers (", backend_class, ").")
+                  BiocParallel::bpnworkers(backend), " workers (", backend_class, ").")
       }
   }
   return(backend)
 }
+
 
 
 
@@ -65,12 +66,11 @@ getBackend <- function(ncore, BPPARAM = NULL, verbose = FALSE) {
 #' @param verbose Logical parameter. Should the function be verbose?
 #' 
 #' @return A \code{\link{GRanges}} object containing RE database. 'name' column 
-#' indicates the RE subfamily; 'score' 
-#' column indicates the SW score; 'Index' is an internal index for RE to facilitate data 
-#' referral, which is meaningless for external use.
+#' indicates the RE subfamily; 'score' column indicates the SW score; 'Index' is an 
+#' internal index for RE to facilitate data referral, which is meaningless for external use.
 #'
 #' @examples
-#' ah <- AnnotationHub::AnnotationHub()
+#' if(!exists("ah")) ah <- AnnotationHub::AnnotationHub()
 #' L1 <- fetchRMSK(ah, 'L1', verbose = TRUE)
 #' L1
 #' 
@@ -89,12 +89,13 @@ fetchRMSK <- function(ah, REtype, verbose = FALSE) {
     REFamily <- remp_options(".default.L1Family")
   
   RE <- rmsk[rmsk$name %in% REFamily, ]
-  RE <- RE[seqnames(RE) %in% paste0("chr", c(1:22, "X", "Y"))]  # chr1 - 22, chrX, chrY
+  RE <- RE[seqnames(RE) %in% paste0("chr", c(seq_len(22), "X", "Y"))]  # chr1 - 22, chrX, chrY
   
   mcols(RE)$Index <- Rle(paste(REtype, formatC(seq_len(length(RE)), width = 7, 
                                                flag = "0"), sep = "_"))  # Add internal index, meaningless for external database
   return(RE)
 }
+
 
 
 
@@ -117,11 +118,11 @@ fetchRMSK <- function(ah, REtype, verbose = FALSE) {
 #' index that is used to facilitate data referral, which is meaningless for external use.
 #' 
 #' @return A single \code{\link{GRanges}} (for main refgene data) object or a list incorporating 
-#' both \code{GRanges} object (for main refgene data)  and \code{\link{GRangesList}} object 
+#' both \code{\link{GRanges}} object (for main refgene data) and \code{\link{GRangesList}} object 
 #' (for gene regions data).
 #' 
 #' @examples
-#' ah <- AnnotationHub::AnnotationHub()
+#' if(!exists("ah")) ah <- AnnotationHub::AnnotationHub()
 #' refGene <- fetchRefSeqGene(ah, mainOnly = TRUE, verbose = TRUE)
 #' refGene
 #' 
@@ -226,12 +227,13 @@ fetchRefSeqGene <- function(ah, mainOnly = FALSE, verbose = FALSE) {
 
 
 
+
 #' @title Find RE-CpG genomic location given RE ranges information
 #'
 #' @description
 #' \code{findRECpG} is used to obtain RE-CpG genomic location data.
 #'
-#' @param RE.hg19 an \code{GRanges} object of RE genomic location database. This 
+#' @param RE.hg19 A \code{\link{GRanges}} object of RE genomic location database. This 
 #' can be obtained by \code{\link{fetchRMSK}}.
 #' @param REtype Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.
 #' @param be A \code{\link{BiocParallel}} object containing back-end information that is 
@@ -276,7 +278,7 @@ findRECpG <- function(RE.hg19, REtype = c("Alu", "L1"), be = NULL, verbose = FAL
   if (verbose) 
     message("    Identifying CpG sites in ", REtype, " sequence ...")
   
-  if (BiocParallel::bpworkers(be) > 1) {
+  if (BiocParallel::bpnworkers(be) > 1) {
     BiocParallel::bpstart(be)
     .bploadLibraryQuiet("Biostrings", be)
     RE.CpG <- bpvec(SEQ.RE, .vRECpGPos, CpG = DNAString("CG"), BPPARAM = be)
@@ -323,7 +325,7 @@ findRECpG <- function(RE.hg19, REtype = c("Alu", "L1"), be = NULL, verbose = FAL
 #' @title Annotate genomic ranges data with gene region information.
 #'
 #' @description
-#' \code{GRannot} is used to annotate a \code{GRanges} dataset with gene region 
+#' \code{GRannot} is used to annotate a \code{\link{GRanges}} dataset with gene region 
 #' information using refseq gene database
 #'
 #' @param object.GR An \code{\link{GRanges}} object of a genomic location database.
@@ -345,7 +347,7 @@ findRECpG <- function(RE.hg19, REtype = c("Alu", "L1"), be = NULL, verbose = FAL
 #'
 #' @examples
 #' data(Alu.demo)
-#' ah <- AnnotationHub::AnnotationHub()
+#' if(!exists("ah")) ah <- AnnotationHub::AnnotationHub()
 #' refgene.hg19 <- fetchRefSeqGene(ah, verbose = TRUE)
 #' Alu.demo.refGene <- GRannot(Alu.demo, refgene.hg19, verbose = TRUE)
 #' Alu.demo.refGene
@@ -449,7 +451,7 @@ GRannot <- function(object.GR, refgene, symbol = FALSE, verbose = FALSE) {
 #'
 #' @examples
 #' data(Alu.demo)
-#' GM12878_450k <- getGM12878('450k')
+#' if(!exists("GM12878_450k")) GM12878_450k <- getGM12878('450k')
 #' remp.res <- remprofile(GM12878_450k, REtype = "Alu", RE = Alu.demo)
 #' details(remp.res)
 #' rempB(remp.res) # Methylation data (beta value)

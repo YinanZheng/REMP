@@ -21,7 +21,7 @@ A \code{\link{GRanges}} or a \code{\link{GRangesList}} object containing refSeq
 Gene database.
 }
 \description{
-\code{GRannot} is used to annotate a \code{GRanges} dataset with gene region 
+\code{GRannot} is used to annotate a \code{\link{GRanges}} dataset with gene region 
 information using refseq gene database
 }
 \details{
@@ -34,7 +34,7 @@ main refgene database obtained by \code{\link{fetchRefSeqGene}}.
 }
 \examples{
 data(Alu.demo)
-ah <- AnnotationHub::AnnotationHub()
+if(!exists("ah")) ah <- AnnotationHub::AnnotationHub()
 refgene.hg19 <- fetchRefSeqGene(ah, verbose = TRUE)
 Alu.demo.refGene <- GRannot(Alu.demo, refgene.hg19, verbose = TRUE)
 Alu.demo.refGene

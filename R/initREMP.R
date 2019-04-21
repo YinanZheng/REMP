@@ -38,12 +38,10 @@
 #' @seealso See \code{\link{remp}} for RE methylation prediction.
 #'
 #' @examples
-#' data(Alu.demo)
-#' remparcel <- initREMP(arrayType = '450k', REtype = 'Alu', RE = Alu.demo, ncore = 1)
-#' remparcel
-#' 
-#' # Save the data for later use
-#' saveParcel(remparcel)
+#' if(!exists("remparcel")){
+#'  data(Alu.demo)
+#'  remparcel <- initREMP(arrayType = '450k', REtype = 'Alu', RE = Alu.demo, ncore = 1)
+#' }
 #' 
 #' @export
 initREMP <- function(arrayType = c("450k", "EPIC"), REtype = c("Alu", "L1"), RE = NULL, 
@@ -56,7 +54,8 @@ initREMP <- function(arrayType = c("450k", "EPIC"), REtype = c("Alu", "L1"), RE 
   arrayType <- match.arg(arrayType)
   REtype <- match.arg(REtype)
   
-  message("Start ", REtype, " annotation data initialization ...", .timeTrace(t)) 
+  tRun <- .timeTrace(t); t <- tRun$t
+  message("Start ", REtype, " annotation data initialization ...") 
   message("Illumina platform: ", arrayType)
   
   if (is.null(ncore)) 
@@ -154,7 +153,8 @@ initREMP <- function(arrayType = c("450k", "EPIC"), REtype = c("Alu", "L1"), RE 
                          RE = RE.refGene, RECpG = RE.CpG,
                          ILMN = ILMN.GR)
   
-  message("Done.", .timeTrace(t))
+  tRun <- .timeTrace(t); t <- tRun$t
+  message("Done.", tRun$t_text)
   
   if(export)
     saveParcel(remparcel, work.dir, verbose)

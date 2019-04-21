@@ -1,75 +1,64 @@
 # REMP 0.99.0
-
 * Initial submission to Bioconductor.
 
 # REMP 0.99.14
-
 * Revisions based on the comments to the initial submission.
 
 # REMP 0.99.16
-
 * Package accepted by Bioconductor.
 
 # REMP 0.99.20
-
 * Added trim(REMProduct) functionality to trim predicted CpGs based on quality score (only for Random Forest model).
 
 # REMP 0.99.21
-
 * Improved the robustness of function GRannot() when indicator column "Index" is not provided.
 * Fixed the inaccurate RE statistics calculation after function trim() is applied.
 
 # REMP 0.99.22
-
 * Enabled parallel computing in function decodeAnnot(REMProduct).
 
 # REMP 0.99.24
-
 * Vignettes updated
 * Fixed bugs for Mac OS and Linux system.
 
 # REMP 0.99.25
-
 * Fixed timeout issue encountered in the build system.
 
 # REMP 1.0.0
-
 * Initial release on Bioconductor.
 
 # REMP 1.0.1
-
 * In groomethy, changed the default KNN imputation direction from "by-column" to "by-row" to avoid out-of-range imputation results. 
 
 # REMP 1.0.4
-
 * Use package 'ranger' to boost computation speed for Random Forest.
 
 # REMP 1.0.7
-
 * Allow random seed for reproducible results using Random Forest.
 * Use package 'ranger' to simplfy the code and boost computation speed for Quantile Regression Forest.
 
 # REMP 1.2.1
-
 * Added "rempAggregate" method to "REMProduct" class to enable aggregation algorithm.
 * Function name changed: annotation --> rempAnnot, trim --> rempTrim, imp --> rempImp.
 * Fixed a bug when using "naive" method.
 
 # REMP 1.2.3
-
 * Allows parallel computing in "rempAggregate" method.
 * Added "rempCombine" method to combine two "REMProduct" objects by column.
 
 # REMP 1.2.5
-
 * Added "remprofile" method to get the methylation data profiled in RE.
 * Minor bug fixes and improvements.
 
 # REMP 1.4.0
-
 * Version number update (same as REMP 1.2.5). R-3.5.0. Bioconductor 3.7.
 
 # REMP 1.4.1
-
 * Fix bug in grooMethy
 * Added parameters to control the behaviors of imputation in "remprofile".
+
+# REMP 1.6.2
+* Fix bug in identifying numbers of back-end workers;
+* Fix bug in predictor importance matrix;
+* "remp" now supports Extreme Gradient Boosting model.
+* Add rempTemplate function to facilitate model parameter tunning.

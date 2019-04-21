@@ -6,7 +6,9 @@
 #'
 #' @param methyDat A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}}, 
 #' \code{data.table}, \code{data.frame}, or \code{matrix} of Illumina BeadChip methylation data 
-#' (450k or EPIC array). See Details.
+#' (450k or EPIC array). See Details. Alternatively, user can also specify a pre-built data template for 
+#' \code{remp} to carry out the prediction. See \code{\link{rempTemplate}}. With template specified, \code{methyDat}, 
+#' \code{REtype}, \code{parcel}, and \code{work.dir} can be skipped.
 #' @param REtype Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.
 #' @param parcel An \code{\link{REMParcel}} object containing necessary data to carry out the
 #' prediction. If \code{NULL}, the function will search the \code{.rds} data file in \code{work.dir} 
@@ -17,17 +19,20 @@
 #' one specified in \code{\link{initREMP}} or in \code{\link{saveParcel}}.
 #' @param win An integer specifying window size to confine the upstream and downstream flanking 
 #' region centered on the predicted CpG in RE for prediction. Default = \code{1000}. See Details.
-#' @param method Name of model/approach for prediction. Currently \code{"rf"} (Random Forest),  
-#' \code{"svmLinear"} (SVM with linear kernel), \code{"svmRadial"} (SVM with linear kernel), and
-#' \code{"naive"} (carrying over methylation values of the closest CpG site) are available. 
-#' Default = \code{"rf"} (Random Forest). See Details.
+#' @param method Name of model/approach for prediction. Currently \code{"rf"} (Random Forest), 
+#' \code{"xgbTree"} (Extreme Gradient Boosting), \code{"svmLinear"} (SVM with linear kernel), \code{"svmRadial"} 
+#' (SVM with linear kernel), and \code{"naive"} (carrying over methylation values of the closest 
+#' CpG site) are available. Default = \code{"rf"} (Random Forest). See Details.
 #' @param autoTune Logical parameter. If \code{TRUE}, a 3-time repeated 5-fold cross validation 
 #' will be performed to determine the best model parameter. If \code{FALSE}, the \code{param} option 
 #' (see below) must be specified. Default = \code{TRUE}. Auto-tune will be disabled using Random Forest. 
 #' See Details.
-#' @param param A number or a vector specifying the model tuning parameter(s) (not applicable for Random Forest).
-#' For SVM, \code{param} represents 'Cost' (for linear kernel) or 'Sigma'
-#' and 'Cost' (for radial basis function kernel). This parameter is valid only when \code{autoTune = FALSE}.
+#' @param param A list specifying fixed model tuning parameter(s) (not applicable for Random Forest, see Details).
+#' For Extreme Gradient Boosting, \code{param} list must contain '\code{$nrounds}', '\code{$max_depth}', 
+#' '\code{$eta}', '\code{$gamma}', '\code{$colsample_bytree}', '\code{$min_child_weight}', and '\code{$subsample}'.
+#' See \code{xgbTree} in package \code{caret}. For SVM, \code{param} list must contain '\code{$C}' (cost) for linear kernel 
+#' or '\code{$sigma}' and '\code{$C}' for radial basis function kernel. This parameter is valid only 
+#' when \code{autoTune = FALSE}.
 #' @param seed Random seed for Random Forest model for reproducible prediction results. 
 #' Default is \code{NULL}, which generates a seed.
 #' @param ncore Number of cores to run parallel computation. By default, max number of cores available 
@@ -61,12 +66,24 @@
 #'
 #' @examples
 #' # Obtain example Illumina example data (450k)
-#' GM12878_450k <- getGM12878('450k')
+#' if(!exists("GM12878_450k")) GM12878_450k <- getGM12878('450k')
 #' 
-#' # Make sure you have run 'initREMP'. See ?initREMP.
+#' # Make sure you have run 'initREMP' first. See ?initREMP.
+#' if(!exists("remparcel")){
+#'  data(Alu.demo)
+#'  remparcel <- initREMP(arrayType = '450k', REtype = 'Alu', RE = Alu.demo, ncore = 1)
+#' }
 #' 
+#' # With data template pre-built (See ?rempTemplate):
+#' if(!exists("template")) template <- rempTemplate(GM12878_450k, remparcel, win = 1000)
+#' remp.res <- remp(template, ncore = 1)
+#' 
+#' # Or run remp without pre-built template
+#' \dontrun{
 #' # Run prediction
-#' remp.res <- remp(GM12878_450k, REtype = 'Alu', ncore = 1)
+#' remp.res <- remp(GM12878_450k, REtype = 'Alu', parcel = remparcel, ncore = 1)
+#' }
+#' 
 #' remp.res
 #' details(remp.res)
 #' rempB(remp.res) # Methylation data (beta value)
@@ -84,7 +101,7 @@
 #' # (Recommended) Trim off less reliable prediction
 #' remp.res <- rempTrim(remp.res)
 #' 
-#' # (Recommended) Obtain RE-level methylation (aggregate by mean)
+#' # Obtain RE-level methylation (aggregate by mean)
 #' remp.res <- rempAggregate(remp.res)
 #' rempB(remp.res) # Methylation data (beta value)
 #' 
@@ -95,178 +112,112 @@
 #' plot(remp.res)
 #' 
 #' @export
-remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL, 
-                 work.dir = tempdir(),
-                 win = 1000, method = c("rf", "svmLinear", "svmRadial", "naive"), 
+remp <- function(methyDat = NULL, REtype = c("Alu", "L1"), parcel = NULL, work.dir = tempdir(), win = 1000,
+                 method = c("rf", "xgbTree", "svmLinear", "svmRadial", "naive"), 
                  autoTune = TRUE, param = NULL, seed = NULL, ncore = NULL, BPPARAM = NULL, 
                  verbose = FALSE) {
   t <- Sys.time()
-  REtype <- match.arg(REtype)
+  
+  if(is.null(methyDat)) stop("Methylation dataset (methyDat) is missing.")
+  if(!is.null(param) & !is(param, "list")) stop("Tuning parameter(s) (param) must be a list object.")
+  
   method <- match.arg(method)
+  if (method != "naive" & !autoTune & is.null(param)) {
+    message("Tuning parameter for method = '", method, "' is missing!")
+    stop("You turned off auto-tune. Please specify tuning parameter(s).")
+  }
   
-  if(win > remp_options(".default.max.flankWindow"))
-    stop("Flanking window size cannot be greater than ", remp_options(".default.max.flankWindow"), 
-         ". Please see ?remp_options for details.")
-  
-  if (is.null(ncore)) 
-    ncore <- parallel::detectCores()
-  
-  if(method == "rf")
+  if(method %in% c("rf", "xgbTree"))
   {
     if (is.null(seed))
       seed = sample(.Random.seed, 1)
     message("Using random seed = ", seed)
     
-    autoTune <- FALSE # No need to tune RF mtry
-    param <- round(length(remp_options(".default.predictors"))/3) # one third of number of predictors
-    if (verbose) 
-      message("Note: Auto-tune is disabled for Random Forest and mtry is set to one third of number of predictors (", param, ").")
+    if(method == "rf")
+    {
+      autoTune <- FALSE # No need to tune RF mtry
+      param <- list(mtry = round(length(remp_options(".default.predictors"))/3)) # one third of number of predictors
+      if (verbose) 
+        message("Note: Auto-tune is disabled for Random Forest and mtry is set to 
+                one third of number of predictors (", param, ").")
+    }
+  }
+  
+  if (is.null(ncore)) 
+    ncore <- parallel::detectCores()
+  
+  if(!is(methyDat, "template"))
+  {
+    REtype <- match.arg(REtype)
+    
+    if(win > remp_options(".default.max.flankWindow"))
+      stop("Flanking window size cannot be greater than ", 
+           remp_options(".default.max.flankWindow"), 
+           ". Please see ?remp_options for details.")
+    
+    ## Groom methylation data
+    methyDat <- grooMethy(methyDat, verbose = verbose)
+    methyDat <- minfi::getM(methyDat)
+    
+    ## Get the REMParcel object ready
+    if(is.null(parcel))
+    {
+      arrayType <- .guessArrayType(methyDat)
+      if (arrayType == "27k")
+        stop("Illumina 27k array is not supported.")
+      if (arrayType == "UNKNOWN") 
+        stop("Unknown methylation array type.")
+      
+      subDirName <- paste0("REMP.data.", arrayType)
+      work.dir <- .forwardSlashPath(work.dir)
+      data.dir <- .forwardSlashPath(file.path(work.dir, subDirName))
+      
+      path_to_parcel <- file.path(data.dir, 
+                                  paste0("REMParcel_", 
+                                         REtype, "_", 
+                                         arrayType, "_", 
+                                         remp_options(".default.max.flankWindow"), 
+                                         ".rds"))
+      
+      if (file.exists(path_to_parcel)){
+        remparcel <- readRDS(path_to_parcel)
+      } else {
+        stop("Necessary annotation data files are missing. Please make sure:
+             1) you have run initREMP() first to generate the data. See ?initREMP for details; 
+             2) your working directory specified is the same as you did in initREMP(); 
+             3) the RE type and/or platform match the annotation data generated by initREMP().")
+      }
+    } else {
+      .isREMParcelOrStop(parcel)
+      remparcel <- parcel
+    }
+    
+    TEMPLATE <- rempTemplate(methyDat, remparcel, win, FALSE)
+  } else {
+    TEMPLATE <- methyDat
   }
   
   ## Setup backend for paralell computing
   be <- getBackend(ncore, BPPARAM, verbose)
-  ncore <- BiocParallel::bpworkers(be)
+  ncore <- BiocParallel::bpnworkers(be)
   
-  message("Start RE methylation prediction with ", BiocParallel::bpworkers(be), 
-          " core(s) ...", .timeTrace(t))
+  tRun <- .timeTrace(t); t <- tRun$t
+  message("Start RE methylation prediction with ", 
+          BiocParallel::bpnworkers(be), " core(s) ...")
   
-  if (method != "naive" & !autoTune & is.null(param)) {
-    message("Tuning parameter for method = '", method, "' is missing!")
-    stop("You turned off auto-tune. Please specify parameter.")
-  }
-  
-  ## Groom methylation data
-  methyDat <- grooMethy(methyDat, verbose = verbose)
-  
-  methyDat <- minfi::getM(methyDat)
-  
-  arrayType <- .guessArrayType(methyDat)
-  if (arrayType == "27k")
-    stop("Illumina 27k array is not supported.")
-  if (arrayType == "UNKNOWN") 
-    stop("Unknown methylation array type.")
-  
-  subDirName <- paste0("REMP.data.", arrayType)
-  work.dir <- .forwardSlashPath(work.dir)
-  data.dir <- .forwardSlashPath(file.path(work.dir, subDirName))
-  
-  ## Get the REMParcel object ready
-  
-  if(is.null(parcel))
-  {
-    path_to_parcel <- file.path(data.dir, 
-                                paste0("REMParcel_", 
-                                       REtype, "_", 
-                                       arrayType, "_", 
-                                       remp_options(".default.max.flankWindow"), 
-                                       ".rds"))
-    
-    if (file.exists(path_to_parcel)){
-      remparcel <- readRDS(path_to_parcel)
-    } else {
-      stop("Necessary annotation data files are missing. Please make sure:
-           1) you have run initREMP() first to generate the data. See ?initREMP for details; 
-           2) your working directory specified is the same as you did in initREMP(); 
-           3) the RE type and/or platform match the annotation data generated by initREMP().")
-    }
-  } else {
-    .isREMParcelOrStop(parcel)
-    remparcel <- parcel
-  }
-  
-  refgene_main <- getRefGene(remparcel)
-  RE_refGene.original <- getRE(remparcel)
-  RE_CpG <- getRECpG(remparcel)
-  ILMN <- getILMN(remparcel)
-  RE_CpG_ILMN <- getILMN(remparcel, REonly = TRUE)
-  
-  ####
+  REtype = TEMPLATE$REtype
+  arrayType = TEMPLATE$arrayType
+  methyDat <- TEMPLATE$NBCpG_methyDat
+  RE_NeibCpG <- TEMPLATE$NBCpG_GR
+  RE_CpG_ILMN_DATA <- TEMPLATE$RECpG_methyDat
+  RE_CpG_ILMN <- TEMPLATE$RECpG_GR
+
+  refgene_main <- TEMPLATE$refgene
+  RE_refGene.original <- TEMPLATE$RE
   
   samplenames <- colnames(methyDat)
   sampleN <- length(samplenames)
-  
-  ## Make indicator of genomic regions
-  RE_refGene <- .toIndicator(RE_refGene.original)
-  # ILMN <- .toIndicator(ILMN)
-  
-  ## RE.CpG : Add CpG density and rename
-  ## identical(runValue(RE_refGene$Index), runValue(RE_CpG$Index))
-  RE_refGene$N <- runLength(RE_CpG$Index)
-  RE_refGene$Length <- width(RE_refGene)
-  RE_refGene$CpG.density <- RE_refGene$N/RE_refGene$Length  #density of CpG within RE sequence
-  
-  merge_RE_CpG_meta <- mcols(RE_refGene)[match(as.character(RE_CpG$Index), 
-                                               as.character(RE_refGene$Index)), ]
-  merge_RE_CpG_meta$CpG.ID <- as.character(granges(RE_CpG))
-  mcols(RE_CpG) <- setNames(merge_RE_CpG_meta, paste0("RE.", colnames(merge_RE_CpG_meta)))
-  # all(as.character(granges(RE_CpG)) == RE_CpG$RE.CpG.ID)
-  
-  ## Find valid CpG sites with methylation profiled
-  commonCpGIndex <- intersect(rownames(methyDat), ILMN$Index)
-  
-  ## Trim down methyDat:
-  methyDat <- methyDat[match(commonCpGIndex, rownames(methyDat)), , drop = FALSE]
-  
-  ## ILMN : create pointer and rename. Note: Different Methy data will
-  ## result in different size of this data!
-  ILMN <- ILMN[match(commonCpGIndex, ILMN$Index), ]
-  mcols(ILMN) <- setNames(mcols(ILMN), paste0("ILMN.", colnames(mcols(ILMN))))
-  ILMN$Methy.ptr <- seq_len(length(ILMN))
-  # identical(ILMN$ILMN.Index, rownames(methyDat))
-  
-  ## RE_CpG_ILMN : Compute total number of RE covered by ILMN. Note:
-  ## Different Methy data will result in different size of this data.
-  RE_CpG_ILMN <- RE_CpG_ILMN[RE_CpG_ILMN$Index %in% rownames(methyDat),]
-  RE_CpG_ILMN <- unique(RE_CpG_ILMN)
-  
-  RE_CpG_ILMN_DATA <- methyDat[match(RE_CpG_ILMN$Index, rownames(methyDat)), , drop = FALSE]
-  
-  ############################################################# Find RE_CpG's neighboring CpG
-  if (verbose) 
-    message("Processing ", REtype, " with window +/- ", win, " base pair ...", .timeTrace(t))
-  RE_CpG_flanking <- .twoWayFlank(granges(RE_CpG), win)
-  HITS <- findOverlaps(RE_CpG_flanking, ILMN, ignore.strand = TRUE)
-  
-  ## Part 1: RE-CpG
-  RE_NeibCpG <- RE_CpG[queryHits(HITS), ]
-  ## Total RE that can be predicted (contains neighboring CpGs within given window)
-  
-  ## Part 2: Neighboring ILMN CpG
-  RE_NeibCpG_ILMN <- ILMN[subjectHits(HITS), ]
-  RE_NeibCpG_ILMN <- DataFrame(RE_NeibCpG_ILMN.GR = granges(RE_NeibCpG_ILMN), 
-                               mcols(RE_NeibCpG_ILMN))
-  mcols(RE_NeibCpG) <- DataFrame(mcols(RE_NeibCpG), RE_NeibCpG_ILMN)
-  # identical(as.character(granges(RE_NeibCpG)), RE_NeibCpG$RE.CpG.ID)
-  
-  ## Remove singleton (RE-CpGs with only one neighboring ILMN CpG)
-  message("Preparing neighboring CpG information ...", .timeTrace(t))
-  RE_NeibCpG$distance <- abs(start(RE_NeibCpG$RE_NeibCpG_ILMN.GR) - start(RE_NeibCpG))
-  RE_NeibCpG <- RE_NeibCpG[RE_NeibCpG$distance > 1,]
-  
-  ## Add core predictors.
-  RE_NeibCpG <- RE_NeibCpG[order(RE_NeibCpG$RE.CpG.ID, RE_NeibCpG$distance), ]
-  RE_NeibCpG.DF <- mcols(RE_NeibCpG)[, c("RE.CpG.ID", "Methy.ptr", "distance")]
-  
-  distance_agg <- .aggregateNeib(distance ~ RE.CpG.ID, RE_NeibCpG.DF, 
-                                 function(x) c(length(x), mean(x), sd(x), x[1], x[2]), 
-                                 c("RE.CpG.ID", "N.nbr", "distance.mean", 
-                                   "distance.std", "distance.min", "distance.min2"))
-  Methy_ptr_agg <- .aggregateNeib(Methy.ptr ~ RE.CpG.ID, RE_NeibCpG.DF, 
-                                  function(x) c(x[1], x[2]), 
-                                  c("RE.CpG.ID", "Methy.ptr.min", "Methy.ptr.min2"))
-  
-  Methy_ptr_distance_agg <- merge(distance_agg, Methy_ptr_agg, by = "RE.CpG.ID")
-  
-  RE_NeibCpG_meta <- mcols(RE_NeibCpG)
-  mcols(RE_NeibCpG) <- cbind(RE_NeibCpG_meta, 
-                             Methy_ptr_distance_agg[match(RE_NeibCpG_meta$RE.CpG.ID, 
-                                                          Methy_ptr_distance_agg$RE.CpG.ID), -1])
-  RE_NeibCpG <- RE_NeibCpG[order(RE_NeibCpG$RE.Index)]
-  RE_NeibCpG <- RE_NeibCpG[RE_NeibCpG$N.nbr > 1, ]  ## Remove singleton
-  
-  if (verbose) 
-    message("Template generation completed ...", .timeTrace(t))
-  
+
   ####################################### 
   
   if ("naive" == method) {
@@ -283,16 +234,23 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
     method_text <- "Random Forest"
     QCname_text <- "Quantile Regression Forest"
   }
+  if ("xgbTree" == method) {
+    BEST_TUNE <- DataFrame(matrix(NA, nrow = sampleN, ncol = 7))
+    colnames(BEST_TUNE) <- c("nrounds", "max_depth", "eta", "gamma", "colsample_bytree", "min_child_weight", "subsample")
+    libToLoad <- NULL
+    method_text <- "Extreme Gradient Boosting"
+    QCname_text <- "N/A"
+  }
   if ("svmLinear" == method) {
     BEST_TUNE <- DataFrame(matrix(NA, nrow = sampleN, ncol = 1))
-    colnames(BEST_TUNE) <- "Cost"
+    colnames(BEST_TUNE) <- "cost"
     libToLoad <- "kernlab"
     method_text <- "SVM(Linear)"
     QCname_text <- "N/A"
   }
   if ("svmRadial" == method) {
     BEST_TUNE <- DataFrame(matrix(NA, nrow = sampleN, ncol = 2)) 
-    colnames(BEST_TUNE) <- c("gamma", "Cost")
+    colnames(BEST_TUNE) <- c("sigma", "cost")
     libToLoad <- "kernlab"
     method_text <- "SVM(Radial)"
     QCname_text <- "N/A"
@@ -349,7 +307,7 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
     best_tune <- as.numeric(P_basic$bestTune)
     
     if (method != "naive") {
-      REMP_PREDICT_IMP[, i] <- P_basic$importance$Overall
+      REMP_PREDICT_IMP[, i] <- P_basic$importance[remp_options(".default.predictors"),"Overall"]
       for(k in seq_len(length(best_tune)))
       {
         BEST_TUNE[i, k] <- best_tune[k]
@@ -387,11 +345,12 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
                                    num.threads = ncore)
     }
 
+    tRun <- .timeTrace(t); t <- tRun$t
     message("    ", samplenames[i], " completed! ", sampleN - i, 
-            " sample(s) left ...", .timeTrace(t))
+            " sample(s) left ...", tRun$t_text)
   }
   
-  message("Done.", .timeTrace(t))
+  message("Done.")
   
   remproduct <- REMProduct(REtype = REtype, platform = arrayType, win = as.character(win),
                            predictModel = method_text, QCModel = QCname_text, 
@@ -443,9 +402,19 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
 
 .modelTrain <- function(d, varname, method, autoTune, param, 
                         be, seed, verbose) {
-  ncore <- BiocParallel::bpworkers(be)
+  ncore <- BiocParallel::bpnworkers(be)
   
   d <- as.data.frame(mcols(d)[, c("Methy", varname)])
+  
+  if (autoTune) {
+    trC.method <- "repeatedcv"
+    trC.number <- 5
+    trC.repeats <- 3
+  } else {
+    trC.method <- "none"
+    trC.number <- 1
+    trC.repeats <- NA
+  }
   
   if (method == "naive") {
     modelFit <- list(model = NULL, QC = NULL, importance = NULL, bestTune = NULL, 
@@ -457,10 +426,10 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
       if (autoTune) {
         C <- remp_options(".default.C.svmLinear.tune")
       } else {
-        C <- param
+        C <- param$C
       }
       grid <- expand.grid(C = C)
-      text <- "Cost"
+      text <- "cost"
     }
     
     if (method == "svmRadial") {
@@ -468,27 +437,41 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
         sigma <- remp_options(".default.sigma.svmRadial.tune")
         C <- remp_options(".default.C.svmRadial.tune")
       } else {
-        sigma <- param[1]
-        C <- param[2]
+        sigma <- param$sigma
+        C <- param$C
       }
       grid <- expand.grid(sigma = sigma, C = C)
-      text <- c("gamma", "cost")
+      text <- c("sigma", "cost")
     }
     
-    if (autoTune) {
-      trC.method <- "repeatedcv"
-      trC.number <- 5
-      trC.repeats <- 3
-    } else {
-      trC.method <- "none"
-      trC.number <- 1
-      trC.repeats <- NA
+    if (method == "xgbTree") {
+      if (autoTune) {
+        nrounds = remp_options(".default.nrounds.xgbTree.tune")
+        max_depth = remp_options(".default.max_depth.xgbTree.tune")
+        eta = remp_options(".default.eta.xgbTree.tune")
+        gamma = remp_options(".default.gamma.xgbTree.tune")
+        colsample_bytree = remp_options(".default.colsample_bytree.xgbTree.tune")
+        min_child_weight = remp_options(".default.min_child_weight.xgbTree.tune")
+        subsample = remp_options(".default.subsample.xgbTree.tune")
+      } else {
+        nrounds <- param$nrounds
+        eta <- param$eta
+        max_depth <- param$max_depth
+        gamma <- param$gamma
+        colsample_bytree <- param$colsample_bytree
+        min_child_weight <- param$min_child_weight
+        subsample <- param$subsample
+      }
+      grid <- expand.grid(nrounds = nrounds, eta = eta, max_depth = max_depth,
+                          gamma = gamma, colsample_bytree = colsample_bytree, 
+                          min_child_weight = min_child_weight, subsample = subsample)
+      text <- c("nrounds", "max_depth", "eta", "gamma", "colsample_bytree", "min_child_weight", "subsample")
     }
-    
+
     if (method == "rf") {
       text <- "mtry"
       doQC <- TRUE
-      model.tune <- ranger::ranger(Methy ~ ., data = d, mtry = param, num.threads = ncore,
+      model.tune <- ranger::ranger(Methy ~ ., data = d, mtry = param$mtry, num.threads = ncore,
                                    importance = "permutation", keep.inbag = FALSE,
                                    scale.permutation.importance = TRUE, seed = seed)
       var_imp <- ranger::importance(model.tune)
@@ -521,15 +504,15 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
       model = model.tune$finalModel
     }
     
-    if (autoTune) {
-      if (verbose) 
+    if (verbose) {
+      if (autoTune)
         message("    Best tuning parameter found: ", 
                 paste(paste(text, unlist(best_param), sep = " = "), collapse = ", "))
-    } else {
-      if (verbose) 
+      else
         message("    Pre-specified tuning parameter: ", 
                 paste(paste(text, unlist(best_param), sep = " = "), collapse = ", "))
     }
+    
     modelFit <- list(model = model, 
                      importance = var_imp, 
                      bestTune = best_param, 
@@ -570,6 +553,7 @@ remp <- function(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
     data.frame(newdata)$Methy.min #newdata is matrix
   } else {
     if(any(class(model) %in% c("ksvm","vm"))) kernlab::predict(model, newdata) #kernlab has its own predict function
+    else predict(model, newdata)
   }
 }
 

@@ -4,15 +4,17 @@
 \alias{remp}
 \title{Repetitive element methylation prediction}
 \usage{
-remp(methyDat, REtype = c("Alu", "L1"), parcel = NULL,
-  work.dir = tempdir(), win = 1000, method = c("rf", "svmLinear",
-  "svmRadial", "naive"), autoTune = TRUE, param = NULL, seed = NULL,
-  ncore = NULL, BPPARAM = NULL, verbose = FALSE)
+remp(methyDat = NULL, REtype = c("Alu", "L1"), parcel = NULL,
+  work.dir = tempdir(), win = 1000, method = c("rf", "xgbTree",
+  "svmLinear", "svmRadial", "naive"), autoTune = TRUE, param = NULL,
+  seed = NULL, ncore = NULL, BPPARAM = NULL, verbose = FALSE)
 }
 \arguments{
 \item{methyDat}{A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}}, 
 \code{data.table}, \code{data.frame}, or \code{matrix} of Illumina BeadChip methylation data 
-(450k or EPIC array). See Details.}
+(450k or EPIC array). See Details. Alternatively, user can also specify a pre-built data template for 
+\code{remp} to carry out the prediction. See \code{\link{rempTemplate}}. With template specified, \code{methyDat}, 
+\code{REtype}, \code{parcel}, and \code{work.dir} can be skipped.}
 
 \item{REtype}{Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.}
 
@@ -28,19 +30,22 @@ one specified in \code{\link{initREMP}} or in \code{\link{saveParcel}}.}
 \item{win}{An integer specifying window size to confine the upstream and downstream flanking 
 region centered on the predicted CpG in RE for prediction. Default = \code{1000}. See Details.}
 
-\item{method}{Name of model/approach for prediction. Currently \code{"rf"} (Random Forest),
-\code{"svmLinear"} (SVM with linear kernel), \code{"svmRadial"} (SVM with linear kernel), and
-\code{"naive"} (carrying over methylation values of the closest CpG site) are available. 
-Default = \code{"rf"} (Random Forest). See Details.}
+\item{method}{Name of model/approach for prediction. Currently \code{"rf"} (Random Forest), 
+\code{"xgbTree"} (Extreme Gradient Boosting), \code{"svmLinear"} (SVM with linear kernel), \code{"svmRadial"} 
+(SVM with linear kernel), and \code{"naive"} (carrying over methylation values of the closest 
+CpG site) are available. Default = \code{"rf"} (Random Forest). See Details.}
 
 \item{autoTune}{Logical parameter. If \code{TRUE}, a 3-time repeated 5-fold cross validation 
 will be performed to determine the best model parameter. If \code{FALSE}, the \code{param} option 
 (see below) must be specified. Default = \code{TRUE}. Auto-tune will be disabled using Random Forest. 
 See Details.}
 
-\item{param}{A number or a vector specifying the model tuning parameter(s) (not applicable for Random Forest).
-For SVM, \code{param} represents 'Cost' (for linear kernel) or 'Sigma'
-and 'Cost' (for radial basis function kernel). This parameter is valid only when \code{autoTune = FALSE}.}
+\item{param}{A list specifying fixed model tuning parameter(s) (not applicable for Random Forest, see Details).
+For Extreme Gradient Boosting, \code{param} list must contain '\code{$nrounds}', '\code{$max_depth}', 
+'\code{$eta}', '\code{$gamma}', '\code{$colsample_bytree}', '\code{$min_child_weight}', and '\code{$subsample}'.
+See \code{xgbTree} in package \code{caret}. For SVM, \code{param} list must contain '\code{$C}' (cost) for linear kernel 
+or '\code{$sigma}' and '\code{$C}' for radial basis function kernel. This parameter is valid only 
+when \code{autoTune = FALSE}.}
 
 \item{seed}{Random seed for Random Forest model for reproducible prediction results. 
 Default is \code{NULL}, which generates a seed.}
@@ -81,12 +86,24 @@ search grid can be access and modified using \code{\link{remp_options}}.
 }
 \examples{
 # Obtain example Illumina example data (450k)
-GM12878_450k <- getGM12878('450k')
+if(!exists("GM12878_450k")) GM12878_450k <- getGM12878('450k')
 
-# Make sure you have run 'initREMP'. See ?initREMP.
+# Make sure you have run 'initREMP' first. See ?initREMP.
+if(!exists("remparcel")){
+ data(Alu.demo)
+ remparcel <- initREMP(arrayType = '450k', REtype = 'Alu', RE = Alu.demo, ncore = 1)
+}
 
+# With data template pre-built (See ?rempTemplate):
+if(!exists("template")) template <- rempTemplate(GM12878_450k, remparcel, win = 1000)
+remp.res <- remp(template, ncore = 1)
+
+# Or run remp without pre-built template
+\dontrun{
 # Run prediction
-remp.res <- remp(GM12878_450k, REtype = 'Alu', ncore = 1)
+remp.res <- remp(GM12878_450k, REtype = 'Alu', parcel = remparcel, ncore = 1)
+}
+
 remp.res
 details(remp.res)
 rempB(remp.res) # Methylation data (beta value)
@@ -104,7 +121,7 @@ rempAnnot(remp.res)
 # (Recommended) Trim off less reliable prediction
 remp.res <- rempTrim(remp.res)
 
-# (Recommended) Obtain RE-level methylation (aggregate by mean)
+# Obtain RE-level methylation (aggregate by mean)
 remp.res <- rempAggregate(remp.res)
 rempB(remp.res) # Methylation data (beta value)
 

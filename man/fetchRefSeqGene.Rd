@@ -16,7 +16,7 @@ about all records in the hub.}
 }
 \value{
 A single \code{\link{GRanges}} (for main refgene data) object or a list incorporating 
-both \code{GRanges} object (for main refgene data)  and \code{\link{GRangesList}} object 
+both \code{\link{GRanges}} object (for main refgene data) and \code{\link{GRangesList}} object 
 (for gene regions data).
 }
 \description{
@@ -31,7 +31,7 @@ exon (\code{$exon})), and 3'UTR (\code{$threeUTR})). The \code{index} column is 
 index that is used to facilitate data referral, which is meaningless for external use.
 }
 \examples{
-ah <- AnnotationHub::AnnotationHub()
+if(!exists("ah")) ah <- AnnotationHub::AnnotationHub()
 refGene <- fetchRefSeqGene(ah, mainOnly = TRUE, verbose = TRUE)
 refGene
 

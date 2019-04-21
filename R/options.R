@@ -59,8 +59,15 @@ REMPOPTIONS <- options_manager(
   .default.C.svmLinear.tune = 2^seq(-15, 3, 2),
   
   .default.sigma.svmRadial.tune = 2^seq(-9, 1, 2),
+  .default.C.svmRadial.tune = 2^seq(-7, 7, 2),
   
-  .default.C.svmRadial.tune = 2^seq(-7, 7, 2)
+  .default.nrounds.xgbTree.tune = 300,
+  .default.max_depth.xgbTree.tune = c(2,4,6),
+  .default.eta.xgbTree.tune = 0.1,
+  .default.gamma.xgbTree.tune = 0,
+  .default.colsample_bytree.xgbTree.tune = 1,
+  .default.min_child_weight.xgbTree.tune = c(1,2,3),
+  .default.subsample.xgbTree.tune = c(0.4, 0.6, 0.8)
 )
 
 
