@@ -7,7 +7,7 @@
 fetchRefSeqGene(ah, mainOnly = FALSE, verbose = FALSE)
 }
 \arguments{
-\item{ah}{An \code{AnnotationHub} object. Use \code{AnnotationHub()} to retrive information 
+\item{ah}{An \code{AnnotationHub} object. Use \code{AnnotationHub()} to retrive information
 about all records in the hub.}
 
 \item{mainOnly}{Logical parameter. See details.}
@@ -15,24 +15,23 @@ about all records in the hub.}
 \item{verbose}{Logical parameter. Should the function be verbose?}
 }
 \value{
-A single \code{\link{GRanges}} (for main refgene data) object or a list incorporating 
-both \code{\link{GRanges}} object (for main refgene data) and \code{\link{GRangesList}} object 
+A single \code{\link{GRanges}} (for main refgene data) object or a list incorporating
+both \code{\link{GRanges}} object (for main refgene data) and \code{\link{GRangesList}} object
 (for gene regions data).
 }
 \description{
 \code{fetchRefSeqGene} is used to obtain refSeq gene database provided by AnnotationHub.
 }
 \details{
-When \code{mainOnly = FALSE}, only the transcript location information will be returned, 
-Otherwise, a \code{\link{GRangesList}} object containing gene regions 
-information will be added. Gene regions include: 2000 base pair upstream of the transcript 
-start site (\code{$tss})), 5'UTR (\code{$fiveUTR})), coding sequence (\code{$cds})), 
-exon (\code{$exon})), and 3'UTR (\code{$threeUTR})). The \code{index} column is an internal 
+When \code{mainOnly = FALSE}, only the transcript location information will be returned,
+Otherwise, a \code{\link{GRangesList}} object containing gene regions
+information will be added. Gene regions include: 2000 base pair upstream of the transcript
+start site (\code{$tss})), 5'UTR (\code{$fiveUTR})), coding sequence (\code{$cds})),
+exon (\code{$exon})), and 3'UTR (\code{$threeUTR})). The \code{index} column is an internal
 index that is used to facilitate data referral, which is meaningless for external use.
 }
 \examples{
-if(!exists("ah")) ah <- AnnotationHub::AnnotationHub()
-refGene <- fetchRefSeqGene(ah, mainOnly = TRUE, verbose = TRUE)
-refGene
-
+if (!exists("ah")) ah <- AnnotationHub::AnnotationHub()
+if (!exists("refgene.hg19")) refgene.hg19 <- fetchRefSeqGene(ah, verbose = TRUE)
+refgene.hg19
 }

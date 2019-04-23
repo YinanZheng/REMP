@@ -11,43 +11,45 @@ grooMethy(methyDat, impute = TRUE, imputebyrow = TRUE,
 \item{methyDat}{A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
 data.table, data.frame, or matrix of Illumina BeadChip methylation data (450k or EPIC array).}
 
-\item{impute}{If \code{TRUE}, K-Nearest Neighbouring imputation will be applied to fill 
+\item{impute}{If \code{TRUE}, K-Nearest Neighbouring imputation will be applied to fill
 the missing values. Default = \code{TRUE}. See Details.}
 
-\item{imputebyrow}{If \code{TRUE}, missing values will be imputed using similar values in row 
-(i.e., across samples); if \code{FALSE}, missing values will be imputed using similar values 
+\item{imputebyrow}{If \code{TRUE}, missing values will be imputed using similar values in row
+(i.e., across samples); if \code{FALSE}, missing values will be imputed using similar values
 in column (i.e., across CpGs). Default is \code{TRUE}.}
 
-\item{mapGenome}{Logical parameter. If \code{TRUE}, function will return a \code{\link{GenomicRatioSet}} 
+\item{mapGenome}{Logical parameter. If \code{TRUE}, function will return a \code{\link{GenomicRatioSet}}
 object instead of a \code{\link{RatioSet}}.}
 
 \item{verbose}{Logical parameter. Should the function be verbose?}
 }
 \value{
-A \code{\link{RatioSet}} or \code{\link{GenomicRatioSet}} containing beta value and 
+A \code{\link{RatioSet}} or \code{\link{GenomicRatioSet}} containing beta value and
 M value of the methylation data.
 }
 \description{
-\code{grooMethy} is used to automatically detect and fix data issues including zero beta 
+\code{grooMethy} is used to automatically detect and fix data issues including zero beta
 value, missing value, and infinite value.
 }
 \details{
-For methylation data in beta value, if zero value exists, the logit transformation 
-from beta to M value will produce negative infinite value. Therefore, zero beta value 
-will be replaced with the smallest non-zero beta value found in the dataset. \code{grooMethy} 
-can also handle missing value (i.e. \code{NA} or \code{NaN}) using KNN imputation (see 
-\code{\link{impute.knn}}). The infinite value will be also treated as missing value for imputation. 
-If the original dataset is in beta value, \code{grooMethy} will first transform it to M value 
+For methylation data in beta value, if zero value exists, the logit transformation
+from beta to M value will produce negative infinite value. Therefore, zero beta value
+will be replaced with the smallest non-zero beta value found in the dataset. \code{grooMethy}
+can also handle missing value (i.e. \code{NA} or \code{NaN}) using KNN imputation (see
+\code{\link{impute.knn}}). The infinite value will be also treated as missing value for imputation.
+If the original dataset is in beta value, \code{grooMethy} will first transform it to M value
 before imputation is carried out. If the imputed value is out of the original range (which is possible when
-\code{imputebyrow = FALSE}), mean value will be used instead. Warning: imputed 
+\code{imputebyrow = FALSE}), mean value will be used instead. Warning: imputed
 values for multimodal distributed CpGs (across samples) may not be correct. Please check package \code{ENmix} to
-identify the CpGs with multimodal distribution. Please note that \code{grooMethy} is 
-also embedded in \code{\link{remp}} so the user can run \code{\link{remp}} directly without 
+identify the CpGs with multimodal distribution. Please note that \code{grooMethy} is
+also embedded in \code{\link{remp}} so the user can run \code{\link{remp}} directly without
 explicitly running \code{grooMethy}.
 }
 \examples{
-GM12878_450k <- getGM12878('450k') # Get GM12878 methylation data (450k array)
-grooMethy(GM12878_450k, verbose = TRUE)
-grooMethy(minfi::getBeta(GM12878_450k), verbose = TRUE)
+# Get GM12878 methylation data (450k array)
+if (!exists("GM12878_450k")) GM12878_450k <- getGM12878("450k")
+GM12878_450k <- grooMethy(GM12878_450k, verbose = TRUE)
 
+# Also works if data input is a matrix
+grooMethy(minfi::getBeta(GM12878_450k), verbose = TRUE)
 }

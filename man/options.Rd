@@ -25,28 +25,29 @@ The following options are supported
  \item{\code{.default.AluFamily}}{A list of Alu subfamily to be included in the prediction.}
  \item{\code{.default.L1Family}}{A list of L1 subfamily to be included in the prediction.}
  \item{\code{.default.GM12878.450k.URL}}{ URL to download GM12878 450k methylation profiling data.}
- \item{\code{.default.AH.repeatmasker.hg19}}{\code{AnnotationHub} data ID linked to RepeatMasker 
+ \item{\code{.default.AH.repeatmasker.hg19}}{\code{AnnotationHub} data ID linked to RepeatMasker
  database (build hg19)}
- \item{\code{.default.AH.refgene.hg19}}{\code{AnnotationHub} data ID linked to refSeq gene database 
+ \item{\code{.default.AH.refgene.hg19}}{\code{AnnotationHub} data ID linked to refSeq gene database
  (build hg19)}
  \item{\code{.default.TSS.upstream}}{Define the upstream range of transcription start site region.}
  \item{\code{.default.TSS.downstream}}{Define the downstream range of transcription start site region.}
- \item{\code{.default.max.flankWindow}}{Define the max size of the flanking window surrounding the 
+ \item{\code{.default.max.flankWindow}}{Define the max size of the flanking window surrounding the
  predicted RE-CpG.}
  \item{\code{.default.450k.total.probes}}{Total number of probes designed in Illumina 450k array.}
  \item{\code{.default.epic.total.probes}}{Total number of probes designed in Illumina EPIC array.}
- \item{\code{.default.450k.annotation}}{A character string associated with the Illumina 450k 
+ \item{\code{.default.450k.annotation}}{A character string associated with the Illumina 450k
  array annotation dataset.}
- \item{\code{.default.epic.annotation}}{A character string associated with the Illumina EPIC 
+ \item{\code{.default.epic.annotation}}{A character string associated with the Illumina EPIC
  array annotation dataset.}
  \item{\code{.default.genomicRegionColNames}}{Define the names of the genomic regions for prediction.}
  \item{\code{.default.predictors}}{Define the names of predictors for RE methylation prediction.}
- \item{\code{.default.C.svmLinear.tune}}{Define the default \code{C} (Cost) parameter for Support 
+ \item{\code{.default.svmLinear.tune}}{Define the default \code{C} (Cost) parameter for Support
  Vector Machine (SVM) using linear kernel.}
- \item{\code{.default.sigma.svmRadial.tune}}{Define the default \code{sigma} parameter for SVM
+ \item{\code{.default.svmRadial.tune}}{Define the default parameters (\code{C} and \code{sigma}) for SVM
  using Radial basis function kernel.}
- \item{\code{.default.C.svmRadial.tune}}{Define the default \code{C} (Cost) parameter for SVM
- using Radial basis function kernel.} 
+ \item{\code{.default.xgbTree.tune}}{Define the default parameters (\code{nrounds}, \code{eta}, \code{max_depth},
+ \code{gamma}, \code{colsample_bytree}, \code{min_child_weight}, and \code{subsample}) for Extreme Gradient
+ Boosting.}
 }
 }
 
@@ -62,5 +63,4 @@ remp_options(.default.max.flankWindow = 2000)
 
 # Reset all options
 remp_reset()
-
 }

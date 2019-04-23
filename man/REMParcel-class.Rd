@@ -52,7 +52,7 @@ saveParcel(object, ...)
 \item{RE}{Annotated RE genomic range data, which can be obtained by \code{\link{fetchRMSK}} and annotated
 by \code{\link{GRannot}}.}
 
-\item{RECpG}{Genomic range data of annotated CpG site identified in RE DNA sequence, which can 
+\item{RECpG}{Genomic range data of annotated CpG site identified in RE DNA sequence, which can
 be obtained by \code{\link{findRECpG}} and annotated by \code{\link{GRannot}}.}
 
 \item{ILMN}{Illumina CpG probe genomic range data.}
@@ -62,7 +62,7 @@ be obtained by \code{\link{findRECpG}} and annotated by \code{\link{GRannot}}.}
 \item{...}{For \code{saveParcel}: other parameters to be passed to the \code{saveRDS} method. See
 \code{\link{saveRDS}}.}
 
-\item{work.dir}{For \code{saveParcel}: path to the directory where the generated data will be saved. 
+\item{work.dir}{For \code{saveParcel}: path to the directory where the generated data will be saved.
 If not specified, temporary directory \code{tempdir()} will be used.}
 
 \item{verbose}{For \code{saveParcel}: logical parameter. Should the function be verbose?}
@@ -73,19 +73,19 @@ If not specified, temporary directory \code{tempdir()} will be used.}
 An object of class \code{REMParcel} for the constructor.
 }
 \description{
-\code{REMParcel} is a container class to organize required datasets for 
+\code{REMParcel} is a container class to organize required datasets for
 RE methylation prediction generated from \code{\link{initREMP}} and used in \code{\link{remp}}.
 }
 \section{Accessors}{
 
 \describe{
     \item{\code{getRefGene(object)}}{Return RefSeq gene annotation data.}
-    \item{\code{getRE(object)}}{Return RE genomic location data for prediction 
+    \item{\code{getRE(object)}}{Return RE genomic location data for prediction
     (annotated by refSeq gene database).}
-    \item{\code{getRECpG(object)}}{Return RE-CpG genomic location 
+    \item{\code{getRECpG(object)}}{Return RE-CpG genomic location
     data for prediction.}
-    \item{\code{getILMN(object, REonly = FALSE)}}{Return Illumina CpG probe genomic 
-    location data for prediction (annotated by refSeq gene database). If 
+    \item{\code{getILMN(object, REonly = FALSE)}}{Return Illumina CpG probe genomic
+    location data for prediction (annotated by refSeq gene database). If
     \code{REonly = TRUE}, only probes within RE region are returned.}
     }
 }
@@ -93,12 +93,11 @@ RE methylation prediction generated from \code{\link{initREMP}} and used in \cod
 \section{Utilities}{
 
 \describe{
-    \item{\code{saveParcel(object, work.dir = tempdir(), verbose = FALSE, ...)}}{Save 
+    \item{\code{saveParcel(object, work.dir = tempdir(), verbose = FALSE, ...)}}{Save
     the object to local machine. }
     }
 }
 
 \examples{
 showClass("REMParcel")
-
 }

@@ -7,7 +7,7 @@
 fetchRMSK(ah, REtype, verbose = FALSE)
 }
 \arguments{
-\item{ah}{An \code{\link{AnnotationHub}} object. Use \code{AnnotationHub()} to 
+\item{ah}{An \code{\link{AnnotationHub}} object. Use \code{AnnotationHub()} to
 retrive information about all records in the hub.}
 
 \item{REtype}{Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.}
@@ -15,17 +15,16 @@ retrive information about all records in the hub.}
 \item{verbose}{Logical parameter. Should the function be verbose?}
 }
 \value{
-A \code{\link{GRanges}} object containing RE database. 'name' column 
-indicates the RE subfamily; 'score' column indicates the SW score; 'Index' is an 
+A \code{\link{GRanges}} object containing RE database. 'name' column
+indicates the RE subfamily; 'score' column indicates the SW score; 'Index' is an
 internal index for RE to facilitate data referral, which is meaningless for external use.
 }
 \description{
-\code{fetchRMSK} is used to obtain specified RE database from RepeatMasker Database 
+\code{fetchRMSK} is used to obtain specified RE database from RepeatMasker Database
 provided by AnnotationHub.
 }
 \examples{
-if(!exists("ah")) ah <- AnnotationHub::AnnotationHub()
-L1 <- fetchRMSK(ah, 'L1', verbose = TRUE)
+if (!exists("ah")) ah <- AnnotationHub::AnnotationHub()
+L1 <- fetchRMSK(ah, "L1", verbose = TRUE)
 L1
-
 }
