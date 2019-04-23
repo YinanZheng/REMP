@@ -2,35 +2,38 @@
 % Please edit documentation in R/getGM12878.R
 \name{getGM12878}
 \alias{getGM12878}
-\title{Get methylation data of HapMap LCL sample GM12878 profiled by 
+\title{Get methylation data of HapMap LCL sample GM12878 profiled by
 Illumina 450k array or EPIC array}
 \usage{
 getGM12878(arrayType = c("450k", "EPIC"), mapGenome = FALSE)
 }
 \arguments{
-\item{arrayType}{Illumina methylation array type. Currently \code{"450k"} 
+\item{arrayType}{Illumina methylation array type. Currently \code{"450k"}
 and \code{"EPIC"} are supported. Default = \code{"450k"}.}
 
-\item{mapGenome}{Logical parameter. If \code{TRUE}, function will return 
-a \code{\link{GenomicRatioSet}} object instead of a \code{link{RatioSet}} 
+\item{mapGenome}{Logical parameter. If \code{TRUE}, function will return
+a \code{\link{GenomicRatioSet}} object instead of a \code{link{RatioSet}}
 object.}
 }
 \value{
-A \code{\link{RatioSet}} or \code{\link{GenomicRatioSet}} containing 
+A \code{\link{RatioSet}} or \code{\link{GenomicRatioSet}} containing
 beta value and M value of the methylation data.
 }
 \description{
-\code{getGM12878} is used to obtain public available methylation profiling 
+\code{getGM12878} is used to obtain public available methylation profiling
 data of HapMap LCL sample GM12878.
 }
 \details{
-Illumina 450k data were sourced and curated from ENCODE 
-\url{http://hgdownload.cse.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeHaibMethyl450/wgEncodeHaibMethyl450Gm12878SitesRep1.bed.gz}. 
+Illumina 450k data were sourced and curated from ENCODE
+\url{http://hgdownload.cse.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeHaibMethyl450/wgEncodeHaibMethyl450Gm12878SitesRep1.bed.gz}.
 Illumina EPIC data were obtained from data package \code{minfiDataEPIC}.
 }
 \examples{
-# Get GM12878 methylation data (EPIC array)
-GM12878_EPIC <- getGM12878('EPIC') 
-GM12878_EPIC
+# Get GM12878 methylation data (450k array)
+if (!exists("GM12878_450k")) GM12878_450k <- getGM12878("450k")
+GM12878_450k
 
+# Get GM12878 methylation data (EPIC array)
+if (!exists("GM12878_EPIC")) GM12878_EPIC <- getGM12878("EPIC")
+GM12878_EPIC
 }

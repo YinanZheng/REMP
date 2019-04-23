@@ -13,15 +13,15 @@ data.table, data.frame, or matrix of Illumina BeadChip methylation data (450k or
 
 \item{REtype}{Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.}
 
-\item{RE}{A \code{\link{GRanges}} object containing user-specified RE genomic location information. 
-If \code{NULL}, the function will retrive RepeatMasker RE database from \code{\link{AnnotationHub}} 
+\item{RE}{A \code{\link{GRanges}} object containing user-specified RE genomic location information.
+If \code{NULL}, the function will retrive RepeatMasker RE database from \code{\link{AnnotationHub}}
 (build hg19).}
 
-\item{impute}{Parameter used by \code{\link{grooMethy}}. If \code{TRUE}, K-Nearest Neighbouring 
+\item{impute}{Parameter used by \code{\link{grooMethy}}. If \code{TRUE}, K-Nearest Neighbouring
 imputation will be applied to fill the missing values. Default = \code{TRUE}.}
 
-\item{imputebyrow}{Parameter used by \code{\link{grooMethy}}. If \code{TRUE}, missing values will 
-be imputed using similar values in row (i.e., across samples); if \code{FALSE}, missing values 
+\item{imputebyrow}{Parameter used by \code{\link{grooMethy}}. If \code{TRUE}, missing values will
+be imputed using similar values in row (i.e., across samples); if \code{FALSE}, missing values
 will be imputed using similar values in column (i.e., across CpGs). Default is \code{TRUE}.}
 
 \item{verbose}{Logical parameter. Should the function be verbose?}
@@ -34,13 +34,12 @@ A \code{\link{REMProduct}} object containing profiled RE methylation results.
 }
 \examples{
 data(Alu.demo)
-if(!exists("GM12878_450k")) GM12878_450k <- getGM12878('450k')
-remp.res <- remprofile(GM12878_450k, REtype = "Alu", RE = Alu.demo)
-details(remp.res)
-rempB(remp.res) # Methylation data (beta value)
+if (!exists("GM12878_450k")) GM12878_450k <- getGM12878("450k")
+remprofile.res <- remprofile(GM12878_450k, REtype = "Alu", RE = Alu.demo)
+details(remprofile.res)
+rempB(remprofile.res) # Methylation data (beta value)
 
-remp.res <- rempAggregate(remp.res)
-details(remp.res)
-rempB(remp.res) # Methylation data (beta value)
-
+remprofile.res <- rempAggregate(remprofile.res)
+details(remprofile.res)
+rempB(remprofile.res) # Methylation data (beta value)
 }

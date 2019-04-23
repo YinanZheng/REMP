@@ -7,22 +7,22 @@
 getBackend(ncore, BPPARAM = NULL, verbose = FALSE)
 }
 \arguments{
-\item{ncore}{Number of cores to run parallel computation. By default max number 
-of cores available in the machine will be utilized. If \code{ncore = 1}, no 
+\item{ncore}{Number of cores to run parallel computation. By default max number
+of cores available in the machine will be utilized. If \code{ncore = 1}, no
 parallel computation is allowed.}
 
-\item{BPPARAM}{An optional \code{BiocParallelParam} instance determining the 
-parallel back-end to be used during evaluation. If not specified, default 
+\item{BPPARAM}{An optional \code{BiocParallelParam} instance determining the
+parallel back-end to be used during evaluation. If not specified, default
 back-end in the machine will be used.}
 
 \item{verbose}{Logical parameter. Should the function be verbose?}
 }
 \value{
-A \code{\link{BiocParallel}} object that can be used for parallel 
+A \code{\link{BiocParallel}} object that can be used for parallel
 computing.
 }
 \description{
-\code{getBackend} is used to obtain \code{BiocParallel} Back-end to allow 
+\code{getBackend} is used to obtain \code{BiocParallel} Back-end to allow
 parallel computing.
 }
 \examples{
@@ -33,5 +33,4 @@ be
 # parallel mode (2 workers)
 be <- getBackend(2, verbose = TRUE)
 be
-
 }

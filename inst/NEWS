@@ -54,11 +54,11 @@
 * Version number update (same as REMP 1.2.5). R-3.5.0. Bioconductor 3.7.
 
 # REMP 1.4.1
-* Fix bug in grooMethy
+* Fixed bug in grooMethy
 * Added parameters to control the behaviors of imputation in "remprofile".
 
-# REMP 1.6.2
-* Fix bug in identifying numbers of back-end workers;
-* Fix bug in predictor importance matrix;
+# REMP 1.6.3
+* Fixed bug in identifying numbers of back-end workers;
+* Fixed bug in predictor importance matrix;
 * "remp" now supports Extreme Gradient Boosting model.
-* Add rempTemplate function to facilitate model parameter tunning.
+* Added rempTemplate function to facilitate model parameter tunning.

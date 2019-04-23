@@ -15,7 +15,7 @@ Alu.demo
 A GRanges object with 500 ranges and 3 metadata columns.
 }
 \description{
-A \code{\link{GRanges}} dataset containing 500 Alu sequences that have CpGs profiled 
+A \code{\link{GRanges}} dataset containing 500 Alu sequences that have CpGs profiled
 by both Illumina 450k and EPIC array. The variables are as follows:
 }
 \details{

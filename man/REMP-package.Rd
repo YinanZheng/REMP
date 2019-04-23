@@ -6,40 +6,40 @@
 \alias{REMP}
 \title{Repetitive Element Methylation Prediction}
 \description{
-Machine learning-based tools to predict DNA methylation of locus-specific repetitive elements (RE) 
-by learning surrounding genetic and epigenetic information. These tools provide genomewide and 
-single-base resolution of DNA methylation prediction on RE that are difficult to measure using 
-array-based or sequencing-based platforms, which enables epigenome-wide association study (EWAS) 
+Machine learning-based tools to predict DNA methylation of locus-specific repetitive elements (RE)
+by learning surrounding genetic and epigenetic information. These tools provide genomewide and
+single-base resolution of DNA methylation prediction on RE that are difficult to measure using
+array-based or sequencing-based platforms, which enables epigenome-wide association study (EWAS)
 and differentially methylated region (DMR) analysis on RE.
 }
 \section{Overview - standard procedure}{
- 
+
 \describe{
-    \item{Step 1}{Start out generating required dataset for prediction using \code{\link{initREMP}}. 
-    The datasets include RE information, RE-CpG (i.e. CpGs located in RE region) information, 
-    and gene annotation, which are maintained in a \code{\link{REMParcel}} object. 
+    \item{Step 1}{Start out generating required dataset for prediction using \code{\link{initREMP}}.
+    The datasets include RE information, RE-CpG (i.e. CpGs located in RE region) information,
+    and gene annotation, which are maintained in a \code{\link{REMParcel}} object.
     It is recommended to save these generated data to the working directory so they can be used in the future.}
-    \item{Step 2}{Clean Illumina methylation dataset using \code{\link{grooMethy}}. This function 
-    can help identify and fix abnormal values and automatically impute missing values, which are 
+    \item{Step 2}{Clean Illumina methylation dataset using \code{\link{grooMethy}}. This function
+    can help identify and fix abnormal values and automatically impute missing values, which are
     essential for downstream prediction.}
     \item{Step 3}{Run \code{\link{remp}} to predict genome-wide locus specific RE methylation.}
-    \item{Step 4}{Use the built-in accessors and utilities in \code{\link{REMProduct}} object to get or 
+    \item{Step 4}{Use the built-in accessors and utilities in \code{\link{REMProduct}} object to get or
     refine the prediction results.}
     }
 }
 
 \references{
-Zheng Y, Joyce BT, Liu L, Zhang Z, Kibbe WA, Zhang W, Hou L. 
-Prediction of genome-wide DNA methylation in repetitive elements. 
-Nucleic Acids Res. 2017;45(15):8697-711. 
+Zheng Y, Joyce BT, Liu L, Zhang Z, Kibbe WA, Zhang W, Hou L.
+Prediction of genome-wide DNA methylation in repetitive elements.
+Nucleic Acids Res. 2017;45(15):8697-711.
 PubMed PMID: 28911103; PMCID: PMC5587781.
 http://dx.doi.org/10.1093/nar/gkx587.
 }
 \author{
 Yinan Zheng \email{y-zheng@northwestern.edu},
-Lei Liu \email{lei.liu@northwestern.edu},       
+Lei Liu \email{lei.liu@northwestern.edu},
 Wei Zhang \email{wei.zhang1@northwestern.edu},
-Warren Kibbe \email{warren.kibbe@nih.gov},       
+Warren Kibbe \email{warren.kibbe@nih.gov},
 Lifang Hou \email{l-hou@northwestern.edu}
 
 Maintainer: Yinan Zheng \email{y-zheng@northwestern.edu}

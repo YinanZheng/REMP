@@ -103,7 +103,7 @@ rempCombine(object1, object2)
 
 \item{rempB}{Predicted methylation level in beta value (optional).}
 
-\item{rempQC}{Prediction quality scores, which is available only when Random Forest 
+\item{rempQC}{Prediction quality scores, which is available only when Random Forest
 model is used in \code{\link{remp}}.}
 
 \item{cpgRanges}{Genomic ranges of the predicting RE-CpG.}
@@ -138,11 +138,11 @@ model is used in \code{\link{remp}}.}
 
 \item{type}{For \code{plot} and \code{decodeAnnot}: see Utilities.}
 
-\item{ncore}{For \code{decodeAnnot} and \code{rempAggregate}: number of cores to run parallel computation. 
+\item{ncore}{For \code{decodeAnnot} and \code{rempAggregate}: number of cores to run parallel computation.
 By default no parallel computation is allowed (\code{ncore = 1}).}
 
-\item{BPPARAM}{For \code{decodeAnnot} and \code{rempAggregate}: an optional \code{\link{BiocParallelParam}} 
-instance determining the parallel back-end to be used during evaluation. If not specified, default 
+\item{BPPARAM}{For \code{decodeAnnot} and \code{rempAggregate}: an optional \code{\link{BiocParallelParam}}
+instance determining the parallel back-end to be used during evaluation. If not specified, default
 back-end in the machine will be used.}
 
 \item{threshold}{For \code{rempTrim}: see Utilities.}
@@ -155,7 +155,7 @@ back-end in the machine will be used.}
 An object of class \code{REMProduct} for the constructor.
 }
 \description{
-Class \code{REMProduct} is to maintain RE methylation prediction results. 
+Class \code{REMProduct} is to maintain RE methylation prediction results.
 \code{REMProduct} inherits Bioconductor's \code{RangedSummarizedExperiment} class.
 }
 \section{Accessors}{
@@ -166,28 +166,28 @@ Class \code{REMProduct} is to maintain RE methylation prediction results.
     \item{\code{rempQC(object)}}{Return prediction quality scores.}
     \item{\code{rempImp(object)}}{Return relative importance of predictors.}
     \item{\code{rempStats(object)}}{Return RE and gene coverage statistics.}
-    \item{\code{rempAnnot(object)}}{Return annotation data for the predicted RE.}     
+    \item{\code{rempAnnot(object)}}{Return annotation data for the predicted RE.}
     }
 }
 
 \section{Utilities}{
 
 \describe{
-    \item{\code{plot(x, type = c("individual", "overall"), ...)}}{Make a density plot of predicted methylation 
-    (beta values) in the \code{REMProduct} object \code{x}. If \code{type = "individual"}, density curves will be 
-    plotted for each of the samples; If \code{type = "overall"}, one density curve of the mean methylation level 
+    \item{\code{plot(x, type = c("individual", "overall"), ...)}}{Make a density plot of predicted methylation
+    (beta values) in the \code{REMProduct} object \code{x}. If \code{type = "individual"}, density curves will be
+    plotted for each of the samples; If \code{type = "overall"}, one density curve of the mean methylation level
     across the samples will be plotted. Default \code{type = "individual"}.}
     \item{\code{details(object)}}{Display detailed descriptive statistics of the predicion results.}
-    \item{\code{decodeAnnot(object, type = c("symbol", "entrez")), ncore = NULL, BPPARAM = NULL}}{Decode the 
-    RE annotation data by Gene Symbol (when \code{type = "Symbol"}) or Entrez Gene 
-    (when \code{type = "Entrez"}).Default \code{type = "Symbol"}. Annotation data are provided by 
+    \item{\code{decodeAnnot(object, type = c("symbol", "entrez")), ncore = NULL, BPPARAM = NULL}}{Decode the
+    RE annotation data by Gene Symbol (when \code{type = "Symbol"}) or Entrez Gene
+    (when \code{type = "Entrez"}).Default \code{type = "Symbol"}. Annotation data are provided by
     \code{\link{org.Hs.eg.db}}.}
-    \item{\code{rempTrim(object, threshold = 1.7, missingRate = 0.2)}}{Any predicted CpG values with 
-    quality score < threshold (default = 1.7, specified by \code{threshold = 1.7}) will be replaced with NA. 
-    CpGs contain more than missingRate * 100% (default = 20%, specified by \code{missingRage = 0.2}) missing 
+    \item{\code{rempTrim(object, threshold = 1.7, missingRate = 0.2)}}{Any predicted CpG values with
+    quality score < threshold (default = 1.7, specified by \code{threshold = 1.7}) will be replaced with NA.
+    CpGs contain more than missingRate * 100% (default = 20%, specified by \code{missingRage = 0.2}) missing
     rate across samples will be discarded. Relavant statistics will be re-evaluated.}
-    \item{\code{rempAggregate(object, NCpG = 2, ncore = NULL, BPPARAM = NULL)}}{Aggregate the predicted RE-CpG 
-    methylation by RE using mean. To ensure the reliability of the aggregation, by default only RE with at 
+    \item{\code{rempAggregate(object, NCpG = 2, ncore = NULL, BPPARAM = NULL)}}{Aggregate the predicted RE-CpG
+    methylation by RE using mean. To ensure the reliability of the aggregation, by default only RE with at
     least 2 predicted CpG sites (specified by \code{NCpG = 2}) will be aggregated.}
     \item{\code{rempCombine(object1, object2)}}{Combine two \code{REMProduct} objects by column.}
     }
@@ -195,5 +195,4 @@ Class \code{REMProduct} is to maintain RE methylation prediction results.
 
 \examples{
 showClass("REMProduct")
-
 }

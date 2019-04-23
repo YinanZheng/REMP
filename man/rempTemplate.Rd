@@ -8,42 +8,44 @@ rempTemplate(methyDat = NULL, remparcel = NULL, win = 1000,
   verbose = FALSE)
 }
 \arguments{
-\item{methyDat}{A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}}, 
-\code{data.table}, \code{data.frame}, or \code{matrix} of Illumina BeadChip methylation data 
+\item{methyDat}{A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
+\code{data.table}, \code{data.frame}, or \code{matrix} of Illumina BeadChip methylation data
 (450k or EPIC array).}
 
 \item{remparcel}{An \code{\link{REMParcel}} object containing necessary data to carry out the
-prediction. If \code{NULL}, the function will search the \code{.rds} data file in \code{work.dir} 
+prediction. If \code{NULL}, the function will search the \code{.rds} data file in \code{work.dir}
 exported by \code{\link{initREMP}} (with \code{export = TRUE}) or \code{\link{saveParcel}}.}
 
-\item{win}{An integer specifying window size to confine the upstream and downstream flanking 
+\item{win}{An integer specifying window size to confine the upstream and downstream flanking
 region centered on the predicted CpG in RE for prediction. Default = \code{1000}.}
 
 \item{verbose}{Logical parameter. Should the function be verbose?}
 }
 \value{
-A \code{list} object containing a \code{\link{GRanges}} object of neifhboring CpGs of RE-CpGs 
-to be predicted (\code{$NBCpG_GR}) and their methylation dataset matrix (\code{$NBCpG_methyDat}); 
-a \code{\link{GRanges}} object of RE-CpGs for model training (\code{$RECpG_GR}) and their methylation 
-dataset matrix (\code{$RECpG_methyDat}); \code{\link{GRanges}} objects of RefSeq Gene database (\code{$refgene}) 
+A \code{template} object containing a \code{\link{GRanges}} object of neifhboring CpGs of RE-CpGs
+to be predicted (\code{$NBCpG_GR}) and their methylation dataset matrix (\code{$NBCpG_methyDat});
+a \code{\link{GRanges}} object of RE-CpGs for model training (\code{$RECpG_GR}) and their methylation
+dataset matrix (\code{$RECpG_methyDat}); \code{\link{GRanges}} objects of RefSeq Gene database (\code{$refgene})
 and RE (\code{$RE}) that are extracted from the \code{parcel} input; a string of RE type (\code{$REtype})
-and a string of methylation platform (\code{$arrayType}).
+and a string of methylation platform (\code{$arrayType}). Note: the subset operator \code{[]} is supported.
 }
 \description{
 \code{rempTemplate} is used to build a set of data templates for prediction. The data templates include
 RE-CpGs and their methylation data for model training, neighboring CpGs of RE-CpGs and their
-methylation data for model prediction, and other necessary information about the prediction. 
-This function is useful when one needs to experiment different tunning parameters so that these pre-built 
+methylation data for model prediction, and other necessary information about the prediction.
+This function is useful when one needs to experiment different tunning parameters so that these pre-built
 data templates can be re-used.
 }
 \examples{
-if(!exists("GM12878_450k")) GM12878_450k <- getGM12878('450k')
-if(!exists("remparcel")){
- data(Alu.demo)
- remparcel <- initREMP(arrayType = '450k', REtype = 'Alu', RE = Alu.demo, ncore = 1)
+if (!exists("GM12878_450k")) GM12878_450k <- getGM12878("450k")
+if (!exists("remparcel")) {
+  data(Alu.demo)
+  remparcel <- initREMP(arrayType = "450k", REtype = "Alu", RE = Alu.demo, ncore = 1)
 }
 
 template <- rempTemplate(GM12878_450k, remparcel, win = 1000)
 template
 
+## To make a subset
+template[1]
 }
