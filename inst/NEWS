@@ -57,7 +57,7 @@
 * Fixed bug in grooMethy
 * Added parameters to control the behaviors of imputation in "remprofile".
 
-# REMP 1.6.3
+# REMP 1.6.4
 * Fixed bug in identifying numbers of back-end workers;
 * Fixed bug in predictor importance matrix;
 * "remp" now supports Extreme Gradient Boosting model.

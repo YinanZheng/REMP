@@ -1,6 +1,10 @@
 ### REMParcel-class
 
 #' @rdname REMParcel-class
+#' @exportMethod getParcelInfo
+setGeneric("getParcelInfo", function(object) standardGeneric("getParcelInfo"))
+
+#' @rdname REMParcel-class
 #' @exportMethod getRefGene
 setGeneric("getRefGene", function(object) standardGeneric("getRefGene"))
 

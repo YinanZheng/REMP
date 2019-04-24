@@ -27,6 +27,8 @@
 #'
 #' @section Accessors:
 #' \describe{
+#'     \item{\code{getParcelInfo(object)}}{Return data type, RE type, and flanking window size information
+#'     of the parcel.}
 #'     \item{\code{getRefGene(object)}}{Return RefSeq gene annotation data.}
 #'     \item{\code{getRE(object)}}{Return RE genomic location data for prediction
 #'     (annotated by refSeq gene database).}

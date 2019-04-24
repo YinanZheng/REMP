@@ -48,6 +48,11 @@ setMethod("saveParcel", signature(object = "REMParcel"), function(object, work.d
 })
 
 #' @rdname REMParcel-class
+setMethod("getParcelInfo", signature(object = "REMParcel"), function(object) {
+  return(object@REMParcelInfo)
+})
+
+#' @rdname REMParcel-class
 setMethod("getRefGene", signature(object = "REMParcel"), function(object) {
   return(object@RefGene)
 })
