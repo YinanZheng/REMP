@@ -48,13 +48,11 @@ initREMP <- function(arrayType = c("450k", "EPIC"), REtype = c("Alu", "L1"), RE 
                      export = FALSE, work.dir = tempdir(),
                      verbose = FALSE) {
   ## Initiate running time
-  t <- Sys.time()
+  currenT <- Sys.time()
 
   arrayType <- match.arg(arrayType)
   REtype <- match.arg(REtype)
 
-  tRun <- .timeTrace(t)
-  t <- tRun$t
   message("Start ", REtype, " annotation data initialization ...")
   message("Illumina platform: ", arrayType)
 
@@ -166,9 +164,7 @@ initREMP <- function(arrayType = c("450k", "EPIC"), REtype = c("Alu", "L1"), RE 
     ILMN = ILMN.GR
   )
 
-  tRun <- .timeTrace(t)
-  t <- tRun$t
-  message("Done.", tRun$t_text)
+  message("Done.", .timeTrace(currenT)$t_text)
 
   if (export) {
     saveParcel(remparcel, work.dir, verbose)

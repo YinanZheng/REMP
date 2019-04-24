@@ -36,6 +36,7 @@
 #' 
 #' ## To make a subset
 #' template[1]
+#' 
 #' @export
 rempTemplate <- function(methyDat = NULL, remparcel = NULL, win = 1000, verbose = FALSE) {
   if (is.null(methyDat)) stop("Methylation dataset is missing.")
@@ -50,15 +51,15 @@ rempTemplate <- function(methyDat = NULL, remparcel = NULL, win = 1000, verbose 
     )
   }
 
-  t <- Sys.time()
+  currenT <- Sys.time()
 
   ## Groom methylation data
   methyDat <- grooMethy(methyDat, verbose = verbose)
   methyDat <- minfi::getM(methyDat)
 
   ## Guess array type
-  arrayType <- remparcel@REMParcelInfo$platform
-  REtype <- remparcel@REMParcelInfo$REtype
+  arrayType <- getParcelInfo(remparcel)$platform 
+  REtype <- getParcelInfo(remparcel)$REtype
   RE_refGene.original <- getRE(remparcel)
   RE_CpG <- getRECpG(remparcel)
   ILMN <- getILMN(remparcel)
@@ -169,7 +170,7 @@ rempTemplate <- function(methyDat = NULL, remparcel = NULL, win = 1000, verbose 
 
   class(res) <- "template"
 
-  message("Done.", .timeTrace(t)$t_text)
+  message("Done.", .timeTrace(currenT)$t_text)
 
   return(res)
 }

@@ -1,10 +1,10 @@
 ## Internal utility functions:
 
-.timeTrace <- function(startTime, indent = "  ") {
-  t <- Sys.time()
+.timeTrace <- function(oldT, indent = "  ") {
+  currenT <- Sys.time()
   return(list(
-    t = t,
-    t_text = paste0(indent, "(", round(as.numeric(t - startTime, units = "secs"), 0), " sec.)")
+    t = currenT,
+    t_text = paste0(indent, "(", round(as.numeric(currenT - oldT, units = "secs"), 0), " sec.)")
   ))
 }
 

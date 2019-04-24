@@ -5,12 +5,14 @@
 \name{REMParcel-class}
 \alias{REMParcel-class}
 \alias{REMParcel}
+\alias{getParcelInfo}
 \alias{getRefGene}
 \alias{getRE}
 \alias{getRECpG}
 \alias{getILMN}
 \alias{saveParcel}
 \alias{saveParcel,REMParcel-method}
+\alias{getParcelInfo,REMParcel-method}
 \alias{getRefGene,REMParcel-method}
 \alias{getRE,REMParcel-method}
 \alias{getRECpG,REMParcel-method}
@@ -20,6 +22,8 @@
 REMParcel(REtype = "Unknown", platform = "Unknown",
   RefGene = GRanges(), RE = GRanges(), RECpG = GRanges(),
   ILMN = GRanges())
+
+getParcelInfo(object)
 
 getRefGene(object)
 
@@ -33,6 +37,8 @@ saveParcel(object, ...)
 
 \S4method{saveParcel}{REMParcel}(object, work.dir = tempdir(),
   verbose = FALSE, ...)
+
+\S4method{getParcelInfo}{REMParcel}(object)
 
 \S4method{getRefGene}{REMParcel}(object)
 
@@ -79,6 +85,8 @@ RE methylation prediction generated from \code{\link{initREMP}} and used in \cod
 \section{Accessors}{
 
 \describe{
+    \item{\code{getParcelInfo(object)}}{Return data type, RE type, and flanking window size information
+    of the parcel.}
     \item{\code{getRefGene(object)}}{Return RefSeq gene annotation data.}
     \item{\code{getRE(object)}}{Return RE genomic location data for prediction
     (annotated by refSeq gene database).}
