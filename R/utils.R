@@ -75,7 +75,7 @@
     return("EPIC")
   }
   if (nProbes > remp_options(".default.epic.total.probes")) {
-    return("UNKNOWN")
+    return("Seq")
   }
 }
 
@@ -89,6 +89,8 @@
     sum(methyDat_sample < 0 | methyDat_sample > 1, na.rm = TRUE) <
       nrow(methyDat_sample) * ncol(methyDat_sample) * 0.01) {
     return("beta")
+  } else if (rng[1] == 0 & rng[2] == 100) {
+    return("percentage")
   } else {
     return("M")
   }
@@ -155,7 +157,7 @@
 
     p[1] <- paste0(
       indent, REStats[1, 1], " profiled ",
-      REtype, " by Illumina array are used for model training."
+      REtype, " are used for model training."
     )
     p[2] <- paste0(
       indent, REStats[1, 2],

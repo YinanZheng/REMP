@@ -49,7 +49,9 @@ knit_hooks$set(source=listing, output=listing)
 
 \section{Introduction}
 
-\Rpkg{REMP} predicts DNA methylation of locus-specific repetitive elements (RE) by learning surrounding genetic and epigenetic information. \Rpkg{REMP} provides genomewide single-base resolution of DNA methylation on RE that are difficult to measure using array-based or sequencing-based platforms, which enables epigenome-wide association study (EWAS) and differentially methylated region (DMR) analysis on RE. 
+\Rpkg{REMP} predicts DNA methylation of locus-specific repetitive elements (RE) by learning surrounding genetic and epigenetic information. \Rpkg{REMP} provides genomewide single-base resolution of DNA methylation on RE that are difficult to measure directly using array-based or sequencing-based platforms, which enables epigenome-wide association study (EWAS) and differentially methylated region (DMR) analysis on RE. 
+
+\Rpkg{REMP} supports both Illumina methylation BeadChip array platforms (450k and EPIC) and sequencing platforms (e.g. TruSeq Methyl Capture EPIC). 
 
 \section{Installation}
 Install \Rpkg{REMP} (release version):
@@ -94,7 +96,7 @@ GM12878_450k <- grooMethy(GM12878_450k, verbose = TRUE)
 GM12878_450k
 @
 
-For zero beta values, \Rfunction{grooMethy} will replace them with smallest non-zero beta value. For \Rcode{NA}/\Rcode{NaN}/\Rcode{Inf} values, \Rfunction{grooMethy} will treat them as missing values and then apply KNN-imputation to complete the dataset. If the imputed value is out of the original range (which is possible when \Rcode{imputebyrow = FALSE}), mean value will be used instead. Warning: imputed values for multimodal distributed CpGs (across samples) may not be correct. Please check package \Rpkg{ENmix} to identify the CpGs with multimodal distribution. 
+For zero beta values, \Rfunction{grooMethy} will replace them with smallest non-zero beta value. For one beta values, \Rfunction{grooMethy} will replace them with largest non-one beta value. For \Rcode{NA}/\Rcode{NaN}/\Rcode{Inf} values, \Rfunction{grooMethy} will treat them as missing values and then apply KNN-imputation to complete the dataset. If the imputed value is out of the original range (which is possible when \Rcode{imputebyrow = FALSE}), mean value will be used instead. Warning: imputed values for multimodal distributed CpGs (across samples) may not be correct. Please check package \Rpkg{ENmix} to identify the CpGs with multimodal distribution. 
 
 \subsection{Prepare annotation data}
 To run \Rpkg{REMP} for RE methylation prediction, user first needs to prepare some annotation datasets. The function \Rfunction{initREMP} is designed to do the job.
@@ -171,14 +173,14 @@ remp.res <- rempTrim(remp.res, threshold = 1.7, missingRate = 0.2)
 details(remp.res)
 @
 
-Aggregate the predicted methylation of CpGs in RE by averaging them to obtain the RE-specific methylation level:
+(Optional) Aggregate the predicted methylation of CpGs in RE by averaging them to obtain the RE-specific methylation level:
 
 <<rempaggregate, eval=TRUE>>=
 remp.res <- rempAggregate(remp.res, NCpG = 2)
 details(remp.res)
 @
 
-It is recommended to aggregate the predicted CpG methylation by RE to obtain RE-wise methylation level. This is beneficial because 1) it greatly reduces the data dimension for downstream analysis and 2) it produces more robust RE methylation estimation. Note that by default, RE with 2 or more predicted CpG sites will be aggregated. Therefore, the downside of doing this is the reduced coverage of RE. The assumption of doing this is the CpG methylation level within each RE are similar.
+Aggregating CpGs in the same RE for RE-level methylation data is beneficial because 1) it greatly reduces the data dimension for downstream analysis and 2) it may produce more robust RE methylation estimation. Note that by default, RE with 2 or more predicted CpG sites will be aggregated. Therefore, the downside of doing this is the reduced coverage of RE. The assumption of doing this is the CpG methylation level within each RE are similar.
 
 To add genomic regions annotation of the predicted REs:
 
@@ -209,7 +211,7 @@ Make a density plot of the predicted methylation (beta values):
 \begin{figure}[h!]
 \centering
 <<rempplot, eval=TRUE, fig.width=4.5, fig.height=4>>=
-plot(remp.res, main = "Alu methylation (GM12878)", col = "blue")
+remplot(remp.res, main = "Alu methylation (GM12878)", col = "blue")
 @
 \end{figure}
 

@@ -4,12 +4,17 @@
 \alias{grooMethy}
 \title{Groom methylation data to fix potential data issues}
 \usage{
-grooMethy(methyDat, impute = TRUE, imputebyrow = TRUE,
+grooMethy(methyDat, Seq.GR = NULL, impute = TRUE, imputebyrow = TRUE,
   mapGenome = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{methyDat}{A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
-data.table, data.frame, or matrix of Illumina BeadChip methylation data (450k or EPIC array).}
+\code{data.table}, \code{data.frame}, or \code{matrix} of Illumina BeadChip methylation data
+(450k or EPIC array) or Illumina methylation sequencing data.}
+
+\item{Seq.GR}{A \code{\link{GRanges}} object containing genomic locations of the CpGs profiled by sequencing
+platforms. This parameter should not be \code{NULL} if the input methylation data \code{methyDat} are
+obtained by sequencing. Note that the genomic location must be in hg19 build. See details.}
 
 \item{impute}{If \code{TRUE}, K-Nearest Neighbouring imputation will be applied to fill
 the missing values. Default = \code{TRUE}. See Details.}
@@ -32,10 +37,10 @@ M value of the methylation data.
 value, missing value, and infinite value.
 }
 \details{
-For methylation data in beta value, if zero value exists, the logit transformation
-from beta to M value will produce negative infinite value. Therefore, zero beta value
-will be replaced with the smallest non-zero beta value found in the dataset. \code{grooMethy}
-can also handle missing value (i.e. \code{NA} or \code{NaN}) using KNN imputation (see
+For methylation data in beta value, if zero/one value exists, the logit transformation
+from beta to M value will produce infinite value. Therefore, zero/one beta value
+will be replaced with the smallest non-zero beta/largest non-one beta value found in the dataset.
+\code{grooMethy} can also handle missing value (i.e. \code{NA} or \code{NaN}) using KNN imputation (see
 \code{\link{impute.knn}}). The infinite value will be also treated as missing value for imputation.
 If the original dataset is in beta value, \code{grooMethy} will first transform it to M value
 before imputation is carried out. If the imputed value is out of the original range (which is possible when
@@ -43,7 +48,10 @@ before imputation is carried out. If the imputed value is out of the original ra
 values for multimodal distributed CpGs (across samples) may not be correct. Please check package \code{ENmix} to
 identify the CpGs with multimodal distribution. Please note that \code{grooMethy} is
 also embedded in \code{\link{remp}} so the user can run \code{\link{remp}} directly without
-explicitly running \code{grooMethy}.
+explicitly running \code{grooMethy}. For sequencing methylation data, please specify the genomic location of CpGs
+in a \code{GenomicRanges} object and specify it in \code{Seq.GR}. For an example of \code{Seq.GR}, Please 
+run \code{minfi::getLocations(IlluminaHumanMethylation450kanno.ilmn12.hg19)} (the row names of the CpGs in \code{Seq.GR} 
+can be \code{NULL}).
 }
 \examples{
 # Get GM12878 methylation data (450k array)

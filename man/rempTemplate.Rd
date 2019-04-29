@@ -4,15 +4,19 @@
 \alias{rempTemplate}
 \title{Prepare data template for REMP}
 \usage{
-rempTemplate(methyDat = NULL, remparcel = NULL, win = 1000,
-  verbose = FALSE)
+rempTemplate(methyDat = NULL, Seq.GR = NULL, parcel = NULL,
+  win = 1000, verbose = FALSE)
 }
 \arguments{
 \item{methyDat}{A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
 \code{data.table}, \code{data.frame}, or \code{matrix} of Illumina BeadChip methylation data
-(450k or EPIC array).}
+(450k or EPIC array) or Illumina methylation sequencing data.}
 
-\item{remparcel}{An \code{\link{REMParcel}} object containing necessary data to carry out the
+\item{Seq.GR}{A \code{\link{GRanges}} object containing genomic locations of the CpGs profiled by sequencing
+platforms. This parameter should not be \code{NULL} if the input methylation data \code{methyDat} are
+obtained by sequencing. Note that the genomic location must be in hg19 build. See details in \code{\link{initREMP}}.}
+
+\item{parcel}{An \code{\link{REMParcel}} object containing necessary data to carry out the
 prediction. If \code{NULL}, the function will search the \code{.rds} data file in \code{work.dir}
 exported by \code{\link{initREMP}} (with \code{export = TRUE}) or \code{\link{saveParcel}}.}
 
@@ -43,7 +47,7 @@ if (!exists("remparcel")) {
   remparcel <- initREMP(arrayType = "450k", REtype = "Alu", RE = Alu.demo, ncore = 1)
 }
 
-template <- rempTemplate(GM12878_450k, remparcel, win = 1000)
+template <- rempTemplate(GM12878_450k, parcel = remparcel, win = 1000)
 template
 
 ## To make a subset

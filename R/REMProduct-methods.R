@@ -47,8 +47,8 @@ setMethod("rempStats", signature(object = "REMProduct"), function(object) {
 #### Utilities
 #' @rdname REMProduct-class
 setMethod(
-  "plot", signature(x = "REMProduct", y = "missing"),
-  function(x, type = c("individual", "overall"), ...) {
+  "remplot", signature(object = "REMProduct"),
+  function(object, type = c("individual", "overall"), ...) {
     type <- match.arg(type)
     default_main <- ""
     default_xlab <- "Methylation value (beta)"
@@ -64,7 +64,7 @@ setMethod(
       dotdotdot$xlim <- default_xlim
     }
 
-    Bval <- rempB(x)
+    Bval <- as.matrix(rempB(object))
 
     if (type == "individual") {
       do.call(plot, c(list(x = density(na.omit(Bval[, 1]))), dotdotdot))
@@ -82,8 +82,6 @@ setMethod(
     }
   }
 )
-# plot(object)
-# plot(object, type = "overall")
 
 #' @rdname REMProduct-class
 setMethod("details", signature(object = "REMProduct"), function(object) {
