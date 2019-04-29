@@ -4,19 +4,23 @@
 \alias{initREMP}
 \title{RE Annotation Database Initialization}
 \usage{
-initREMP(arrayType = c("450k", "EPIC"), REtype = c("Alu", "L1"),
-  RE = NULL, ncore = NULL, BPPARAM = NULL, export = FALSE,
-  work.dir = tempdir(), verbose = FALSE)
+initREMP(arrayType = c("450k", "EPIC", "Seq"), REtype = c("Alu", "L1"),
+  RE = NULL, Seq.GR = NULL, ncore = NULL, BPPARAM = NULL,
+  export = FALSE, work.dir = tempdir(), verbose = FALSE)
 }
 \arguments{
-\item{arrayType}{Illumina methylation array type. Currently \code{"450k"} and \code{"EPIC"}
-are supported. Default = \code{"450k"}.}
+\item{arrayType}{Illumina methylation array type. Currently \code{"450k"}, \code{"EPIC"},
+and \code{"Seq"} (methylation sequencing) are supported. Default = \code{"450k"}.}
 
 \item{REtype}{Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.}
 
 \item{RE}{A \code{\link{GRanges}} object containing user-specified RE genomic location information.
 If \code{NULL}, the function will retrive RepeatMasker RE database from \code{\link{AnnotationHub}}
 (build hg19).}
+
+\item{Seq.GR}{A \code{\link{GRanges}} object containing genomic locations of the CpGs profiled by sequencing
+platforms. This parameter should not be \code{NULL} if \code{arrayType == 'Seq'}. Note that the genomic
+location must be in hg19 build. See details.}
 
 \item{ncore}{Number of cores to run parallel computation. By default max number of cores
 available in the machine will be utilized. If \code{ncore = 1}, no parallel computation is allowed.}
@@ -50,7 +54,10 @@ RE methylation prediction in \code{\link{remp}}. Once generated, the data can be
 as long as there is no change to the RE database. To minimize the size of resulting data file, the generated
 annotation data are only for REs that contain RE-CpGs with neighboring profiled CpGs. By default, the
 neighboring CpGs are confined within 1200 bp flanking window. This window size can be modified using
-\code{\link{remp_options}}.
+\code{\link{remp_options}}. For sequencing methylation data, please specify the genomic location of CpGs
+in a \code{GenomicRanges} object and specify it in \code{Seq.GR}. For an example of \code{Seq.GR}, Please 
+run \code{minfi::getLocations(IlluminaHumanMethylation450kanno.ilmn12.hg19)} (the row names of the CpGs in 
+\code{Seq.GR} can be \code{NULL}).
 }
 \examples{
 if (!exists("remparcel")) {

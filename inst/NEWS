@@ -11,7 +11,7 @@
 * Added trim(REMProduct) functionality to trim predicted CpGs based on quality score (only for Random Forest model).
 
 # REMP 0.99.21
-* Improved the robustness of function GRannot() when indicator column "Index" is not provided.
+* Improved the robustness of function GRannot() when indicator column "Index" is not provided;
 * Fixed the inaccurate RE statistics calculation after function trim() is applied.
 
 # REMP 0.99.22
@@ -34,31 +34,35 @@
 * Use package 'ranger' to boost computation speed for Random Forest.
 
 # REMP 1.0.7
-* Allow random seed for reproducible results using Random Forest.
+* Allow random seed for reproducible results using Random Forest;
 * Use package 'ranger' to simplfy the code and boost computation speed for Quantile Regression Forest.
 
 # REMP 1.2.1
-* Added "rempAggregate" method to "REMProduct" class to enable aggregation algorithm.
-* Function name changed: annotation --> rempAnnot, trim --> rempTrim, imp --> rempImp.
+* Added "rempAggregate" method to "REMProduct" class to enable aggregation algorithm;
+* Function name changed: annotation --> rempAnnot, trim --> rempTrim, imp --> rempImp;
 * Fixed a bug when using "naive" method.
 
 # REMP 1.2.3
-* Allows parallel computing in "rempAggregate" method.
+* Allows parallel computing in "rempAggregate" method;
 * Added "rempCombine" method to combine two "REMProduct" objects by column.
 
 # REMP 1.2.5
-* Added "remprofile" method to get the methylation data profiled in RE.
+* Added "remprofile" method to get the methylation data profiled in RE;
 * Minor bug fixes and improvements.
 
 # REMP 1.4.0
 * Version number update (same as REMP 1.2.5). R-3.5.0. Bioconductor 3.7.
 
 # REMP 1.4.1
-* Fixed bug in grooMethy
+* Fixed bug in grooMethy;
 * Added parameters to control the behaviors of imputation in "remprofile".
 
 # REMP 1.6.4
 * Fixed bug in identifying numbers of back-end workers;
 * Fixed bug in predictor importance matrix;
-* "remp" now supports Extreme Gradient Boosting model.
-* Added rempTemplate function to facilitate model parameter tunning.
+* "remp" now supports Extreme Gradient Boosting model;
+* Added new function 'rempTemplate' to facilitate model parameter tunning.
+
+# REMP 1.6.5
+* REMP now supports methylation sequencing data as input;
+* Improved robustness.

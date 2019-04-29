@@ -5,7 +5,11 @@
 #' value, missing value, and infinite value.
 #'
 #' @param methyDat A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
-#' data.table, data.frame, or matrix of Illumina BeadChip methylation data (450k or EPIC array).
+#' \code{data.table}, \code{data.frame}, or \code{matrix} of Illumina BeadChip methylation data
+#' (450k or EPIC array) or Illumina methylation sequencing data.
+#' @param Seq.GR A \code{\link{GRanges}} object containing genomic locations of the CpGs profiled by sequencing
+#' platforms. This parameter should not be \code{NULL} if the input methylation data \code{methyDat} are
+#' obtained by sequencing. Note that the genomic location must be in hg19 build. See details.
 #' @param impute If \code{TRUE}, K-Nearest Neighbouring imputation will be applied to fill
 #' the missing values. Default = \code{TRUE}. See Details.
 #' @param imputebyrow If \code{TRUE}, missing values will be imputed using similar values in row
@@ -16,10 +20,10 @@
 #' @param verbose Logical parameter. Should the function be verbose?
 #'
 #' @details
-#' For methylation data in beta value, if zero value exists, the logit transformation
-#' from beta to M value will produce negative infinite value. Therefore, zero beta value
-#' will be replaced with the smallest non-zero beta value found in the dataset. \code{grooMethy}
-#' can also handle missing value (i.e. \code{NA} or \code{NaN}) using KNN imputation (see
+#' For methylation data in beta value, if zero/one value exists, the logit transformation
+#' from beta to M value will produce infinite value. Therefore, zero/one beta value
+#' will be replaced with the smallest non-zero beta/largest non-one beta value found in the dataset.
+#' \code{grooMethy} can also handle missing value (i.e. \code{NA} or \code{NaN}) using KNN imputation (see
 #' \code{\link{impute.knn}}). The infinite value will be also treated as missing value for imputation.
 #' If the original dataset is in beta value, \code{grooMethy} will first transform it to M value
 #' before imputation is carried out. If the imputed value is out of the original range (which is possible when
@@ -27,7 +31,10 @@
 #' values for multimodal distributed CpGs (across samples) may not be correct. Please check package \code{ENmix} to
 #' identify the CpGs with multimodal distribution. Please note that \code{grooMethy} is
 #' also embedded in \code{\link{remp}} so the user can run \code{\link{remp}} directly without
-#' explicitly running \code{grooMethy}.
+#' explicitly running \code{grooMethy}. For sequencing methylation data, please specify the genomic location of CpGs
+#' in a \code{GenomicRanges} object and specify it in \code{Seq.GR}. For an example of \code{Seq.GR}, Please 
+#' run \code{minfi::getLocations(IlluminaHumanMethylation450kanno.ilmn12.hg19)} (the row names of the CpGs in \code{Seq.GR} 
+#' can be \code{NULL}).
 #'
 #' @return A \code{\link{RatioSet}} or \code{\link{GenomicRatioSet}} containing beta value and
 #' M value of the methylation data.
@@ -40,15 +47,19 @@
 #' # Also works if data input is a matrix
 #' grooMethy(minfi::getBeta(GM12878_450k), verbose = TRUE)
 #' @export
-grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = FALSE, verbose = FALSE) {
+grooMethy <- function(methyDat, Seq.GR = NULL, impute = TRUE, imputebyrow = TRUE, mapGenome = FALSE, verbose = FALSE) {
   currenT <- Sys.time()
+  
+  if (is.null(methyDat)) stop("Methylation dataset (methyDat) is missing.")
+  if (!is.null(Seq.GR) & !is(Seq.GR, "GRanges")) stop("Seq.GR must be a GenomicRanges object.")
+  
   methyDat_work <- methyDat
 
   if (is(methyDat_work, "RatioSet") || is(methyDat_work, "GenomicRatioSet")) {
     methyDat_work <- minfi::getBeta(methyDat_work)
   }
 
-  methyDat_work <- .methyMatrix(methyDat_work)
+  methyDat_work <- .methyMatrix(methyDat_work, Seq.GR)
 
   type <- .guessBetaorM(methyDat_work)
   arrayType <- .guessArrayType(methyDat_work)
@@ -62,8 +73,8 @@ grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = F
   if (arrayType == "EPIC") {
     annotationInfo <- c(array = "IlluminaHumanMethylationEPIC", annotation = remp_options(".default.epic.annotation"))
   }
-  if (arrayType == "UNKNOWN") {
-    stop("Unknown methylation array type.")
+  if (arrayType == "Seq" | !is.null(Seq.GR)) {
+    annotationInfo <- c(array = "Sequencing", annotation = "Custom")
   }
 
   if (verbose) {
@@ -71,6 +82,11 @@ grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = F
       "Illumina ", arrayType, " Methylation data in ", type,
       " value detected."
     )
+  }
+
+  if (type == "percentage") {
+    methyDat_work <- methyDat_work / 100
+    if (verbose) message("Percentage data has been divided by 100 and scaled to range 0-1.")
   }
 
   dc <- .dataCheck(methyDat_work, type)
@@ -86,22 +102,24 @@ grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = F
       stop("Negative beta or beta > 1 values detected! Please check your data and data preprocessing.")
     }
 
-    ## If any beta value = 0 is found
+    ## If any beta value = 0 or 1 is found
     if (2 %in% dc$code) {
-      if (verbose) {
-        message(
-          "    A total of ", sum(methyDat_work == 0, na.rm = TRUE),
-          " zero beta values are found."
-        )
+      nzero <- sum(methyDat_work == 0, na.rm = TRUE)
+      none <- sum(methyDat_work == 1, na.rm = TRUE)
+
+      if (nzero > 0) {
+        if (verbose) message("    A total of ", nzero, " zero beta values are found.")
+        smallBeta <- min(methyDat_work[methyDat_work > 0], na.rm = TRUE)
+        if (verbose) message("    Fixing 'zero' beta values with the smallest non-0 beta value = ", smallBeta, " ...")
+        methyDat_work[methyDat_work == 0] <- smallBeta
       }
-      smallBeta <- min(methyDat_work[methyDat_work > 0], na.rm = TRUE)
-      if (verbose) {
-        message(
-          "    Fixing zero beta values with the smallest beta value = ",
-          smallBeta, " ..."
-        )
+
+      if (none > 0) {
+        if (verbose) message("    A total of ", none, " one beta values are found.")
+        bigBeta <- max(methyDat_work[methyDat_work < 1], na.rm = TRUE)
+        if (verbose) message("    Fixing 'one' beta values with the largest non-1 beta value = ", bigBeta, " ...")
+        methyDat_work[methyDat_work == 1] <- bigBeta
       }
-      methyDat_work[methyDat_work == 0] <- smallBeta
     }
 
     ## If any beta/M value is NaN or infinite
@@ -126,7 +144,7 @@ grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = F
     mdata <- methyDat_work
   } else {
     if (verbose) {
-      message("    Converting beta value to M value ...")
+      message("    Converting beta/percentage value to M value ...")
     }
     betadata <- methyDat_work
     mdata <- .toM(methyDat_work)
@@ -175,7 +193,7 @@ grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = F
   }
 
   rset <- minfi::RatioSet(Beta = betadata, M = mdata, annotation = annotationInfo)
-  if (mapGenome) {
+  if (arrayType != "seq" & mapGenome) {
     rset <- minfi::mapToGenome(rset)
   }
 
@@ -185,27 +203,39 @@ grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = F
 } ## End of grooMethy
 
 ## Internal functions
-.methyMatrix <- function(methyDat) {
+.methyMatrix <- function(methyDat, Seq.GR = NULL) {
   methyDat <- data.frame(methyDat, check.names = FALSE)
+
   probeNameIndicator <- which(vapply(methyDat, class, character(1)) %in% c("factor", "character"))
-  if (length(probeNameIndicator) > 1) {
-    stop("There are more than one character columns! Please only keep one column or just use row names to indicate Illumina probe names (i.e. cg00000029).")
-  }
 
-  containILMN <- "cg" %in% unique(substring(methyDat[seq_len(10), probeNameIndicator], 1, 2))
-  containRownames <- "cg" %in% unique(substring(rownames(methyDat)[seq_len(10)], 1, 2))
-  if (!containILMN & !containRownames) {
-    stop("Cannot find a column or row names that indicates Illumina probe names (i.e. cg00000029). Please fix it.")
-  }
-
-  if (containILMN) {
-    methyDat.matrix <- matrix(methyDat[, -probeNameIndicator],
-      ncol = ncol(methyDat) - 1
-    )
-    rownames(methyDat.matrix) <- methyDat[, probeNameIndicator]
-    colnames(methyDat.matrix) <- colnames(methyDat)[-probeNameIndicator]
-  } else if (containRownames) {
+  if (!is.null(Seq.GR)) {
+    if (length(probeNameIndicator) > 0) {
+      stop("Factor or Character columns detected! The input methylation data from sequencing platform should all be numeric.")
+    }
     methyDat.matrix <- as.matrix(methyDat)
+    rownames(methyDat.matrix) <- paste0(seqnames(Seq.GR), ":", start(Seq.GR))
+  } else {
+    if (length(probeNameIndicator) > 1) {
+      stop(paste("For array methylation data, please only keep one column or just use row names to indicate Illumina probe names (i.e. cg00000029).",
+                 "For sequencing methylation data, the parameter Seq.GR cannot be missing. Please provide it."))
+    }
+
+    containILMN <- "cg" %in% unique(substring(methyDat[seq_len(10), probeNameIndicator], 1, 2))
+    containRownames <- "cg" %in% unique(substring(rownames(methyDat)[seq_len(10)], 1, 2))
+    if (!containILMN & !containRownames) {
+      stop(paste("For array methylation data, a column or row names that indicates Illumina probe names (i.e. cg00000029) is missing.",
+                 "Please fix it. For sequencing methylation data, the parameter Seq.GR cannot be missing. Please provide it."))
+    }
+
+    if (containILMN) {
+      methyDat.matrix <- matrix(methyDat[, -probeNameIndicator],
+        ncol = ncol(methyDat) - 1
+      )
+      rownames(methyDat.matrix) <- methyDat[, probeNameIndicator]
+      colnames(methyDat.matrix) <- colnames(methyDat)[-probeNameIndicator]
+    } else if (containRownames) {
+      methyDat.matrix <- as.matrix(methyDat)
+    }
   }
   return(methyDat.matrix)
 }
@@ -213,13 +243,13 @@ grooMethy <- function(methyDat, impute = TRUE, imputebyrow = TRUE, mapGenome = F
 .dataCheck <- function(methyDat, type) {
   errorString <- NULL
   code <- NULL
-  if (type %in% c("[Genomic]RatioSet", "beta") & any(methyDat < 0 | methyDat >
+  if (type %in% c("[Genomic]RatioSet", "beta", "percentage") & any(methyDat < 0 | methyDat >
     1, na.rm = TRUE)) {
     errorString <- c(errorString, "out-of-range")
     code <- c(code, 1)
   }
-  if (type %in% c("[Genomic]RatioSet", "beta") & any(methyDat == 0, na.rm = TRUE)) {
-    errorString <- c(errorString, "0")
+  if (type %in% c("[Genomic]RatioSet", "beta", "percentage") & any(methyDat == 0 | methyDat == 1, na.rm = TRUE)) {
+    errorString <- c(errorString, "0/1")
     code <- c(code, 2)
   }
   if (any(is.nan(methyDat))) {

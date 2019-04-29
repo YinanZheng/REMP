@@ -55,8 +55,8 @@
 #'
 #' @section Utilities:
 #' \describe{
-#'     \item{\code{plot(x, type = c("individual", "overall"), ...)}}{Make a density plot of predicted methylation
-#'     (beta values) in the \code{REMProduct} object \code{x}. If \code{type = "individual"}, density curves will be
+#'     \item{\code{remplot(object, type = c("individual", "overall"), ...)}}{Make a density plot of predicted methylation
+#'     (beta values) in the \code{REMProduct} object. If \code{type = "individual"}, density curves will be
 #'     plotted for each of the samples; If \code{type = "overall"}, one density curve of the mean methylation level
 #'     across the samples will be plotted. Default \code{type = "individual"}.}
 #'     \item{\code{details(object)}}{Display detailed descriptive statistics of the predicion results.}

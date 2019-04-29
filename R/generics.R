@@ -52,6 +52,10 @@ setGeneric("rempImp", function(object) standardGeneric("rempImp"))
 setGeneric("rempStats", function(object) standardGeneric("rempStats"))
 
 #' @rdname REMProduct-class
+#' @exportMethod remplot
+setGeneric("remplot", function(object, ...) standardGeneric("remplot"))
+
+#' @rdname REMProduct-class
 #' @exportMethod details
 setGeneric("details", function(object) standardGeneric("details"))
 

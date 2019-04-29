@@ -11,6 +11,7 @@
 \alias{rempAnnot}
 \alias{rempImp}
 \alias{rempStats}
+\alias{remplot}
 \alias{details}
 \alias{decodeAnnot}
 \alias{rempTrim}
@@ -22,7 +23,7 @@
 \alias{rempImp,REMProduct-method}
 \alias{rempAnnot,REMProduct-method}
 \alias{rempStats,REMProduct-method}
-\alias{plot,REMProduct,missing-method}
+\alias{remplot,REMProduct-method}
 \alias{details,REMProduct-method}
 \alias{decodeAnnot,REMProduct-method}
 \alias{rempTrim,REMProduct-method}
@@ -50,6 +51,8 @@ rempImp(object)
 
 rempStats(object)
 
+remplot(object, ...)
+
 details(object)
 
 decodeAnnot(object, ...)
@@ -72,7 +75,7 @@ rempCombine(object1, object2)
 
 \S4method{rempStats}{REMProduct}(object)
 
-\S4method{plot}{REMProduct,missing}(x, type = c("individual", "overall"),
+\S4method{remplot}{REMProduct}(object, type = c("individual", "overall"),
   ...)
 
 \S4method{details}{REMProduct}(object)
@@ -134,8 +137,6 @@ model is used in \code{\link{remp}}.}
 
 \item{object2}{A \code{REMProduct} object.}
 
-\item{x}{For \code{plot}: an \code{REMProduct} object.}
-
 \item{type}{For \code{plot} and \code{decodeAnnot}: see Utilities.}
 
 \item{ncore}{For \code{decodeAnnot} and \code{rempAggregate}: number of cores to run parallel computation.
@@ -150,6 +151,8 @@ back-end in the machine will be used.}
 \item{missingRate}{For \code{rempTrim}: see Utilities.}
 
 \item{NCpG}{For \code{rempAggregate}: see Utilities.}
+
+\item{x}{For \code{plot}: an \code{REMProduct} object.}
 }
 \value{
 An object of class \code{REMProduct} for the constructor.
@@ -173,8 +176,8 @@ Class \code{REMProduct} is to maintain RE methylation prediction results.
 \section{Utilities}{
 
 \describe{
-    \item{\code{plot(x, type = c("individual", "overall"), ...)}}{Make a density plot of predicted methylation
-    (beta values) in the \code{REMProduct} object \code{x}. If \code{type = "individual"}, density curves will be
+    \item{\code{remplot(object, type = c("individual", "overall"), ...)}}{Make a density plot of predicted methylation
+    (beta values) in the \code{REMProduct} object. If \code{type = "individual"}, density curves will be
     plotted for each of the samples; If \code{type = "overall"}, one density curve of the mean methylation level
     across the samples will be plotted. Default \code{type = "individual"}.}
     \item{\code{details(object)}}{Display detailed descriptive statistics of the predicion results.}

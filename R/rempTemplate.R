@@ -9,8 +9,11 @@
 #'
 #' @param methyDat A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
 #' \code{data.table}, \code{data.frame}, or \code{matrix} of Illumina BeadChip methylation data
-#' (450k or EPIC array).
-#' @param remparcel An \code{\link{REMParcel}} object containing necessary data to carry out the
+#' (450k or EPIC array) or Illumina methylation sequencing data.
+#' @param Seq.GR A \code{\link{GRanges}} object containing genomic locations of the CpGs profiled by sequencing
+#' platforms. This parameter should not be \code{NULL} if the input methylation data \code{methyDat} are
+#' obtained by sequencing. Note that the genomic location must be in hg19 build. See details in \code{\link{initREMP}}.
+#' @param parcel An \code{\link{REMParcel}} object containing necessary data to carry out the
 #' prediction. If \code{NULL}, the function will search the \code{.rds} data file in \code{work.dir}
 #' exported by \code{\link{initREMP}} (with \code{export = TRUE}) or \code{\link{saveParcel}}.
 #' @param win An integer specifying window size to confine the upstream and downstream flanking
@@ -31,18 +34,18 @@
 #'   remparcel <- initREMP(arrayType = "450k", REtype = "Alu", RE = Alu.demo, ncore = 1)
 #' }
 #' 
-#' template <- rempTemplate(GM12878_450k, remparcel, win = 1000)
+#' template <- rempTemplate(GM12878_450k, parcel = remparcel, win = 1000)
 #' template
 #' 
 #' ## To make a subset
 #' template[1]
-#' 
 #' @export
-rempTemplate <- function(methyDat = NULL, remparcel = NULL, win = 1000, verbose = FALSE) {
-  if (is.null(methyDat)) stop("Methylation dataset is missing.")
-
-  if (is.null(remparcel)) stop("REMParcel object is missing.")
-  .isREMParcelOrStop(remparcel)
+rempTemplate <- function(methyDat = NULL, Seq.GR = NULL, parcel = NULL, win = 1000, verbose = FALSE) {
+  if (is.null(methyDat)) stop("Methylation dataset (methyDat) is missing.")
+  if (!is.null(Seq.GR) & !is(Seq.GR, "GRanges")) stop("Seq.GR must be a GenomicRanges object.")
+  
+  if (is.null(parcel)) stop("REMParcel object is missing.")
+  .isREMParcelOrStop(parcel)
 
   if (win > remp_options(".default.max.flankWindow")) {
     stop(
@@ -54,16 +57,16 @@ rempTemplate <- function(methyDat = NULL, remparcel = NULL, win = 1000, verbose 
   currenT <- Sys.time()
 
   ## Groom methylation data
-  methyDat <- grooMethy(methyDat, verbose = verbose)
+  methyDat <- grooMethy(methyDat, Seq.GR, verbose = verbose)
   methyDat <- minfi::getM(methyDat)
 
   ## Guess array type
-  arrayType <- getParcelInfo(remparcel)$platform 
-  REtype <- getParcelInfo(remparcel)$REtype
-  RE_refGene.original <- getRE(remparcel)
-  RE_CpG <- getRECpG(remparcel)
-  ILMN <- getILMN(remparcel)
-  RE_CpG_ILMN <- getILMN(remparcel, REonly = TRUE)
+  arrayType <- getParcelInfo(parcel)$platform
+  REtype <- getParcelInfo(parcel)$REtype
+  RE_refGene.original <- getRE(parcel)
+  RE_CpG <- getRECpG(parcel)
+  ILMN <- getILMN(parcel)
+  RE_CpG_ILMN <- getILMN(parcel, REonly = TRUE)
 
   ## Make indicator of genomic regions
   RE_refGene <- .toIndicator(RE_refGene.original)
@@ -156,14 +159,14 @@ rempTemplate <- function(methyDat = NULL, remparcel = NULL, win = 1000, verbose 
   RE_NeibCpG <- RE_NeibCpG[order(RE_NeibCpG$RE.Index)]
   RE_NeibCpG <- RE_NeibCpG[RE_NeibCpG$N.nbr > 1, ] ## Remove singleton
 
-  refgene_main <- getRefGene(remparcel)
-  RE_refGene.original <- getRE(remparcel)
+  refgene_main <- getRefGene(parcel)
+  RE_refGene.original <- getRE(parcel)
 
   res <- list(
     NBCpG_methyDat = DataFrame(methyDat), RECpG_methyDat = DataFrame(RE_CpG_ILMN_DATA),
     NBCpG_GR = RE_NeibCpG, RECpG_GR = RE_CpG_ILMN,
-    refgene = getRefGene(remparcel),
-    RE = getRE(remparcel),
+    refgene = getRefGene(parcel),
+    RE = getRE(parcel),
     REtype = REtype,
     arrayType = arrayType
   )

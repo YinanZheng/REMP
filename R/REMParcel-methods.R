@@ -1,10 +1,8 @@
-
 # REMParcel-methods
 
 setMethod("show", signature(object = "REMParcel"), function(object) {
   .showREMParceInfo(object)
 })
-# remparcel
 
 #' @rdname REMParcel-class
 setMethod("saveParcel", signature(object = "REMParcel"), function(object, work.dir = tempdir(), verbose = FALSE, ...) {
