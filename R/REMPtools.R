@@ -25,9 +25,17 @@
 #' be
 #' @export
 getBackend <- function(ncore, BPPARAM = NULL, verbose = FALSE) {
-  if (ncore > parallel::detectCores()) {
-    ncore <- parallel::detectCores()
+  maxCore <- parallel::detectCores()
+  if (ncore > maxCore) {
+    if (!is.na(maxCore)) {
+      ncore <- maxCore
+    } else {
+      
+    }
   }
+
+  if (ncore > 16) message("Note: Requesting more than 16 cores may not benifit much.")
+
   if (ncore == 1) {
     backend <- BiocParallel::SerialParam()
     if (verbose) {
@@ -293,7 +301,7 @@ fetchRefSeqGene <- function(ah, mainOnly = FALSE, verbose = FALSE) {
 #' a preference for hemimethylated CpG/CpG dyads (methylated on one strand only).
 #' As a result, methyaltion status of CpG sites in both forward and reverse strands are usually consistent.
 #' Therefore, to accommodate the cytosine loci in both strands, the returned genomic
-#' ranges cover the 'CG' sequence with width of 2. The 'stand' information indicates the strand of the RE.
+#' ranges cover the 'CG' sequence with width of 2. The 'strand' information indicates the strand of the RE.
 #'
 #' @return A \code{\link{GRanges}} object containing identified RE-CpG genomic
 #' location data.

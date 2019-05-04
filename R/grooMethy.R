@@ -32,8 +32,8 @@
 #' identify the CpGs with multimodal distribution. Please note that \code{grooMethy} is
 #' also embedded in \code{\link{remp}} so the user can run \code{\link{remp}} directly without
 #' explicitly running \code{grooMethy}. For sequencing methylation data, please specify the genomic location of CpGs
-#' in a \code{GenomicRanges} object and specify it in \code{Seq.GR}. For an example of \code{Seq.GR}, Please 
-#' run \code{minfi::getLocations(IlluminaHumanMethylation450kanno.ilmn12.hg19)} (the row names of the CpGs in \code{Seq.GR} 
+#' in a \code{GenomicRanges} object and specify it in \code{Seq.GR}. For an example of \code{Seq.GR}, Please
+#' run \code{minfi::getLocations(IlluminaHumanMethylation450kanno.ilmn12.hg19)} (the row names of the CpGs in \code{Seq.GR}
 #' can be \code{NULL}).
 #'
 #' @return A \code{\link{RatioSet}} or \code{\link{GenomicRatioSet}} containing beta value and
@@ -49,19 +49,23 @@
 #' @export
 grooMethy <- function(methyDat, Seq.GR = NULL, impute = TRUE, imputebyrow = TRUE, mapGenome = FALSE, verbose = FALSE) {
   currenT <- Sys.time()
-  
+
   if (is.null(methyDat)) stop("Methylation dataset (methyDat) is missing.")
   if (!is.null(Seq.GR) & !is(Seq.GR, "GRanges")) stop("Seq.GR must be a GenomicRanges object.")
-  
+
   methyDat_work <- methyDat
 
   if (is(methyDat_work, "RatioSet") || is(methyDat_work, "GenomicRatioSet")) {
+    if(minfi::preprocessMethod(methyDat_work) == "grooMethy(REMP)") {
+      if (verbose) message("Methylation data are already groomed.")
+      return(methyDat_work)
+    }  
     methyDat_work <- minfi::getBeta(methyDat_work)
   }
 
   methyDat_work <- .methyMatrix(methyDat_work, Seq.GR)
 
-  type <- .guessBetaorM(methyDat_work)
+  type <- .guessDataType(methyDat_work)
   arrayType <- .guessArrayType(methyDat_work)
 
   if (arrayType == "27k") {
@@ -73,8 +77,8 @@ grooMethy <- function(methyDat, Seq.GR = NULL, impute = TRUE, imputebyrow = TRUE
   if (arrayType == "EPIC") {
     annotationInfo <- c(array = "IlluminaHumanMethylationEPIC", annotation = remp_options(".default.epic.annotation"))
   }
-  if (arrayType == "Seq" | !is.null(Seq.GR)) {
-    annotationInfo <- c(array = "Sequencing", annotation = "Custom")
+  if (arrayType == "Sequencing" | !is.null(Seq.GR)) {
+    annotationInfo <- c(array = "IlluminaHumanMethylationSequencing", annotation = "Custom")
   }
 
   if (verbose) {
@@ -86,7 +90,7 @@ grooMethy <- function(methyDat, Seq.GR = NULL, impute = TRUE, imputebyrow = TRUE
 
   if (type == "percentage") {
     methyDat_work <- methyDat_work / 100
-    if (verbose) message("Percentage data has been divided by 100 and scaled to range 0-1.")
+    if (verbose) message("Percentage data have been divided by 100 and scaled to range 0-1.")
   }
 
   dc <- .dataCheck(methyDat_work, type)
@@ -175,7 +179,7 @@ grooMethy <- function(methyDat, Seq.GR = NULL, impute = TRUE, imputebyrow = TRUE
     ## If so then use mean to fix them
     if (nrow(idx) > 0) {
       if (verbose) {
-        message("    Fixing ", nrow(idx), " imputed probes that are out of the original data range ....")
+        message("    Fixing ", nrow(idx), " imputed probes that are out of the original data range...")
       }
       m <- apply(mdata[idx[, 1], ], 1, function(x) mean(x, na.rm = TRUE)) ## calculate the mean of the original data
       for (i in seq_len(nrow(idx))) {
@@ -192,8 +196,10 @@ grooMethy <- function(methyDat, Seq.GR = NULL, impute = TRUE, imputebyrow = TRUE
     betadata <- .toBeta(mdata)
   }
 
-  rset <- minfi::RatioSet(Beta = betadata, M = mdata, annotation = annotationInfo)
-  if (arrayType != "seq" & mapGenome) {
+  rset <- minfi::RatioSet(Beta = betadata, M = mdata, 
+                          annotation = annotationInfo, 
+                          preprocessMethod = "grooMethy(REMP)")
+  if (arrayType != "Sequencing" & mapGenome) {
     rset <- minfi::mapToGenome(rset)
   }
 
@@ -216,15 +222,19 @@ grooMethy <- function(methyDat, Seq.GR = NULL, impute = TRUE, imputebyrow = TRUE
     rownames(methyDat.matrix) <- paste0(seqnames(Seq.GR), ":", start(Seq.GR))
   } else {
     if (length(probeNameIndicator) > 1) {
-      stop(paste("For array methylation data, please only keep one column or just use row names to indicate Illumina probe names (i.e. cg00000029).",
-                 "For sequencing methylation data, the parameter Seq.GR cannot be missing. Please provide it."))
+      stop(paste(
+        "For array methylation data, please only keep one column or just use row names to indicate Illumina probe names (i.e. cg00000029).",
+        "For sequencing methylation data, the parameter Seq.GR cannot be missing. Please provide it."
+      ))
     }
 
     containILMN <- "cg" %in% unique(substring(methyDat[seq_len(10), probeNameIndicator], 1, 2))
     containRownames <- "cg" %in% unique(substring(rownames(methyDat)[seq_len(10)], 1, 2))
     if (!containILMN & !containRownames) {
-      stop(paste("For array methylation data, a column or row names that indicates Illumina probe names (i.e. cg00000029) is missing.",
-                 "Please fix it. For sequencing methylation data, the parameter Seq.GR cannot be missing. Please provide it."))
+      stop(paste(
+        "For array methylation data, a column or row names that indicates Illumina probe names (i.e. cg00000029) is missing.",
+        "Please fix it. For sequencing methylation data, the parameter Seq.GR cannot be missing. Please provide it."
+      ))
     }
 
     if (containILMN) {

@@ -35,7 +35,6 @@
 #' @param BPPARAM For \code{decodeAnnot} and \code{rempAggregate}: an optional \code{\link{BiocParallelParam}}
 #' instance determining the parallel back-end to be used during evaluation. If not specified, default
 #' back-end in the machine will be used.
-#' @param x For \code{plot}: an \code{REMProduct} object.
 #' @param threshold For \code{rempTrim}: see Utilities.
 #' @param missingRate For \code{rempTrim}: see Utilities.
 #' @param NCpG For \code{rempAggregate}: see Utilities.

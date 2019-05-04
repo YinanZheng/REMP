@@ -76,11 +76,11 @@ Two major RE types in human, Alu element (Alu) and LINE-1 (L1) are available.
 \details{
 Before running \code{remp}, user should make sure the methylation data have gone through
 proper quality control, background correction, and normalization procedures. Both beta value
-and M value are allowed. Rows represents probes and columns represents samples. For array data, 
+and M value are allowed. Rows represents probes and columns represents samples. For array data,
 please make sure to have row names that specify the Illumina probe ID (i.e. cg00000029). For sequencing
-data, please provide the genomic location of CpGs in a \code{\link{GRanges}} obejct and 
-specify it using \code{Seq.GR} parameter. \code{win = 1000} is based on previous findings showing that 
-neighboring CpGs are more likely to be co-modified within 1000 bp. User can specify narrower window size 
+data, please provide the genomic location of CpGs in a \code{\link{GRanges}} obejct and
+specify it using \code{Seq.GR} parameter. \code{win = 1000} is based on previous findings showing that
+neighboring CpGs are more likely to be co-modified within 1000 bp. User can specify narrower window size
 for slight improvement of prediction accuracy at the cost of less predicted RE. Window size greater than 1000 is not
 recommended as the machine learning models would not be able to learn much userful information
 for prediction but introduce noise. Random Forest model (\code{method = "rf"}) is recommented

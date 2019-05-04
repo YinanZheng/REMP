@@ -75,11 +75,11 @@
     return("EPIC")
   }
   if (nProbes > remp_options(".default.epic.total.probes")) {
-    return("Seq")
+    return("Sequencing")
   }
 }
 
-.guessBetaorM <- function(methyDat) {
+.guessDataType <- function(methyDat) {
   methyDat_sample <- methyDat[sample(seq_len(nrow(methyDat)), min(5000, nrow(methyDat))),
     sample(seq_len(ncol(methyDat)), min(5, ncol(methyDat))),
     drop = FALSE
@@ -89,10 +89,12 @@
     sum(methyDat_sample < 0 | methyDat_sample > 1, na.rm = TRUE) <
       nrow(methyDat_sample) * ncol(methyDat_sample) * 0.01) {
     return("beta")
+  } else if (rng[1] < 0) {
+    return("M")
   } else if (rng[1] == 0 & rng[2] == 100) {
     return("percentage")
   } else {
-    return("M")
+    return("unknown")
   }
 }
 
@@ -183,7 +185,7 @@
   if (!isEmpty(GeneStats)) {
     p <- rep(NA, 4)
 
-    p[1] <- paste0(indent, "Gene coverage by ", REtype, " (out of total refSeq Gene):")
+    p[1] <- paste0(indent, "Gene coverage by ", REtype, " (out of total hg19 refSeq Gene):")
     p[2] <- paste0(
       indent, indent, GeneStats[2, 3],
       " (", round(GeneStats[2, 3] / GeneStats[1, 3] * 100, 2), "%) total genes;"

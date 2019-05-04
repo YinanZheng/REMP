@@ -1,4 +1,4 @@
-#' Subset of Alu sequence dataset
+#' Subset of Alu genomic location dataset
 #'
 #' A \code{\link{GRanges}} dataset containing 500 Alu sequences that have CpGs profiled
 #' by both Illumina 450k and EPIC array. The variables are as follows:
@@ -12,9 +12,13 @@
 #'   \item Index internal index
 #' }
 #'
-#' Scripts for generating this object are contained in the \code{scripts} directory.
+#' \code{Alu.demo} has the same format as the data object returned by \code{\link{fetchRMSK}}.
 #'
 #' @format A \code{\link{GRanges}} object.
+#' 
 #' @return A GRanges object with 500 ranges and 3 metadata columns.
+#' 
+#' @seealso See \code{\link{fetchRMSK}} to obtain the complete Alu/L1 dataset.
+
 #' @source RepeatMasker database provided by package \code{AnnotationHub}.
 "Alu.demo"

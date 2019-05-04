@@ -3,9 +3,9 @@
 *REMP* provides machine learning-based tools to predict DNA methylation of locus-specific repetitive elements (RE) by learning surrounding genetic and epigenetic information. These tools provide genomewide and single-base resolution of DNA methylation prediction on RE that are difficult to measure directly using array-based or sequencing-based platforms, which enables epigenome-wide association study (EWAS) and differentially methylated region (DMR) analysis on RE. 
 
 Supporting methylation platforms:
-+ ** Illumina 450k BeadChip Array
-+ ** Illumina EPIC BeadChip Array
-+ ** Illumina methylation sequencing platforms (e.g., TruSeq Methyl Capture EPIC)
++ Illumina 450k BeadChip Array
++ Illumina EPIC BeadChip Array
++ Illumina methylation sequencing platforms (e.g., TruSeq Methyl Capture EPIC)
 
 ## Installation 
 

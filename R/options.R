@@ -61,7 +61,8 @@ REMPOPTIONS <- options_manager(
     "RE.score", "RE.Length", "RE.CpG.density",
     "RE.InTSS", "RE.In5UTR", "RE.InCDS",
     "N.nbr", "distance.mean", "distance.std", "distance.min", "distance.min2",
-    "Methy.min", "Methy.min2", "Methy.mean", "Methy.std"
+    "Methy.min", "Methy.min2", "Methy.mean.mov1", "Methy.mean.mov2",
+    "Methy.mean.mov3", "Methy.mean.mov4", "Methy.std"
   ),
 
   .default.svmLinear.tune = list(C = 2^seq(-15, 3, 2)),

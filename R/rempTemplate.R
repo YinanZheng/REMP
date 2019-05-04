@@ -43,7 +43,7 @@
 rempTemplate <- function(methyDat = NULL, Seq.GR = NULL, parcel = NULL, win = 1000, verbose = FALSE) {
   if (is.null(methyDat)) stop("Methylation dataset (methyDat) is missing.")
   if (!is.null(Seq.GR) & !is(Seq.GR, "GRanges")) stop("Seq.GR must be a GenomicRanges object.")
-  
+
   if (is.null(parcel)) stop("REMParcel object is missing.")
   .isREMParcelOrStop(parcel)
 
@@ -127,6 +127,12 @@ rempTemplate <- function(methyDat = NULL, Seq.GR = NULL, parcel = NULL, win = 10
   ## Remove singleton (RE-CpGs with only one neighboring ILMN CpG)
   RE_NeibCpG$distance <- abs(start(RE_NeibCpG$RE_NeibCpG_ILMN.GR) - start(RE_NeibCpG))
   RE_NeibCpG <- RE_NeibCpG[RE_NeibCpG$distance > 1, ]
+
+  ## Make distance bucket
+  RE_NeibCpG$distance_cat <- cut(RE_NeibCpG$distance, seq(0, win, win / 4),
+    labels = FALSE
+  )
+  RE_NeibCpG$distance_cat[is.na(RE_NeibCpG$distance_cat)] <- 4
 
   ## Add core predictors.
   RE_NeibCpG <- RE_NeibCpG[order(RE_NeibCpG$RE.CpG.ID, RE_NeibCpG$distance), ]

@@ -37,19 +37,16 @@ remprofile <- function(methyDat, REtype = c("Alu", "L1"), Seq.GR = NULL,
                        RE = NULL, impute = FALSE, imputebyrow = TRUE, verbose = FALSE) {
   if (is.null(methyDat)) stop("Methylation dataset (methyDat) is missing.")
   if (!is.null(Seq.GR) & !is(Seq.GR, "GRanges")) stop("Seq.GR must be a GenomicRanges object.")
-  
+
   REtype <- match.arg(REtype)
-  
+
   ## Groom methylation data
   methyDat <- grooMethy(methyDat, Seq.GR, impute, verbose = verbose)
+  arrayType <- gsub("IlluminaHumanMethylation", "", methyDat@annotation["array"])
+  
   methyDat <- minfi::getM(methyDat)
   probeNames <- rownames(methyDat)
-
-  arrayType <- .guessArrayType(methyDat)
-  if (arrayType == "27k") {
-    stop("Illumina 27k array is not supported.")
-  }
-
+  
   if (arrayType == "450k") {
     if (requireNamespace("IlluminaHumanMethylation450kanno.ilmn12.hg19", quietly = TRUE)) {
       ILMN.GR <- minfi::getLocations(
@@ -62,17 +59,17 @@ remprofile <- function(methyDat, REtype = c("Alu", "L1"), Seq.GR = NULL,
         IlluminaHumanMethylationEPICanno.ilm10b2.hg19::IlluminaHumanMethylationEPICanno.ilm10b2.hg19
       )
     }
-  } else if (arrayType == "Seq") {
+  } else if (arrayType == "Sequencing") {
     if (!is.null(Seq.GR)) {
       if (!is(Seq.GR, "GRanges")) stop("Seq.GR must be a GenomicRanges object.")
       ILMN.GR <- Seq.GR
     } else {
-      stop("Seq.GR must be specified if arrayType == 'Seq'.")
+      stop("Seq.GR must be specified if arrayType == 'Sequencing'.")
     }
   } else {
-    stop("Wrong Illumina platform type. Can be one of '450k', 'EPIC', or 'Seq'.")
+    stop("Wrong Illumina platform type. Can be one of '450k', 'EPIC', or 'Sequencing'.")
   }
-  if (arrayType == "Seq") {
+  if (arrayType == "Sequencing") {
     ILMN.GR$Index <- paste0(seqnames(ILMN.GR), ":", start(ILMN.GR))
   } else {
     ILMN.GR <- ILMN.GR[substring(names(ILMN.GR), 1, 2) != "ch"] # remove ch probes
