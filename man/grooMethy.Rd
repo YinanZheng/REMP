@@ -49,8 +49,8 @@ values for multimodal distributed CpGs (across samples) may not be correct. Plea
 identify the CpGs with multimodal distribution. Please note that \code{grooMethy} is
 also embedded in \code{\link{remp}} so the user can run \code{\link{remp}} directly without
 explicitly running \code{grooMethy}. For sequencing methylation data, please specify the genomic location of CpGs
-in a \code{GenomicRanges} object and specify it in \code{Seq.GR}. For an example of \code{Seq.GR}, Please 
-run \code{minfi::getLocations(IlluminaHumanMethylation450kanno.ilmn12.hg19)} (the row names of the CpGs in \code{Seq.GR} 
+in a \code{GenomicRanges} object and specify it in \code{Seq.GR}. For an example of \code{Seq.GR}, Please
+run \code{minfi::getLocations(IlluminaHumanMethylation450kanno.ilmn12.hg19)} (the row names of the CpGs in \code{Seq.GR}
 can be \code{NULL}).
 }
 \examples{

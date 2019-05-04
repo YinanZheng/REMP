@@ -31,7 +31,7 @@ status across all CpG/CpG dyads are concordant. Maintenance methyltransferase ex
 a preference for hemimethylated CpG/CpG dyads (methylated on one strand only).
 As a result, methyaltion status of CpG sites in both forward and reverse strands are usually consistent.
 Therefore, to accommodate the cytosine loci in both strands, the returned genomic
-ranges cover the 'CG' sequence with width of 2. The 'stand' information indicates the strand of the RE.
+ranges cover the 'CG' sequence with width of 2. The 'strand' information indicates the strand of the RE.
 }
 \examples{
 data(Alu.demo)

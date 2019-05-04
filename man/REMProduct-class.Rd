@@ -151,8 +151,6 @@ back-end in the machine will be used.}
 \item{missingRate}{For \code{rempTrim}: see Utilities.}
 
 \item{NCpG}{For \code{rempAggregate}: see Utilities.}
-
-\item{x}{For \code{plot}: an \code{REMProduct} object.}
 }
 \value{
 An object of class \code{REMProduct} for the constructor.

@@ -57,12 +57,10 @@
 * Fixed bug in grooMethy;
 * Added parameters to control the behaviors of imputation in "remprofile".
 
-# REMP 1.6.4
+# REMP 1.8.1
+* REMP package now supports methylation sequencing data as input;
+* "remp" function now supports Extreme Gradient Boosting model;
+* Added new function 'rempTemplate' to facilitate model parameter tunning;
 * Fixed bug in identifying numbers of back-end workers;
 * Fixed bug in predictor importance matrix;
-* "remp" now supports Extreme Gradient Boosting model;
-* Added new function 'rempTemplate' to facilitate model parameter tunning.
-
-# REMP 1.6.5
-* REMP now supports methylation sequencing data as input;
 * Improved robustness.

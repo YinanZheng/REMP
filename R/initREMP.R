@@ -5,13 +5,13 @@
 #' Two major RE types in human, Alu element (Alu) and LINE-1 (L1) are available.
 #'
 #' @param arrayType Illumina methylation array type. Currently \code{"450k"}, \code{"EPIC"},
-#' and \code{"Seq"} (methylation sequencing) are supported. Default = \code{"450k"}.
+#' and \code{"Sequencing"} are supported. Default = \code{"450k"}.
 #' @param REtype Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.
 #' @param RE A \code{\link{GRanges}} object containing user-specified RE genomic location information.
 #' If \code{NULL}, the function will retrive RepeatMasker RE database from \code{\link{AnnotationHub}}
 #' (build hg19).
 #' @param Seq.GR A \code{\link{GRanges}} object containing genomic locations of the CpGs profiled by sequencing
-#' platforms. This parameter should not be \code{NULL} if \code{arrayType == 'Seq'}. Note that the genomic
+#' platforms. This parameter should not be \code{NULL} if \code{arrayType == 'Sequencing'}. Note that the genomic
 #' location must be in hg19 build. See details.
 #' @param ncore Number of cores to run parallel computation. By default max number of cores
 #' available in the machine will be utilized. If \code{ncore = 1}, no parallel computation is allowed.
@@ -26,7 +26,7 @@
 #'
 #' @details
 #' Currently, we support two major types of RE in human, Alu and L1. The main purpose of
-#' \code{initREMP} is to generate and annotate CpG/RE data using the refSeq Gene
+#' \code{initREMP} is to generate and annotate CpG/RE data using the refSeq Gene (hg19)
 #' annotation database (provided by \code{\link{AnnotationHub}}). These annotation data are crucial to
 #' RE methylation prediction in \code{\link{remp}}. Once generated, the data can be reused in the future
 #' (data can be very large). Therefore, we recommend user to save the output from
@@ -35,8 +35,8 @@
 #' annotation data are only for REs that contain RE-CpGs with neighboring profiled CpGs. By default, the
 #' neighboring CpGs are confined within 1200 bp flanking window. This window size can be modified using
 #' \code{\link{remp_options}}. For sequencing methylation data, please specify the genomic location of CpGs
-#' in a \code{GenomicRanges} object and specify it in \code{Seq.GR}. For an example of \code{Seq.GR}, Please 
-#' run \code{minfi::getLocations(IlluminaHumanMethylation450kanno.ilmn12.hg19)} (the row names of the CpGs in 
+#' in a \code{GenomicRanges} object and specify it in \code{Seq.GR}. For an example of \code{Seq.GR}, Please
+#' run \code{minfi::getLocations(IlluminaHumanMethylation450kanno.ilmn12.hg19)} (the row names of the CpGs in
 #' \code{Seq.GR} can be \code{NULL}).
 #'
 #' @return An \code{\link{REMParcel}} object containing data needed for RE methylation prediction.
@@ -49,7 +49,7 @@
 #'   remparcel <- initREMP(arrayType = "450k", REtype = "Alu", RE = Alu.demo, ncore = 1)
 #' }
 #' @export
-initREMP <- function(arrayType = c("450k", "EPIC", "Seq"), REtype = c("Alu", "L1"),
+initREMP <- function(arrayType = c("450k", "EPIC", "Sequencing"), REtype = c("Alu", "L1"),
                      RE = NULL, Seq.GR = NULL,
                      ncore = NULL, BPPARAM = NULL,
                      export = FALSE, work.dir = tempdir(),
@@ -64,7 +64,7 @@ initREMP <- function(arrayType = c("450k", "EPIC", "Seq"), REtype = c("Alu", "L1
   message("Illumina platform: ", arrayType)
 
   if (is.null(ncore)) {
-    ncore <- parallel::detectCores()
+    ncore <- 1
   }
 
   ## Setup backend for paralell computing
@@ -82,17 +82,17 @@ initREMP <- function(arrayType = c("450k", "EPIC", "Seq"), REtype = c("Alu", "L1
         IlluminaHumanMethylationEPICanno.ilm10b2.hg19::IlluminaHumanMethylationEPICanno.ilm10b2.hg19
       )
     }
-  } else if (arrayType == "Seq") {
+  } else if (arrayType == "Sequencing") {
     if (!is.null(Seq.GR)) {
       if (!is(Seq.GR, "GRanges")) stop("Seq.GR must be a GenomicRanges object.")
       ILMN.GR <- Seq.GR
     } else {
-      stop("Seq.GR must be specified if arrayType == 'Seq'.")
+      stop("Seq.GR must be specified if arrayType == 'Sequencing'.")
     }
   } else {
-    stop("Wrong Illumina platform type. Can be one of '450k', 'EPIC', or 'Seq'.")
+    stop("Wrong Illumina platform type. Can be one of '450k', 'EPIC', or 'Sequencing'.")
   }
-  if (arrayType == "Seq") {
+  if (arrayType == "Sequencing") {
     ILMN.GR$Index <- paste0(seqnames(ILMN.GR), ":", start(ILMN.GR))
   } else {
     ILMN.GR <- ILMN.GR[substring(names(ILMN.GR), 1, 2) != "ch"] # remove ch probes
@@ -134,13 +134,13 @@ initREMP <- function(arrayType = c("450k", "EPIC", "Seq"), REtype = c("Alu", "L1
     RE.hg19 <- fetchRMSK(ah, REtype, verbose)
   } else {
     .isGROrStop(RE)
-    if(any(grepl("Alu",RE$name)) & REtype == "L1") {
+    if (any(grepl("Alu", RE$name)) & REtype == "L1") {
       message("Specified REtype (", REtype, ")", " does not match RE database provided. REtype is set to 'Alu'.")
-      REtype = "Alu"
+      REtype <- "Alu"
     }
-    if(any(grepl("L1",RE$name)) & REtype == "Alu") {
+    if (any(grepl("L1", RE$name)) & REtype == "Alu") {
       message("Specified REtype (", REtype, ")", " does not match RE database provided. REtype is set to 'L1'.")
-      REtype = "L1"
+      REtype <- "L1"
     }
     RE.hg19 <- RE
   }

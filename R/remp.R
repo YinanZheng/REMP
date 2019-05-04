@@ -50,11 +50,11 @@
 #' @details
 #' Before running \code{remp}, user should make sure the methylation data have gone through
 #' proper quality control, background correction, and normalization procedures. Both beta value
-#' and M value are allowed. Rows represents probes and columns represents samples. For array data, 
+#' and M value are allowed. Rows represents probes and columns represents samples. For array data,
 #' please make sure to have row names that specify the Illumina probe ID (i.e. cg00000029). For sequencing
-#' data, please provide the genomic location of CpGs in a \code{\link{GRanges}} obejct and 
-#' specify it using \code{Seq.GR} parameter. \code{win = 1000} is based on previous findings showing that 
-#' neighboring CpGs are more likely to be co-modified within 1000 bp. User can specify narrower window size 
+#' data, please provide the genomic location of CpGs in a \code{\link{GRanges}} obejct and
+#' specify it using \code{Seq.GR} parameter. \code{win = 1000} is based on previous findings showing that
+#' neighboring CpGs are more likely to be co-modified within 1000 bp. User can specify narrower window size
 #' for slight improvement of prediction accuracy at the cost of less predicted RE. Window size greater than 1000 is not
 #' recommended as the machine learning models would not be able to learn much userful information
 #' for prediction but introduce noise. Random Forest model (\code{method = "rf"}) is recommented
@@ -129,7 +129,7 @@ remp <- function(methyDat = NULL, REtype = c("Alu", "L1"), Seq.GR = NULL,
   if (is.null(methyDat)) stop("Methylation dataset (methyDat) is missing.")
   if (!is.null(Seq.GR) & !is(Seq.GR, "GRanges")) stop("Seq.GR must be a GenomicRanges object.")
   if (!is.null(param) & !is(param, "list")) stop("Tuning parameter(s) (param) must be a list object.")
-  
+
   method <- match.arg(method)
   if (method != "naive" & !autoTune & is.null(param)) {
     message("Tuning parameter for method = '", method, "' is missing!")
@@ -153,7 +153,7 @@ remp <- function(methyDat = NULL, REtype = c("Alu", "L1"), Seq.GR = NULL,
   }
 
   if (is.null(ncore)) {
-    ncore <- parallel::detectCores()
+    ncore <- 1
   }
 
   if (!is(methyDat, "template")) {
@@ -165,15 +165,12 @@ remp <- function(methyDat = NULL, REtype = c("Alu", "L1"), Seq.GR = NULL,
       )
     }
 
-    arrayType <- .guessArrayType(methyDat)
-    if (arrayType == "27k") {
-      stop("Illumina 27k array is not supported.")
-    }
-
     ## Groom methylation data
-    methyDat <- grooMethy(methyDat, Seq.GR = Seq.GR, verbose = verbose)
+    methyDat <- grooMethy(methyDat, Seq.GR, verbose = verbose)
+    arrayType <- gsub("IlluminaHumanMethylation", "", methyDat@annotation["array"])
+    
     methyDat <- minfi::getM(methyDat)
-
+    
     ## Get the REMParcel object ready
     if (is.null(parcel)) {
       if (is.null(REtype)) {
@@ -326,6 +323,7 @@ remp <- function(methyDat = NULL, REtype = c("Alu", "L1"), Seq.GR = NULL,
     # identical(RE_CpG_ILMN$Index, names(RE_CpG_ILMN_OneMethyDat))
 
     ### To be predicted
+    if(verbose) message("    Loading methylation data for prediction...")
     RE_unprf_neib <- .loadMethy(methyDat[, i, drop = FALSE], RE_NeibCpG)
     # summary(RE_unprf_neib$distance)
 
@@ -431,12 +429,43 @@ remp <- function(methyDat = NULL, REtype = c("Alu", "L1"), Seq.GR = NULL,
   RE_NeibCpG$Methy.min <- methyDatOne[RE_NeibCpG$Methy.ptr.min, ]
   RE_NeibCpG$Methy.min2 <- methyDatOne[RE_NeibCpG$Methy.ptr.min2, ]
 
-  RE_NeibCpG.DF <- mcols(RE_NeibCpG)[, c("RE.CpG.ID", "Methy.all")]
+  RE_NeibCpG.DF <- mcols(RE_NeibCpG)[, c("RE.CpG.ID", "distance_cat", "Methy.all")]
+  catList <- sort(unique(RE_NeibCpG.DF$distance_cat))
+
   Methy_all_agg <- .aggregateNeib(
     Methy.all ~ RE.CpG.ID, RE_NeibCpG.DF,
-    function(x) c(mean(x), sd(x)),
-    c("RE.CpG.ID", "Methy.mean", "Methy.std")
+    function(x) sd(x),
+    c("RE.CpG.ID", "Methy.std")
   )
+
+  ## Moving average
+  cati <- NULL
+  for (i in catList)
+  {
+    cati <- c(cati, i)
+    sub_RE_NeibCpG.DF <- RE_NeibCpG.DF[RE_NeibCpG.DF$distance_cat %in% cati, ]
+    sub_Methy_all_agg <- .aggregateNeib(
+      Methy.all ~ RE.CpG.ID,
+      sub_RE_NeibCpG.DF,
+      function(x) mean(x),
+      c("RE.CpG.ID", paste0("Methy.mean.mov", i))
+    )
+    Methy_all_agg <- merge(Methy_all_agg, sub_Methy_all_agg,
+      by = "RE.CpG.ID", all.x = TRUE
+    )
+  }
+
+  ## carry over missing
+  for (j in catList + 2)
+  {
+    current <- Methy_all_agg[, j]
+    k <- 1
+    while (any(is.na(current)) & j + k <= 6) {
+      current[is.na(current)] <- Methy_all_agg[is.na(current), j + k]
+      k <- k + 1
+    }
+    Methy_all_agg[, j] <- current
+  }
 
   RE_NeibCpG_meta <- mcols(RE_NeibCpG)
   mcols(RE_NeibCpG) <- cbind(

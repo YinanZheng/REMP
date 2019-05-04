@@ -3,7 +3,7 @@
 \docType{data}
 \name{Alu.demo}
 \alias{Alu.demo}
-\title{Subset of Alu sequence dataset}
+\title{Subset of Alu genomic location dataset}
 \format{A \code{\link{GRanges}} object.}
 \source{
 RepeatMasker database provided by package \code{AnnotationHub}.
@@ -28,6 +28,9 @@ by both Illumina 450k and EPIC array. The variables are as follows:
   \item Index internal index
 }
 
-Scripts for generating this object are contained in the \code{scripts} directory.
+\code{Alu.demo} has the same format as the data object returned by \code{\link{fetchRMSK}}.
+}
+\seealso{
+See \code{\link{fetchRMSK}} to obtain the complete Alu/L1 dataset.
 }
 \keyword{datasets}
