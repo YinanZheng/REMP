@@ -4,11 +4,18 @@
 \alias{fetchRefSeqGene}
 \title{Get RefSeq gene database}
 \usage{
-fetchRefSeqGene(ah, mainOnly = FALSE, verbose = FALSE)
+fetchRefSeqGene(annotation.source = c("AH", "UCSC"), genome = c("hg19",
+  "hg38"), mainOnly = FALSE, verbose = FALSE)
 }
 \arguments{
-\item{ah}{An \code{AnnotationHub} object. Use \code{AnnotationHub()} to retrive information
-about all records in the hub.}
+\item{annotation.source}{Character parameter. Specify the source of annotation databases, including
+the RefSeq Gene annotation database and RepeatMasker annotation database. If \code{"AH"}, the database 
+will be obtained from the AnnotationHub package. If \code{"UCSC"}, the database will be downloaded 
+from the UCSC website http://hgdownload.cse.ucsc.edu/goldenpath. The corresponding build (\code{"hg19"} or 
+\code{"hg38"}) will be specified in the parameter \code{genome}.}
+
+\item{genome}{Character parameter. Specify the build of human genome. Can be either \code{"hg19"} or 
+\code{"hg38"}. Note that if \code{annotation.source == "AH"}, only hg19 database is available.}
 
 \item{mainOnly}{Logical parameter. See details.}
 
@@ -20,7 +27,8 @@ both \code{\link{GRanges}} object (for main refgene data) and \code{\link{GRange
 (for gene regions data).
 }
 \description{
-\code{fetchRefSeqGene} is used to obtain refSeq gene database provided by AnnotationHub.
+\code{fetchRefSeqGene} is used to obtain refSeq gene database provided by AnnotationHub (hg19) 
+or UCSC web database (hg19/hg38).
 }
 \details{
 When \code{mainOnly = FALSE}, only the transcript location information will be returned,
@@ -31,7 +39,10 @@ exon (\code{$exon})), and 3'UTR (\code{$threeUTR})). The \code{index} column is 
 index that is used to facilitate data referral, which is meaningless for external use.
 }
 \examples{
-if (!exists("ah")) ah <- AnnotationHub::AnnotationHub()
-if (!exists("refgene.hg19")) refgene.hg19 <- fetchRefSeqGene(ah, verbose = TRUE)
+if (!exists("refgene.hg19")) 
+refgene.hg19 <- fetchRefSeqGene(annotation.source = "AH", 
+                                genome = "hg19", 
+                                verbose = TRUE)
 refgene.hg19
+
 }

@@ -7,9 +7,9 @@
 getBackend(ncore, BPPARAM = NULL, verbose = FALSE)
 }
 \arguments{
-\item{ncore}{Number of cores to run parallel computation. By default max number
+\item{ncore}{Number of cores used for parallel computing. By default max number
 of cores available in the machine will be utilized. If \code{ncore = 1}, no
-parallel computation is allowed.}
+parallel computing is allowed.}
 
 \item{BPPARAM}{An optional \code{BiocParallelParam} instance determining the
 parallel back-end to be used during evaluation. If not specified, default
@@ -27,10 +27,11 @@ parallel computing.
 }
 \examples{
 # Non-parallel mode
-be <- getBackend(1, verbose = TRUE)
+be <- getBackend(ncore = 1, verbose = TRUE)
 be
 
 # parallel mode (2 workers)
-be <- getBackend(2, verbose = TRUE)
+be <- getBackend(ncore = 2, verbose = TRUE)
 be
+
 }

@@ -29,9 +29,11 @@ Illumina 450k data were sourced and curated from ENCODE
 Illumina EPIC data were obtained from data package \code{minfiDataEPIC}.
 }
 \examples{
+\dontrun{
 # Get GM12878 methylation data (450k array)
 if (!exists("GM12878_450k")) GM12878_450k <- getGM12878("450k")
 GM12878_450k
+}
 
 # Get GM12878 methylation data (EPIC array)
 if (!exists("GM12878_EPIC")) GM12878_EPIC <- getGM12878("EPIC")

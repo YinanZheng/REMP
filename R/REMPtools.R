@@ -4,9 +4,9 @@
 #' \code{getBackend} is used to obtain \code{BiocParallel} Back-end to allow
 #' parallel computing.
 #'
-#' @param ncore Number of cores to run parallel computation. By default max number
+#' @param ncore Number of cores used for parallel computing. By default max number
 #' of cores available in the machine will be utilized. If \code{ncore = 1}, no
-#' parallel computation is allowed.
+#' parallel computing is allowed.
 #' @param BPPARAM An optional \code{BiocParallelParam} instance determining the
 #' parallel back-end to be used during evaluation. If not specified, default
 #' back-end in the machine will be used.
@@ -17,14 +17,17 @@
 #'
 #' @examples
 #' # Non-parallel mode
-#' be <- getBackend(1, verbose = TRUE)
+#' be <- getBackend(ncore = 1, verbose = TRUE)
 #' be
 #' 
 #' # parallel mode (2 workers)
-#' be <- getBackend(2, verbose = TRUE)
+#' be <- getBackend(ncore = 2, verbose = TRUE)
 #' be
+#' 
 #' @export
-getBackend <- function(ncore, BPPARAM = NULL, verbose = FALSE) {
+getBackend <- function(ncore, 
+                       BPPARAM = NULL, 
+                       verbose = FALSE) {
   maxCore <- parallel::detectCores()
   if (ncore > maxCore) {
     if (!is.na(maxCore)) {
@@ -74,10 +77,15 @@ getBackend <- function(ncore, BPPARAM = NULL, verbose = FALSE) {
 #' @description
 #' \code{fetchRMSK} is used to obtain specified RE database from RepeatMasker Database
 #' provided by AnnotationHub.
-#'
-#' @param ah An \code{\link{AnnotationHub}} object. Use \code{AnnotationHub()} to
-#' retrive information about all records in the hub.
+#' 
 #' @param REtype Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.
+#' @param annotation.source Character parameter. Specify the source of annotation databases, including
+#' the RefSeq Gene annotation database and RepeatMasker annotation database. If \code{"AH"}, the database 
+#' will be obtained from the AnnotationHub package. If \code{"UCSC"}, the database will be downloaded 
+#' from the UCSC website http://hgdownload.cse.ucsc.edu/goldenpath. The corresponding build (\code{"hg19"} or 
+#' \code{"hg38"}) will be specified in the parameter \code{genome}.
+#' @param genome Character parameter. Specify the build of human genome. Can be either \code{"hg19"} or
+#' \code{"hg38"}.
 #' @param verbose Logical parameter. Should the function be verbose?
 #'
 #' @return A \code{\link{GRanges}} object containing RE database. 'name' column
@@ -85,34 +93,83 @@ getBackend <- function(ncore, BPPARAM = NULL, verbose = FALSE) {
 #' internal index for RE to facilitate data referral, which is meaningless for external use.
 #'
 #' @examples
-#' if (!exists("ah")) ah <- AnnotationHub::AnnotationHub()
-#' L1 <- fetchRMSK(ah, "L1", verbose = TRUE)
+#' L1 <- fetchRMSK(REtype = "L1", 
+#'                 annotation.source = "AH",
+#'                 genome = "hg19", 
+#'                 verbose = TRUE)
 #' L1
 #' @export
-fetchRMSK <- function(ah, REtype, verbose = FALSE) {
-  if (verbose) {
-    message(
-      "Loading ", REtype, " annotation data from RepeatMasker (hg19) database from AnnotationHub: ",
-      remp_options(".default.AH.repeatmasker.hg19")
-    )
+fetchRMSK <- function(REtype = c("Alu", "L1"), 
+                      annotation.source = c("AH", "UCSC"), 
+                      genome = c("hg19", "hg38"), 
+                      verbose = FALSE) {
+  REtype = match.arg(REtype)
+  annotation.source = match.arg(annotation.source)
+  genome = match.arg(genome)
+  
+  if(genome == "hg19") {
+    if(annotation.source == "AH") {
+      if (verbose) message(
+        "Loading ", REtype, " annotation data from RepeatMasker (hg19) database from AnnotationHub: ",
+        remp_options(".default.AH.repeatmasker.hg19")
+      )
+      ah <- .initiateAH()
+      if(is.null(ah)) {
+        message("AnnotationHub is currently not accessible, Switching to 'UCSC' source instead...")
+        annotation.source <- "UCSC"
+      } else {
+        rmsk <- suppressMessages(ah[[remp_options(".default.AH.repeatmasker.hg19")]])
+        rmsk$score <- as.integer(rmsk$score)
+      }
+    }
+    if(annotation.source == "UCSC") {
+      if (verbose) message(
+        "Loading ", REtype, " annotation data from RepeatMasker (hg19) database from ",
+        remp_options(".default.RMSK.hg19.URL")
+      )
+      rmsk <- .RMSKDownload(url = remp_options(".default.RMSK.hg19.URL"), 
+                            tag = "RMSK.hg19",
+                            verbose)
+    }
   }
-  # HG19 rtracklayer://hgdownload.cse.ucsc.edu/goldenpath/hg19/database/rmsk
-  rmsk <- suppressWarnings(suppressMessages(ah[[remp_options(".default.AH.repeatmasker.hg19")]]))
+  
+  if(genome == "hg38") {
+    if(annotation.source == "AH") {
+      message("RepeatMasker database in hg38 build is not available in AnnotationHub. Switching to 'UCSC' source instead...")
+      annotation.source <- "UCSC"
+    }
+    if(annotation.source == "UCSC") {
+      if (verbose) message(
+        "Loading ", REtype, " annotation data from RepeatMasker (hg38) database from ",
+        remp_options(".default.RMSK.hg38.URL")
+      )
+      rmsk <- .RMSKDownload(url = remp_options(".default.RMSK.hg38.URL"), 
+                            tag = "RMSK.hg38",
+                            verbose)
+    }
+  }
+  
 
   if (REtype == "Alu") {
-    REFamily <- remp_options(".default.AluFamily")
+    REFamily_grep <- remp_options(".default.AluFamily.grep")
   }
   if (REtype == "L1") {
-    REFamily <- remp_options(".default.L1Family")
+    REFamily_grep <- remp_options(".default.L1Family.grep")
   }
 
-  RE <- rmsk[rmsk$name %in% REFamily, ]
-  RE <- RE[seqnames(RE) %in% paste0("chr", c(seq_len(22), "X", "Y"))] # chr1 - 22, chrX, chrY
+  RE <- rmsk[grep(REFamily_grep, rmsk$name)]
+  RE <- RE[as.character(seqnames(RE)) %in% remp_options(".default.chr")] # chr1 - 22, chrX, chrY
+  seqlevels(RE) <- remp_options(".default.chr") # remove uncommon chr
 
+  RE <- sort(RE) # sort so that AH and UCSC are identical
+  
   mcols(RE)$Index <- Rle(paste(REtype, formatC(seq_len(length(RE)),
     width = 7,
     flag = "0"
   ), sep = "_")) # Add internal index, meaningless for external database
+  
+  if(verbose) message("Obtained ", length(RE), " ", REtype, " (", genome, ").")
+  
   return(RE)
 }
 
@@ -122,10 +179,16 @@ fetchRMSK <- function(ah, REtype, verbose = FALSE) {
 #' @title Get RefSeq gene database
 #'
 #' @description
-#' \code{fetchRefSeqGene} is used to obtain refSeq gene database provided by AnnotationHub.
+#' \code{fetchRefSeqGene} is used to obtain refSeq gene database provided by AnnotationHub (hg19) 
+#' or UCSC web database (hg19/hg38).
 #'
-#' @param ah An \code{AnnotationHub} object. Use \code{AnnotationHub()} to retrive information
-#' about all records in the hub.
+#' @param annotation.source Character parameter. Specify the source of annotation databases, including
+#' the RefSeq Gene annotation database and RepeatMasker annotation database. If \code{"AH"}, the database 
+#' will be obtained from the AnnotationHub package. If \code{"UCSC"}, the database will be downloaded 
+#' from the UCSC website http://hgdownload.cse.ucsc.edu/goldenpath. The corresponding build (\code{"hg19"} or 
+#' \code{"hg38"}) will be specified in the parameter \code{genome}.
+#' @param genome Character parameter. Specify the build of human genome. Can be either \code{"hg19"} or 
+#' \code{"hg38"}. Note that if \code{annotation.source == "AH"}, only hg19 database is available.
 #' @param mainOnly Logical parameter. See details.
 #' @param verbose Logical parameter. Should the function be verbose?
 #'
@@ -142,19 +205,52 @@ fetchRMSK <- function(ah, REtype, verbose = FALSE) {
 #' (for gene regions data).
 #'
 #' @examples
-#' if (!exists("ah")) ah <- AnnotationHub::AnnotationHub()
-#' if (!exists("refgene.hg19")) refgene.hg19 <- fetchRefSeqGene(ah, verbose = TRUE)
+#' if (!exists("refgene.hg19")) 
+#' refgene.hg19 <- fetchRefSeqGene(annotation.source = "AH", 
+#'                                 genome = "hg19", 
+#'                                 verbose = TRUE)
 #' refgene.hg19
+#' 
 #' @export
-fetchRefSeqGene <- function(ah, mainOnly = FALSE, verbose = FALSE) {
-  if (verbose) {
-    message(
-      "Loading refseq gene (hg19) database from AnnotationHub: ",
-      remp_options(".default.AH.refgene.hg19")
-    )
+fetchRefSeqGene <- function(annotation.source = c("AH", "UCSC"), 
+                            genome = c("hg19", "hg38"), 
+                            mainOnly = FALSE, 
+                            verbose = FALSE) {
+  annotation.source = match.arg(annotation.source)
+  genome = match.arg(genome)
+  
+  if(genome == "hg19") {
+    if(annotation.source == "AH") {
+      if(verbose) message(
+        "Loading static refSeq gene (hg19) database from AnnotationHub: ",
+        remp_options(".default.AH.refgene.hg19"))
+      ah <- .initiateAH()
+      if(is.null(ah)) {
+        message("AnnotationHub is currently not accessible, Switching to 'UCSC' source instead...")
+        annotation.source <- "UCSC"
+      } else refgene <- suppressMessages(ah[[remp_options(".default.AH.refgene.hg19")]])
+    }
+    if(annotation.source == "UCSC") {
+      if(verbose) message("Loading UCSC refSeq gene (hg19) database from ", remp_options(".default.refGene.hg19.URL"))
+      refgene <- .UCSCrefGeneDownload(url = remp_options(".default.refGene.hg19.URL"), 
+                                      tag = "refGene.hg19",
+                                      verbose)
+    }
   }
-
-  refgene <- suppressWarnings(suppressMessages(ah[[remp_options(".default.AH.refgene.hg19")]]))
+  
+  if(genome == "hg38") {
+    if(annotation.source == "AH") {
+      message("RefSeq Gene database in hg38 build is not available in AnnotationHub. Switching to 'UCSC' source instead...")
+      annotation.source <- "UCSC"
+    }
+    if(annotation.source == "UCSC") {
+      if(verbose) message("Loading UCSC refSeq gene (hg38) database from ", remp_options(".default.refGene.hg38.URL"))
+      refgene <- .UCSCrefGeneDownload(url = remp_options(".default.refGene.hg38.URL"), 
+                                      tag = "refGene.hg38",
+                                      verbose)
+    }
+  }
+  
   refgene <- refgene[as.character(seqnames(refgene)) %in%
     paste0("chr", c(seq_len(22), "X", "Y"))] ## chr1 - 22, chrX, chrY
   refgene$type <- substring(refgene$name, 1, 2) ## Protein coding gene (NM) or noncoding RNA gene (NR)
@@ -183,11 +279,11 @@ fetchRefSeqGene <- function(ah, mainOnly = FALSE, verbose = FALSE) {
     GeneSymbol = EG2Symbol
   )
 
-  refgene_main$EntrezGene <- refseq2EG_Symbol.DF$EntrezGeneID[match(
+  refgene_main$EntrezGene <- refseq2EG_Symbol.DF$EntrezGeneID[base::match(
     refgene_main$name,
     refseq2EG_Symbol.DF$refseqID
   )]
-  refgene_main$GeneSymbol <- refseq2EG_Symbol.DF$GeneSymbol[match(
+  refgene_main$GeneSymbol <- refseq2EG_Symbol.DF$GeneSymbol[base::match(
     refgene_main$name,
     refseq2EG_Symbol.DF$refseqID
   )]
@@ -282,17 +378,19 @@ fetchRefSeqGene <- function(ah, mainOnly = FALSE, verbose = FALSE) {
 
 
 
-
 #' @title Find RE-CpG genomic location given RE ranges information
 #'
 #' @description
 #' \code{findRECpG} is used to obtain RE-CpG genomic location data.
 #'
-#' @param RE.hg19 A \code{\link{GRanges}} object of RE genomic location database. This
+#' @param RE A \code{\link{GRanges}} object of RE genomic location database. This
 #' can be obtained by \code{\link{fetchRMSK}}.
 #' @param REtype Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.
+#' @param genome Character parameter. Specify the build of human genome. Can be either \code{"hg19"} or 
+#' \code{"hg38"}. User should make sure the genome build of \code{RE} is consistent with this parameter.
 #' @param be A \code{\link{BiocParallel}} object containing back-end information that is
-#' ready for paralle computing. This can be obtained by \code{\link{getBackend}}.
+#' ready for parallel computing. This can be obtained by \code{\link{getBackend}}. If not specified,
+#' non-parallel mode is used.
 #' @param verbose logical parameter. Should the function be verbose?
 #'
 #' @details
@@ -302,40 +400,62 @@ fetchRefSeqGene <- function(ah, mainOnly = FALSE, verbose = FALSE) {
 #' As a result, methyaltion status of CpG sites in both forward and reverse strands are usually consistent.
 #' Therefore, to accommodate the cytosine loci in both strands, the returned genomic
 #' ranges cover the 'CG' sequence with width of 2. The 'strand' information indicates the strand of the RE.
+#' Locating CpG sites in RE sequences can be computation intensive. It is recommanded to get more than
+#' one work in the backend for a faster running speed.
 #'
 #' @return A \code{\link{GRanges}} object containing identified RE-CpG genomic
 #' location data.
 #'
 #' @examples
-#' data(Alu.demo)
-#' be <- getBackend(1, verbose = TRUE)
-#' RE.CpG <- findRECpG(Alu.demo, "Alu", be, verbose = TRUE)
+#' data(Alu.hg19.demo)
+#' RE.CpG <- findRECpG(RE = Alu.hg19.demo, 
+#'                     REtype = "Alu", 
+#'                     genome = "hg19", 
+#'                     verbose = TRUE)
 #' RE.CpG
+#' 
 #' @export
-findRECpG <- function(RE.hg19, REtype = c("Alu", "L1"), be = NULL, verbose = FALSE) {
+findRECpG <- function(RE, 
+                      REtype = c("Alu", "L1"), 
+                      genome = c("hg19", "hg38"), 
+                      be = NULL, 
+                      verbose = FALSE) {
   if (is.null(be)) be <- getBackend(1, verbose)
   REtype <- match.arg(REtype)
-
+  genome <- match.arg(genome)
+  
   ## Flank RE by 1 base pair to cover the cases where CG is located in
   ## RE's head or tail
-  RE.hg19 <- .twoWayFlank(RE.hg19, 1)
+  RE <- .twoWayFlank(RE, 1)
 
   if (verbose) {
     message(
-      "    Getting sequence of the total ", length(RE.hg19),
+      "    Getting sequence of the total ", length(RE),
       " ", REtype, " ..."
     )
   }
-  SEQ.RE <- BSgenome::getSeq(
-    BSgenome.Hsapiens.UCSC.hg19::Hsapiens,
-    GRanges(
-      seqnames(RE.hg19),
-      IRanges(
-        start = start(RE.hg19),
-        end = end(RE.hg19)
-      )
-    )
-  ) # ignore strand
+  
+  if(genome == "hg19") {
+    if (requireNamespace("BSgenome.Hsapiens.UCSC.hg19", quietly = TRUE)) {
+      if(isNamespaceLoaded("BSgenome.Hsapiens.UCSC.hg38")) unloadNamespace("BSgenome.Hsapiens.UCSC.hg38")
+      if(!isNamespaceLoaded("BSgenome.Hsapiens.UCSC.hg19")) attachNamespace("BSgenome.Hsapiens.UCSC.hg19")
+      if(verbose) message("    Using UCSC Human Reference Genome: hg19")
+      hs <- BSgenome.Hsapiens.UCSC.hg19::Hsapiens
+    } else stop("Please install missing package: BSgenome.Hsapiens.UCSC.hg19") 
+  }
+  
+  if(genome == "hg38") {
+    if (requireNamespace("BSgenome.Hsapiens.UCSC.hg38", quietly = TRUE)) {
+      if(isNamespaceLoaded("BSgenome.Hsapiens.UCSC.hg19")) unloadNamespace("BSgenome.Hsapiens.UCSC.hg19")
+      if(!isNamespaceLoaded("BSgenome.Hsapiens.UCSC.hg38")) attachNamespace("BSgenome.Hsapiens.UCSC.hg38")
+      if(verbose) message("    Using UCSC Human Reference Genome: hg38")
+      hs <- BSgenome.Hsapiens.UCSC.hg38::Hsapiens
+    } else stop("Please install missing package: BSgenome.Hsapiens.UCSC.hg38") 
+  }
+  
+  SEQ.RE <- BSgenome::getSeq(hs, 
+                             GRanges(seqnames(RE), 
+                                     IRanges(start = start(RE), end = end(RE)))) # ignore strand
 
   if (verbose) {
     message("    Identifying CpG sites in ", REtype, " sequence ...")
@@ -360,24 +480,24 @@ findRECpG <- function(RE.hg19, REtype = c("Alu", "L1"), be = NULL, verbose = FAL
     if (verbose) {
       message("    There are ", length(noCpGind), " ", REtype, " sequences contain no CpG site.")
     }
-    RE.hg19 <- RE.hg19[-noCpGind]
+    RE <- RE[-noCpGind]
     RE.CpG <- RE.CpG[-noCpGind]
   }
 
   ## Extend 'C' to 'CG' AND Shift to the real genomic location
   RE.CpG.IRList <- IRangesList(start = RE.CpG - 1, end = RE.CpG)
-  block_shift <- shift(RE.CpG.IRList, start(RE.hg19))
+  block_shift <- shift(RE.CpG.IRList, start(RE))
 
   RE.CpG <- makeGRangesListFromFeatureFragments(
-    seqnames = seqnames(RE.hg19),
+    seqnames = seqnames(RE),
     fragmentStarts = start(block_shift),
     fragmentEnds = end(block_shift),
-    strand = strand(RE.hg19)
+    strand = strand(RE)
   )
   elementLen <- elementNROWS(RE.CpG)
 
   RE.CpG <- unlist(RE.CpG)
-  RE.CpG$Index <- Rle(runValue(RE.hg19$Index), elementLen)
+  RE.CpG$Index <- Rle(runValue(RE$Index), elementLen)
   RE.CpG <- RE.CpG[order(RE.CpG$Index)]
 
   if (verbose) {
@@ -416,13 +536,19 @@ findRECpG <- function(RE.hg19, REtype = c("Alu", "L1"), be = NULL, verbose = FAL
 #' Gene database.
 #'
 #' @examples
-#' data(Alu.demo)
-#' if (!exists("ah")) ah <- AnnotationHub::AnnotationHub()
-#' if (!exists("refgene.hg19")) refgene.hg19 <- fetchRefSeqGene(ah, verbose = TRUE)
-#' Alu.demo.refGene <- GRannot(Alu.demo, refgene.hg19, verbose = TRUE)
-#' Alu.demo.refGene
+#' data(Alu.hg19.demo)
+#' if (!exists("refgene.hg19")) 
+#'   refgene.hg19 <- fetchRefSeqGene(annotation.source = "AH", 
+#'                                   genome = "hg19",
+#'                                   verbose = TRUE)
+#' Alu.hg19.demo.refGene <- GRannot(Alu.hg19.demo, refgene.hg19, verbose = TRUE)
+#' Alu.hg19.demo.refGene
+#' 
 #' @export
-GRannot <- function(object.GR, refgene, symbol = FALSE, verbose = FALSE) {
+GRannot <- function(object.GR, 
+                    refgene, 
+                    symbol = FALSE, 
+                    verbose = FALSE) {
 
   ## Check if the object.GR contains a metadata column called "Index"
   if (!"Index" %in% colnames(mcols(object.GR))) {
@@ -545,7 +671,8 @@ GRannot <- function(object.GR, refgene, symbol = FALSE, verbose = FALSE) {
       list(Index = as.character(object.GR$Index[queryHits(object_annot_Hit)])),
       .clps
     )
-    InRegion[match(object_agg$Index, object.GR$Index)] <- object_agg$InRegion
+    InRegion[base::match(object_agg$Index, 
+                         runValue(object.GR$Index))] <- object_agg$InRegion
   }
 
   object.GR$newRegion <- InRegion
@@ -560,4 +687,49 @@ GRannot <- function(object.GR, refgene, symbol = FALSE, verbose = FALSE) {
   }
 
   return(object.GR)
+}
+
+# Used by fetchRMSK
+.RMSKDownload <- function(url, tag, verbose)
+{
+  rmsk_raw <- .webDownload(url = url,
+                           tag = tag,
+                           col_types = readr::cols_only(X2 = readr::col_integer(),
+                                                        X6 = readr::col_character(),
+                                                        X7 = readr::col_integer(),
+                                                        X8 = readr::col_integer(),
+                                                        X10 = readr::col_character(),
+                                                        X11 = readr::col_character()),
+                           verbose = verbose)
+  
+  rmsk <- GRanges(seqnames = rmsk_raw$X6, IRanges(start = rmsk_raw$X7+1, end = rmsk_raw$X8),
+                  strand = rmsk_raw$X10, name = rmsk_raw$X11, score = rmsk_raw$X2)
+  return(rmsk)
+}
+
+# Used by fetchRefSeqGene
+.UCSCrefGeneDownload <- function(url, tag, verbose)
+{
+  refgene_raw <- .webDownload(url = url, 
+                              tag = tag, 
+                              col_types = readr::cols_only(X2 = readr::col_character(),
+                                                           X3 = readr::col_character(),
+                                                           X4 = readr::col_character(),
+                                                           X5 = readr::col_integer(),
+                                                           X6 = readr::col_integer(),
+                                                           X7 = readr::col_integer(),
+                                                           X8 = readr::col_integer(),
+                                                           X10 = readr::col_character(),
+                                                           X11 = readr::col_character()), 
+                              verbose = verbose)
+  refgene <- GRanges(seqnames = refgene_raw$X3, IRanges(start = refgene_raw$X5 + 1, end = refgene_raw$X6),
+                     strand = refgene_raw$X4, name = vapply(strsplit(refgene_raw$X2, "\\."), function(x) x[1], character(1)), 
+                     thick = IRanges(start = refgene_raw$X7 + 1, end = refgene_raw$X8),
+                     blocks = IRangesList(start = mapply(function(x, y) x + 1 - y,  
+                                                         lapply(strsplit(refgene_raw$X10, ","), as.integer), 
+                                                         refgene_raw$X5), 
+                                          end = mapply(function(x, y) x - y,  
+                                                       lapply(strsplit(refgene_raw$X11, ","), as.integer), 
+                                                       refgene_raw$X5)))
+  return(refgene)
 }

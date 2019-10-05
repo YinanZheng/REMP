@@ -7,14 +7,21 @@
 #' @param arrayType Illumina methylation array type. Currently \code{"450k"}, \code{"EPIC"},
 #' and \code{"Sequencing"} are supported. Default = \code{"450k"}.
 #' @param REtype Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.
+#' @param annotation.source Character parameter. Specify the source of annotation databases, including
+#' the RefSeq Gene annotation database and RepeatMasker annotation database. If \code{"AH"}, the database 
+#' will be obtained from the AnnotationHub package. If \code{"UCSC"}, the database will be downloaded 
+#' from the UCSC website http://hgdownload.cse.ucsc.edu/goldenpath. The corresponding build (\code{"hg19"} or 
+#' \code{"hg38"}) can be specified in the parameter \code{genome}.
+#' @param genome Character parameter. Specify the build of human genome. Can be either \code{"hg19"} or 
+#' \code{"hg38"}. Note that if \code{annotation.source == "AH"}, only hg19 database is available.
 #' @param RE A \code{\link{GRanges}} object containing user-specified RE genomic location information.
 #' If \code{NULL}, the function will retrive RepeatMasker RE database from \code{\link{AnnotationHub}}
-#' (build hg19).
+#' (build hg19) or download the database from UCSC website (build hg19/hg38).
 #' @param Seq.GR A \code{\link{GRanges}} object containing genomic locations of the CpGs profiled by sequencing
 #' platforms. This parameter should not be \code{NULL} if \code{arrayType == 'Sequencing'}. Note that the genomic
-#' location must be in hg19 build. See details.
-#' @param ncore Number of cores to run parallel computation. By default max number of cores
-#' available in the machine will be utilized. If \code{ncore = 1}, no parallel computation is allowed.
+#' location can be in either hg19 or hg38 build. See details.
+#' @param ncore Number of cores used for parallel computing. By default max number of cores
+#' available in the machine will be utilized. If \code{ncore = 1}, no parallel computing is allowed.
 #' @param BPPARAM An optional \code{\link{BiocParallelParam}} instance determining the parallel back-end to
 #' be used during evaluation. If not specified, default back-end in the machine will be used.
 #' @param export Logical. Should the returned \code{\link{REMParcel}} object be saved to local machine?
@@ -25,19 +32,23 @@
 #' @param verbose Logical parameter. Should the function be verbose?
 #'
 #' @details
-#' Currently, we support two major types of RE in human, Alu and L1. The main purpose of
+#' Currently, we support two major types of RE in the human genome, Alu and L1. The main purpose of
 #' \code{initREMP} is to generate and annotate CpG/RE data using the refSeq Gene (hg19)
 #' annotation database (provided by \code{\link{AnnotationHub}}). These annotation data are crucial to
 #' RE methylation prediction in \code{\link{remp}}. Once generated, the data can be reused in the future
-#' (data can be very large). Therefore, we recommend user to save the output from
+#' (data can be very large). Therefore, we recommend the user to save the output from
 #' \code{initREMP} to the local machine, so that user only need to run this function once
-#' as long as there is no change to the RE database. To minimize the size of resulting data file, the generated
+#' as long as there is no change to the RE database. To minimize the size of the resulting data file, the generated
 #' annotation data are only for REs that contain RE-CpGs with neighboring profiled CpGs. By default, the
 #' neighboring CpGs are confined within 1200 bp flanking window. This window size can be modified using
-#' \code{\link{remp_options}}. For sequencing methylation data, please specify the genomic location of CpGs
+#' \code{\link{remp_options}}. Note that the refSeq Gene database from UCSC is dynamic (updated periodically) 
+#' and reflecting the latest knowledge of gene, whereas the database from AnnotationHub is static and classic. 
+#' Using different sources will have a slight impact on the prediction results of RE methylation and gene annotation 
+#' of final results. For sequencing methylation data, please specify the genomic location of CpGs
 #' in a \code{GenomicRanges} object and specify it in \code{Seq.GR}. For an example of \code{Seq.GR}, Please
 #' run \code{minfi::getLocations(IlluminaHumanMethylation450kanno.ilmn12.hg19)} (the row names of the CpGs in
-#' \code{Seq.GR} can be \code{NULL}).
+#' \code{Seq.GR} can be \code{NULL}). The user should make sure the genome build of \code{Seq.GR} match the 
+#' build specified in \code{genome} parameter (default is \code{"hg19"}).
 #'
 #' @return An \code{\link{REMParcel}} object containing data needed for RE methylation prediction.
 #'
@@ -45,53 +56,78 @@
 #'
 #' @examples
 #' if (!exists("remparcel")) {
-#'   data(Alu.demo)
-#'   remparcel <- initREMP(arrayType = "450k", REtype = "Alu", RE = Alu.demo, ncore = 1)
+#'   data(Alu.hg19.demo)
+#'   remparcel <- initREMP(arrayType = "450k", 
+#'                         REtype = "Alu", 
+#'                         annotation.source = "AH",
+#'                         genome = "hg19",
+#'                         RE = Alu.hg19.demo, 
+#'                         ncore = 1,
+#'                         verbose = TRUE)
 #' }
+#' 
 #' @export
-initREMP <- function(arrayType = c("450k", "EPIC", "Sequencing"), REtype = c("Alu", "L1"),
-                     RE = NULL, Seq.GR = NULL,
-                     ncore = NULL, BPPARAM = NULL,
-                     export = FALSE, work.dir = tempdir(),
+initREMP <- function(arrayType = c("450k", "EPIC", "Sequencing"), 
+                     REtype = c("Alu", "L1"),
+                     annotation.source = c("AH", "UCSC"), 
+                     genome = c("hg19", "hg38"),
+                     RE = NULL, 
+                     Seq.GR = NULL,
+                     ncore = NULL, 
+                     BPPARAM = NULL,
+                     export = FALSE, 
+                     work.dir = tempdir(),
                      verbose = FALSE) {
   ## Initiate running time
   currenT <- Sys.time()
 
   arrayType <- match.arg(arrayType)
   REtype <- match.arg(REtype)
-
-  message("Start ", REtype, " annotation data initialization ...")
+  annotation.source = match.arg(annotation.source)
+  genome = match.arg(genome)
+  
+  if (!is.null(Seq.GR)) {
+    .isGROrStop(Seq.GR)
+    names(Seq.GR) <- NULL
+  }
+  
+  message("Start ", REtype, " annotation data initialization (", genome, ")...")
+  message("Gene annotation database: ", annotation.source)
   message("Illumina platform: ", arrayType)
 
-  if (is.null(ncore)) {
-    ncore <- 1
-  }
+  if (is.null(ncore)) ncore <- 1
 
-  ## Setup backend for paralell computing
+  ## Setup backend for parallel computing
   be <- getBackend(ncore, BPPARAM, verbose)
 
   if (arrayType == "450k") {
     if (requireNamespace("IlluminaHumanMethylation450kanno.ilmn12.hg19", quietly = TRUE)) {
-      ILMN.GR <- minfi::getLocations(
-        IlluminaHumanMethylation450kanno.ilmn12.hg19::IlluminaHumanMethylation450kanno.ilmn12.hg19
-      )
-    }
+      suppressPackageStartupMessages(require("IlluminaHumanMethylation450kanno.ilmn12.hg19"))
+      ILMN.GR <- minfi::getLocations(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+      if(genome == "hg38") {
+        ILMN.GR <- .liftOver_Hg19toHg38(ILMN.GR, 
+                                        "Lifting over Illumina CpG probe location from hg19 to hg38...",
+                                        verbose)
+      }
+    } else stop("Please install missing package: IlluminaHumanMethylation450kanno.ilmn12.hg19")
   } else if (arrayType == "EPIC") {
     if (requireNamespace("IlluminaHumanMethylationEPICanno.ilm10b2.hg19", quietly = TRUE)) {
-      ILMN.GR <- minfi::getLocations(
-        IlluminaHumanMethylationEPICanno.ilm10b2.hg19::IlluminaHumanMethylationEPICanno.ilm10b2.hg19
-      )
-    }
+      suppressPackageStartupMessages(require("IlluminaHumanMethylationEPICanno.ilm10b2.hg19"))
+      ILMN.GR <- minfi::getLocations(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
+      if(genome == "hg38") {
+        ILMN.GR <- .liftOver_Hg19toHg38(ILMN.GR, 
+                                        "Lifting over Illumina CpG probe location from hg19 to hg38...",
+                                        verbose)
+      }
+    } else stop("Please install missing package: IlluminaHumanMethylationEPICanno.ilm10b2.hg19")
   } else if (arrayType == "Sequencing") {
     if (!is.null(Seq.GR)) {
-      if (!is(Seq.GR, "GRanges")) stop("Seq.GR must be a GenomicRanges object.")
       ILMN.GR <- Seq.GR
     } else {
       stop("Seq.GR must be specified if arrayType == 'Sequencing'.")
     }
-  } else {
-    stop("Wrong Illumina platform type. Can be one of '450k', 'EPIC', or 'Sequencing'.")
   }
+  
   if (arrayType == "Sequencing") {
     ILMN.GR$Index <- paste0(seqnames(ILMN.GR), ":", start(ILMN.GR))
   } else {
@@ -110,28 +146,12 @@ initREMP <- function(arrayType = c("450k", "EPIC", "Sequencing"), REtype = c("Al
   ### ------ Part I - Resources preparation ------###
   ##################################################
 
-  ## All database used are from AnnotationHub(), if user does not specify
-  ## the data.
-
-  ## Test the file permission
-  permission <- file.access(AnnotationHub::getAnnotationHubOption("CACHE"), 2)
-
-  if (permission != 0) {
-    if (verbose) {
-      message(
-        AnnotationHub::getAnnotationHubOption("CACHE"),
-        " is not writable, using temporal directory ",
-        .forwardSlashPath(tempdir()), " instead."
-      )
-    }
-    AnnotationHub::setAnnotationHubOption("CACHE", file.path(tempdir(), ".AnnotationHub"))
-  }
-
-  ah <- suppressMessages(AnnotationHub::AnnotationHub())
-
   if (is.null(RE)) {
-    ### Get RE annotation database (RepeatMasker)
-    RE.hg19 <- fetchRMSK(ah, REtype, verbose)
+    ### Get RE annotation database
+    RE.hg <- fetchRMSK(REtype = REtype, 
+                       annotation.source = annotation.source,
+                       genome = genome, 
+                       verbose = verbose)
   } else {
     .isGROrStop(RE)
     if (any(grepl("Alu", RE$name)) & REtype == "L1") {
@@ -142,27 +162,27 @@ initREMP <- function(arrayType = c("450k", "EPIC", "Sequencing"), REtype = c("Al
       message("Specified REtype (", REtype, ")", " does not match RE database provided. REtype is set to 'L1'.")
       REtype <- "L1"
     }
-    RE.hg19 <- RE
+    RE.hg <- RE
   }
 
   ### Get refSeq gene database
-  refgene.hg19 <- fetchRefSeqGene(ah, mainOnly = FALSE, verbose)
+  refgene.hg <- fetchRefSeqGene(annotation.source, genome, mainOnly = FALSE, verbose)
 
-  ### Get RE-CpG location database Narrow down RE.hg19 to RE sequence that
+  ### Get RE-CpG location database Narrow down RE.hg to RE sequence that
   ### overlaps with CpG sites flanking region For demo data, this will not
   ### change anything.
   ILMN.GR.flank <- .twoWayFlank(ILMN.GR, remp_options(".default.max.flankWindow"))
-  RE.hg19 <- subsetByOverlaps(RE.hg19, ILMN.GR.flank, ignore.strand = TRUE)
+  RE.hg <- subsetByOverlaps(RE.hg, ILMN.GR.flank, ignore.strand = TRUE)
 
-  ## Narrow down RE.hg19 to RE sequence that overlaps with gene sequence
-  ## RE.hg19 <- subsetByOverlaps(RE.hg19, refgene.hg19$main, ignore.strand
+  ## Narrow down RE.hg to RE sequence that overlaps with gene sequence
+  ## RE.hg <- subsetByOverlaps(RE.hg, refgene.hg$main, ignore.strand
   ## = TRUE)
 
   ## Locate RE-CpG
-  RE.CpG <- findRECpG(RE.hg19, REtype, be, verbose)
+  RE.CpG <- findRECpG(RE.hg, REtype, genome, be, verbose)
 
-  ## Make RE.hg19 and RE.CpG dataset consistent with RE
-  RE.hg19 <- RE.hg19[runValue(match(RE.CpG$Index, RE.hg19$Index))]
+  ## Make RE.hg and RE.CpG dataset consistent with RE
+  RE.hg <- RE.hg[base::match(runValue(RE.CpG$Index), runValue(RE.hg$Index))]
 
   ########################################
   ### ------ Part II - Annotation ------###
@@ -175,7 +195,7 @@ initREMP <- function(arrayType = c("450k", "EPIC", "Sequencing"), REtype = c("Al
 
   ### ----------------------------------------------------------------------------------------------------
   ### Annotate RE
-  RE.refGene <- GRannot(RE.hg19, refgene.hg19, symbol = FALSE, verbose = verbose)
+  RE.refGene <- GRannot(RE.hg, refgene.hg, symbol = FALSE, verbose = verbose)
 
   ### ----------------------------------------------------------------------------------------------------
   ### RE-CpG covered by ILMN
@@ -184,8 +204,10 @@ initREMP <- function(arrayType = c("450k", "EPIC", "Sequencing"), REtype = c("Al
   ILMN.GR$RE.Index[queryHits(RECpG_Platform.hits)] <- RE.CpG[subjectHits(RECpG_Platform.hits)]$Index
 
   remparcel <- REMParcel(
-    REtype = REtype, platform = arrayType,
-    RefGene = refgene.hg19$main,
+    REtype = REtype, 
+    genome = genome,
+    platform = arrayType,
+    RefGene = refgene.hg$main,
     RE = RE.refGene, RECpG = RE.CpG,
     ILMN = ILMN.GR
   )

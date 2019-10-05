@@ -9,6 +9,7 @@
 #'
 #' @param object A \code{REMParcel} object.
 #' @param REtype Type of RE (\code{"Alu"} or \code{"L1"}).
+#' @param genome Specify the build of human genome. Can be either \code{"hg19"} or \code{"hg38"}.
 #' @param platform Illumina methylation profiling platform (\code{"450k"} or \code{"EPIC"}).
 #' @param RefGene refSeq gene annotation data, which can be obtained by \code{\link{fetchRefSeqGene}}.
 #' @param RE Annotated RE genomic range data, which can be obtained by \code{\link{fetchRMSK}} and annotated
@@ -67,11 +68,14 @@ REMParcel <- setClass("REMParcel",
 )
 
 ## Constructor function
-REMParcel <- function(REtype = "Unknown", platform = "Unknown",
+REMParcel <- function(REtype = "Unknown", 
+                      genome = "Unknown", 
+                      platform = "Unknown",
                       RefGene = GRanges(),
                       RE = GRanges(), RECpG = GRanges(), ILMN = GRanges()) {
   REMParcelInfo <- CharacterList(
     REtype = REtype,
+    genome = genome,
     platform = platform,
     max.win = as.character(remp_options(".default.max.flankWindow"))
   )

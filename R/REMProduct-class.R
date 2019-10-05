@@ -11,6 +11,7 @@
 #' @param object1 A \code{REMProduct} object.
 #' @param object2 A \code{REMProduct} object.
 #' @param REtype Type of RE (\code{"Alu"} or \code{"L1"}).
+#' @param genome Specify the build of human genome. Can be either \code{"hg19"} or \code{"hg38"}.
 #' @param platform Illumina methylation profiling platform (\code{"450k"} or \code{"EPIC"}).
 #' @param win Flanking window size of the predicting RE-CpG.
 #' @param predictModel Name of the model used for prediction.
@@ -30,8 +31,8 @@
 #' @param GeneStats Gene coverage statistics, which is internally generated in \code{\link{remp}}.
 #' @param Seed Random seed for Random Forest model for reproducible prediction results.
 #' @param type For \code{plot} and \code{decodeAnnot}: see Utilities.
-#' @param ncore For \code{decodeAnnot} and \code{rempAggregate}: number of cores to run parallel computation.
-#' By default no parallel computation is allowed (\code{ncore = 1}).
+#' @param ncore For \code{decodeAnnot} and \code{rempAggregate}: number of cores used for parallel computing.
+#' By default no parallel computing is allowed (\code{ncore = 1}).
 #' @param BPPARAM For \code{decodeAnnot} and \code{rempAggregate}: an optional \code{\link{BiocParallelParam}}
 #' instance determining the parallel back-end to be used during evaluation. If not specified, default
 #' back-end in the machine will be used.
@@ -66,7 +67,7 @@
 #'     \item{\code{rempTrim(object, threshold = 1.7, missingRate = 0.2)}}{Any predicted CpG values with
 #'     quality score < threshold (default = 1.7, specified by \code{threshold = 1.7}) will be replaced with NA.
 #'     CpGs contain more than missingRate * 100% (default = 20%, specified by \code{missingRage = 0.2}) missing
-#'     rate across samples will be discarded. Relavant statistics will be re-evaluated.}
+#'     rate across samples will be discarded. Relavant summary statistics will be re-evaluated.}
 #'     \item{\code{rempAggregate(object, NCpG = 2, ncore = NULL, BPPARAM = NULL)}}{Aggregate the predicted RE-CpG
 #'     methylation by RE using mean. To ensure the reliability of the aggregation, by default only RE with at
 #'     least 2 predicted CpG sites (specified by \code{NCpG = 2}) will be aggregated.}
@@ -82,7 +83,8 @@ REMProduct <- setClass("REMProduct",
 )
 
 ## Constructor function
-REMProduct <- function(REtype = "Unknown", platform = "Unknown", win = "Unknown",
+REMProduct <- function(REtype = "Unknown", genome = "Unknown", 
+                       platform = "Unknown", win = "Unknown",
                        predictModel = "Unknown", QCModel = "Unknown",
                        rempM = NULL, rempB = NULL, rempQC = NULL,
                        cpgRanges = GRanges(), sampleInfo = DataFrame(),
@@ -94,6 +96,7 @@ REMProduct <- function(REtype = "Unknown", platform = "Unknown", win = "Unknown"
                        Seed = NULL) {
   rempInfo <- CharacterList(
     REtype = REtype,
+    genome = genome,
     platform = platform,
     win = win,
     predictModel = predictModel,

@@ -4,17 +4,21 @@
 \alias{findRECpG}
 \title{Find RE-CpG genomic location given RE ranges information}
 \usage{
-findRECpG(RE.hg19, REtype = c("Alu", "L1"), be = NULL,
-  verbose = FALSE)
+findRECpG(RE, REtype = c("Alu", "L1"), genome = c("hg19", "hg38"),
+  be = NULL, verbose = FALSE)
 }
 \arguments{
-\item{RE.hg19}{A \code{\link{GRanges}} object of RE genomic location database. This
+\item{RE}{A \code{\link{GRanges}} object of RE genomic location database. This
 can be obtained by \code{\link{fetchRMSK}}.}
 
 \item{REtype}{Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.}
 
+\item{genome}{Character parameter. Specify the build of human genome. Can be either \code{"hg19"} or 
+\code{"hg38"}. User should make sure the genome build of \code{RE} is consistent with this parameter.}
+
 \item{be}{A \code{\link{BiocParallel}} object containing back-end information that is
-ready for paralle computing. This can be obtained by \code{\link{getBackend}}.}
+ready for parallel computing. This can be obtained by \code{\link{getBackend}}. If not specified,
+non-parallel mode is used.}
 
 \item{verbose}{logical parameter. Should the function be verbose?}
 }
@@ -32,10 +36,15 @@ a preference for hemimethylated CpG/CpG dyads (methylated on one strand only).
 As a result, methyaltion status of CpG sites in both forward and reverse strands are usually consistent.
 Therefore, to accommodate the cytosine loci in both strands, the returned genomic
 ranges cover the 'CG' sequence with width of 2. The 'strand' information indicates the strand of the RE.
+Locating CpG sites in RE sequences can be computation intensive. It is recommanded to get more than
+one work in the backend for a faster running speed.
 }
 \examples{
-data(Alu.demo)
-be <- getBackend(1, verbose = TRUE)
-RE.CpG <- findRECpG(Alu.demo, "Alu", be, verbose = TRUE)
+data(Alu.hg19.demo)
+RE.CpG <- findRECpG(RE = Alu.hg19.demo, 
+                    REtype = "Alu", 
+                    genome = "hg19", 
+                    verbose = TRUE)
 RE.CpG
+
 }

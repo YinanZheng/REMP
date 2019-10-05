@@ -33,9 +33,12 @@ The number shown in these columns represent the row number or 'index' column in 
 main refgene database obtained by \code{\link{fetchRefSeqGene}}.
 }
 \examples{
-data(Alu.demo)
-if (!exists("ah")) ah <- AnnotationHub::AnnotationHub()
-if (!exists("refgene.hg19")) refgene.hg19 <- fetchRefSeqGene(ah, verbose = TRUE)
-Alu.demo.refGene <- GRannot(Alu.demo, refgene.hg19, verbose = TRUE)
-Alu.demo.refGene
+data(Alu.hg19.demo)
+if (!exists("refgene.hg19")) 
+  refgene.hg19 <- fetchRefSeqGene(annotation.source = "AH", 
+                                  genome = "hg19",
+                                  verbose = TRUE)
+Alu.hg19.demo.refGene <- GRannot(Alu.hg19.demo, refgene.hg19, verbose = TRUE)
+Alu.hg19.demo.refGene
+
 }

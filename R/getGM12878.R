@@ -20,9 +20,11 @@
 #' beta value and M value of the methylation data.
 #'
 #' @examples
+#' \dontrun{
 #' # Get GM12878 methylation data (450k array)
 #' if (!exists("GM12878_450k")) GM12878_450k <- getGM12878("450k")
 #' GM12878_450k
+#' }
 #' 
 #' # Get GM12878 methylation data (EPIC array)
 #' if (!exists("GM12878_EPIC")) GM12878_EPIC <- getGM12878("EPIC")
@@ -33,18 +35,13 @@ getGM12878 <- function(arrayType = c("450k", "EPIC"), mapGenome = FALSE) {
 
   if (toupper(arrayType) == "450K") {
     ### GM12878-450k
-    tempfilenames <- list.files(tempdir())
-    which.GM12878.450k.file <- grep("remp.GM12878.450k.file", tempfilenames)
-    if (length(which.GM12878.450k.file) == 0) {
-      temp <- tempfile(pattern = "remp.GM12878.450k.file") # Make an identifiable ext to avoid repeated download
-      download.file(remp_options(".default.GM12878.450k.URL"), temp, quiet = TRUE)
-    } else {
-      temp <- file.path(tempdir(), tempfilenames[which.GM12878.450k.file])
-    }
-    GM12878_450k <- read.table(gzfile(temp), header = FALSE)
-    GM12878_450k.d <- matrix(GM12878_450k[, "V5"] / 1000, ncol = 1)
+    GM12878_450k <- .webDownload(url = remp_options(".default.GM12878.450k.URL"),
+                                 tag = "remp.GM12878.450k.file", 
+                                 col_types = readr::cols_only(X4 = readr::col_character(),
+                                                              X5 = readr::col_integer()))
+    GM12878_450k.d <- as.matrix(GM12878_450k$X5 / 1000, ncol = 1)
     colnames(GM12878_450k.d) <- "GM12878"
-    rownames(GM12878_450k.d) <- GM12878_450k[, "V4"]
+    rownames(GM12878_450k.d) <- GM12878_450k$X4
     GM12878.RatioSet <- minfi::RatioSet(
       Beta = GM12878_450k.d, M = .toM(GM12878_450k.d),
       annotation = c(
