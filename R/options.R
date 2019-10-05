@@ -1,6 +1,6 @@
 # Variable, global to REMP's namespace.
 # This function is not exported to user space and does not need to be documented.
-REMPOPTIONS <- options_manager(
+REMPOPTIONS <- settings::options_manager(
   .default.AluFamily = c(
     "AluJb", "AluJo", "AluJr", "AluJr4", "AluSc", "AluSc5",
     "AluSc8", "AluSg", "AluSg4", "AluSg7", "AluSp", "AluSq", "AluSq10",
@@ -30,12 +30,30 @@ REMPOPTIONS <- options_manager(
     "L1P4d", "L1MEa", "L1M2a1", "L1M3b", "L1P4b", "L1PBa1", "L1P", "L1P4c"
   ),
 
+  .default.chr = paste0("chr", c(seq_len(22), "X", "Y")),
+  
+  .default.AluFamily.grep = "^Alu|^FAM|^FLAM|^FRAM",
+  
+  .default.L1Family.grep = "^L1|^HAL1",
+  
   .default.GM12878.450k.URL = "http://hgdownload.cse.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeHaibMethyl450/wgEncodeHaibMethyl450Gm12878SitesRep1.bed.gz",
 
+  .default.RMSK.hg19.URL = "http://hgdownload.cse.ucsc.edu/goldenpath/hg19/database/rmsk.txt.gz",
+  
+  .default.RMSK.hg38.URL = "http://hgdownload.cse.ucsc.edu/goldenpath/hg38/database/rmsk.txt.gz",
+  
+  .default.refGene.hg19.URL = "https://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/refGene.txt.gz",
+  
+  .default.refGene.hg38.URL = "https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/refGene.txt.gz",
+  
   .default.AH.repeatmasker.hg19 = "AH5122",
 
   .default.AH.refgene.hg19 = "AH5040",
 
+  .default.AH.hg38ToHg19.over.chain = "AH14108",
+  
+  .default.AH.hg19ToHg38.over.chain = "AH14150",
+  
   .default.TSS.upstream = 2000,
 
   .default.TSS.downstream = 0,
@@ -139,12 +157,12 @@ REMPOPTIONS <- options_manager(
 #' @export
 remp_options <- function(...) {
   # protect against the use of reserved words.
-  stop_if_reserved(...)
+  settings::stop_if_reserved(...)
   REMPOPTIONS(...)
 }
 
 #' @rdname options
 #' @export
 remp_reset <- function() {
-  reset(REMPOPTIONS)
+  settings::reset(REMPOPTIONS)
 }

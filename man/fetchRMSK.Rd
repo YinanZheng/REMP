@@ -4,13 +4,20 @@
 \alias{fetchRMSK}
 \title{Get RE database from RepeatMasker}
 \usage{
-fetchRMSK(ah, REtype, verbose = FALSE)
+fetchRMSK(REtype = c("Alu", "L1"), annotation.source = c("AH", "UCSC"),
+  genome = c("hg19", "hg38"), verbose = FALSE)
 }
 \arguments{
-\item{ah}{An \code{\link{AnnotationHub}} object. Use \code{AnnotationHub()} to
-retrive information about all records in the hub.}
-
 \item{REtype}{Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.}
+
+\item{annotation.source}{Character parameter. Specify the source of annotation databases, including
+the RefSeq Gene annotation database and RepeatMasker annotation database. If \code{"AH"}, the database 
+will be obtained from the AnnotationHub package. If \code{"UCSC"}, the database will be downloaded 
+from the UCSC website http://hgdownload.cse.ucsc.edu/goldenpath. The corresponding build (\code{"hg19"} or 
+\code{"hg38"}) will be specified in the parameter \code{genome}.}
+
+\item{genome}{Character parameter. Specify the build of human genome. Can be either \code{"hg19"} or
+\code{"hg38"}.}
 
 \item{verbose}{Logical parameter. Should the function be verbose?}
 }
@@ -24,7 +31,9 @@ internal index for RE to facilitate data referral, which is meaningless for exte
 provided by AnnotationHub.
 }
 \examples{
-if (!exists("ah")) ah <- AnnotationHub::AnnotationHub()
-L1 <- fetchRMSK(ah, "L1", verbose = TRUE)
+L1 <- fetchRMSK(REtype = "L1", 
+                annotation.source = "AH",
+                genome = "hg19", 
+                verbose = TRUE)
 L1
 }

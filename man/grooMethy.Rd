@@ -10,11 +10,15 @@ grooMethy(methyDat, Seq.GR = NULL, impute = TRUE, imputebyrow = TRUE,
 \arguments{
 \item{methyDat}{A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
 \code{data.table}, \code{data.frame}, or \code{matrix} of Illumina BeadChip methylation data
-(450k or EPIC array) or Illumina methylation sequencing data.}
+(450k or EPIC array) or Illumina methylation percentage estimates by sequencing. If the data are prepared
+as a \code{data.frame} or alike format, for Illumina array data, please make sure there is a column or row names 
+are available to indicate the Illumina probe names (i.e. cg00000029); for sequencing methylation data, please provide 
+the corresponding CpG location information in \code{Seq.GR}.}
 
 \item{Seq.GR}{A \code{\link{GRanges}} object containing genomic locations of the CpGs profiled by sequencing
 platforms. This parameter should not be \code{NULL} if the input methylation data \code{methyDat} are
-obtained by sequencing. Note that the genomic location must be in hg19 build. See details.}
+obtained by sequencing platform. The order of \code{Seq.GR} should match the order of \code{methyDat}.
+Note that the genomic location can be in either hg19 or hg38 build. See details.}
 
 \item{impute}{If \code{TRUE}, K-Nearest Neighbouring imputation will be applied to fill
 the missing values. Default = \code{TRUE}. See Details.}
@@ -24,7 +28,7 @@ the missing values. Default = \code{TRUE}. See Details.}
 in column (i.e., across CpGs). Default is \code{TRUE}.}
 
 \item{mapGenome}{Logical parameter. If \code{TRUE}, function will return a \code{\link{GenomicRatioSet}}
-object instead of a \code{\link{RatioSet}}.}
+object instead of a \code{\link{RatioSet}}. This function is not applicable for sequencing data.}
 
 \item{verbose}{Logical parameter. Should the function be verbose?}
 }
@@ -51,7 +55,8 @@ also embedded in \code{\link{remp}} so the user can run \code{\link{remp}} direc
 explicitly running \code{grooMethy}. For sequencing methylation data, please specify the genomic location of CpGs
 in a \code{GenomicRanges} object and specify it in \code{Seq.GR}. For an example of \code{Seq.GR}, Please
 run \code{minfi::getLocations(IlluminaHumanMethylation450kanno.ilmn12.hg19)} (the row names of the CpGs in \code{Seq.GR}
-can be \code{NULL}).
+can be \code{NULL}). The user should make sure the genome build of \code{Seq.GR} match the build specified 
+in \code{genome} parameter of function \code{\link{initREMP}} and \code{\link{remprofile}} (default is \code{"hg19"}).
 }
 \examples{
 # Get GM12878 methylation data (450k array)

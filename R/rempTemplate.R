@@ -5,14 +5,15 @@
 #' RE-CpGs and their methylation data for model training, neighboring CpGs of RE-CpGs and their
 #' methylation data for model prediction, and other necessary information about the prediction.
 #' This function is useful when one needs to experiment different tunning parameters so that these pre-built
-#' data templates can be re-used.
+#' data templates can be re-used and substaintially improve efficiency.
 #'
 #' @param methyDat A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
 #' \code{data.table}, \code{data.frame}, or \code{matrix} of Illumina BeadChip methylation data
-#' (450k or EPIC array) or Illumina methylation sequencing data.
+#' (450k or EPIC array) or Illumina methylation percentage estimates by sequencing.
 #' @param Seq.GR A \code{\link{GRanges}} object containing genomic locations of the CpGs profiled by sequencing
 #' platforms. This parameter should not be \code{NULL} if the input methylation data \code{methyDat} are
-#' obtained by sequencing. Note that the genomic location must be in hg19 build. See details in \code{\link{initREMP}}.
+#' obtained by sequencing. Note that the genomic location can be in either hg19 or hg38 build, but must be consistent
+#' with the build as \code{parcel}. See details in \code{\link{initREMP}}.
 #' @param parcel An \code{\link{REMParcel}} object containing necessary data to carry out the
 #' prediction. If \code{NULL}, the function will search the \code{.rds} data file in \code{work.dir}
 #' exported by \code{\link{initREMP}} (with \code{export = TRUE}) or \code{\link{saveParcel}}.
@@ -28,22 +29,40 @@
 #' and a string of methylation platform (\code{$arrayType}). Note: the subset operator \code{[]} is supported.
 #'
 #' @examples
-#' if (!exists("GM12878_450k")) GM12878_450k <- getGM12878("450k")
+#' if (!exists("GM12878_450k"))
+#'   GM12878_450k <- getGM12878("450k")
 #' if (!exists("remparcel")) {
-#'   data(Alu.demo)
-#'   remparcel <- initREMP(arrayType = "450k", REtype = "Alu", RE = Alu.demo, ncore = 1)
+#'   data(Alu.hg19.demo)
+#'   remparcel <- initREMP(arrayType = "450k",
+#'                         REtype = "Alu",
+#'                         annotation.source = "AH",
+#'                         genome = "hg19",
+#'                         RE = Alu.hg19.demo,
+#'                         ncore = 1,
+#'                         verbose = TRUE)
 #' }
 #' 
-#' template <- rempTemplate(GM12878_450k, parcel = remparcel, win = 1000)
+#' template <- rempTemplate(GM12878_450k, 
+#'                          parcel = remparcel, 
+#'                          win = 1000, 
+#'                          verbose = TRUE)
 #' template
 #' 
 #' ## To make a subset
 #' template[1]
+#' 
 #' @export
-rempTemplate <- function(methyDat = NULL, Seq.GR = NULL, parcel = NULL, win = 1000, verbose = FALSE) {
+rempTemplate <- function(methyDat = NULL, 
+                         Seq.GR = NULL, 
+                         parcel = NULL, 
+                         win = 1000, 
+                         verbose = FALSE) {
   if (is.null(methyDat)) stop("Methylation dataset (methyDat) is missing.")
-  if (!is.null(Seq.GR) & !is(Seq.GR, "GRanges")) stop("Seq.GR must be a GenomicRanges object.")
-
+  if (!is.null(Seq.GR)) {
+    .isGROrStop(Seq.GR)
+    names(Seq.GR) <- NULL
+  }
+  
   if (is.null(parcel)) stop("REMParcel object is missing.")
   .isREMParcelOrStop(parcel)
 
@@ -60,9 +79,10 @@ rempTemplate <- function(methyDat = NULL, Seq.GR = NULL, parcel = NULL, win = 10
   methyDat <- grooMethy(methyDat, Seq.GR, verbose = verbose)
   methyDat <- minfi::getM(methyDat)
 
-  ## Guess array type
+  ## Get parcel information
   arrayType <- getParcelInfo(parcel)$platform
   REtype <- getParcelInfo(parcel)$REtype
+  genome <- getParcelInfo(parcel)$genome
   RE_refGene.original <- getRE(parcel)
   RE_CpG <- getRECpG(parcel)
   ILMN <- getILMN(parcel)
@@ -77,10 +97,9 @@ rempTemplate <- function(methyDat = NULL, Seq.GR = NULL, parcel = NULL, win = 10
   RE_refGene$Length <- width(RE_refGene)
   RE_refGene$CpG.density <- RE_refGene$N / RE_refGene$Length # density of CpG within RE sequence
 
-  merge_RE_CpG_meta <- mcols(RE_refGene)[match(
+  merge_RE_CpG_meta <- mcols(RE_refGene)[base::match(
     as.character(RE_CpG$Index),
-    as.character(RE_refGene$Index)
-  ), ]
+    as.character(RE_refGene$Index)), ]
   merge_RE_CpG_meta$CpG.ID <- as.character(granges(RE_CpG))
   mcols(RE_CpG) <- setNames(merge_RE_CpG_meta, paste0("RE.", colnames(merge_RE_CpG_meta)))
   # all(as.character(granges(RE_CpG)) == RE_CpG$RE.CpG.ID)
@@ -89,11 +108,11 @@ rempTemplate <- function(methyDat = NULL, Seq.GR = NULL, parcel = NULL, win = 10
   commonCpGIndex <- intersect(rownames(methyDat), ILMN$Index)
 
   ## Trim down methyDat:
-  methyDat <- methyDat[match(commonCpGIndex, rownames(methyDat)), , drop = FALSE]
+  methyDat <- methyDat[base::match(commonCpGIndex, rownames(methyDat)), , drop = FALSE]
 
   ## ILMN : create pointer and rename. Note: Different Methy data will
   ## result in different size of this data!
-  ILMN <- ILMN[match(commonCpGIndex, ILMN$Index), ]
+  ILMN <- ILMN[base::match(commonCpGIndex, ILMN$Index), ]
   mcols(ILMN) <- setNames(mcols(ILMN), paste0("ILMN.", colnames(mcols(ILMN))))
   ILMN$Methy.ptr <- seq_len(length(ILMN))
   # identical(ILMN$ILMN.Index, rownames(methyDat))
@@ -103,7 +122,7 @@ rempTemplate <- function(methyDat = NULL, Seq.GR = NULL, parcel = NULL, win = 10
   RE_CpG_ILMN <- RE_CpG_ILMN[RE_CpG_ILMN$Index %in% rownames(methyDat), ]
   RE_CpG_ILMN <- unique(RE_CpG_ILMN)
 
-  RE_CpG_ILMN_DATA <- methyDat[match(RE_CpG_ILMN$Index, rownames(methyDat)), , drop = FALSE]
+  RE_CpG_ILMN_DATA <- methyDat[base::match(RE_CpG_ILMN$Index, rownames(methyDat)), , drop = FALSE]
 
   ############################################################# Find RE_CpG's neighboring CpG
   message("Processing ", REtype, " with window +/- ", win, " base pair ...")
@@ -157,7 +176,7 @@ rempTemplate <- function(methyDat = NULL, Seq.GR = NULL, parcel = NULL, win = 10
   RE_NeibCpG_meta <- mcols(RE_NeibCpG)
   mcols(RE_NeibCpG) <- cbind(
     RE_NeibCpG_meta,
-    Methy_ptr_distance_agg[match(
+    Methy_ptr_distance_agg[base::match(
       RE_NeibCpG_meta$RE.CpG.ID,
       Methy_ptr_distance_agg$RE.CpG.ID
     ), -1]
@@ -174,6 +193,7 @@ rempTemplate <- function(methyDat = NULL, Seq.GR = NULL, parcel = NULL, win = 10
     refgene = getRefGene(parcel),
     RE = getRE(parcel),
     REtype = REtype,
+    genome = genome,
     arrayType = arrayType
   )
 

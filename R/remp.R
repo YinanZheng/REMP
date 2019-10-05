@@ -6,15 +6,16 @@
 #'
 #' @param methyDat A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
 #' \code{data.table}, \code{data.frame}, or \code{matrix} of Illumina BeadChip methylation data
-#' (450k or EPIC array) or Illumina methylation sequencing data. See Details. Alternatively, user can also
-#' specify a pre-built data template (see \code{\link{rempTemplate}}).
+#' (450k or EPIC array) or Illumina methylation percentage estimates by sequencing. See Details. 
+#' Alternatively, user can also specify a pre-built data template (see \code{\link{rempTemplate}}).
 #' \code{remp} to carry out the prediction. See \code{\link{rempTemplate}}. With template specified, \code{methyDat},
 #' \code{REtype}, \code{parcel}, and \code{work.dir} can be skipped.
 #' @param REtype Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported. If \code{NULL}, the type of
 #' RE will be extracted from \code{parcel}.
 #' @param Seq.GR A \code{\link{GRanges}} object containing genomic locations of the CpGs profiled by sequencing
 #' platforms. This parameter should not be \code{NULL} if the input methylation data \code{methyDat} are
-#' obtained by sequencing. Note that the genomic location must be in hg19 build. See details in \code{\link{initREMP}}.
+#' obtained by sequencing. Note that the genomic location can be in either hg19 or hg38 build. 
+#' See details in \code{\link{initREMP}}.
 #' @param parcel An \code{\link{REMParcel}} object containing necessary data to carry out the
 #' prediction. If \code{NULL}, \code{REtype} must specify a type of RE so that the function can search the
 #' \code{.rds} data file in \code{work.dir} exported by \code{\link{initREMP}} (with \code{export = TRUE})
@@ -27,7 +28,7 @@
 #' region centered on the predicted CpG in RE for prediction. Default = \code{1000}. See Details.
 #' @param method Name of model/approach for prediction. Currently \code{"rf"} (Random Forest),
 #' \code{"xgbTree"} (Extreme Gradient Boosting), \code{"svmLinear"} (SVM with linear kernel), \code{"svmRadial"}
-#' (SVM with linear kernel), and \code{"naive"} (carrying over methylation values of the closest
+#' (SVM with radial kernel), and \code{"naive"} (carrying over methylation values of the closest
 #' CpG site) are available. Default = \code{"rf"} (Random Forest). See Details.
 #' @param autoTune Logical parameter. If \code{TRUE}, a 3-time repeated 5-fold cross validation
 #' will be performed to determine the best model parameter. If \code{FALSE}, the \code{param} option
@@ -41,8 +42,8 @@
 #' when \code{autoTune = FALSE}.
 #' @param seed Random seed for Random Forest model for reproducible prediction results.
 #' Default is \code{NULL}, which generates a seed.
-#' @param ncore Number of cores to run parallel computation. By default, max number of cores available
-#' in the machine will be utilized. If \code{ncore = 1}, no parallel computation is allowed.
+#' @param ncore Number of cores used for parallel computing. By default, max number of cores available
+#' in the machine will be utilized. If \code{ncore = 1}, no parallel computing is allowed.
 #' @param BPPARAM An optional \code{\link{BiocParallelParam}} instance determining the parallel back-end to
 #' be used during evaluation. If not specified, default back-end in the machine will be used.
 #' @param verbose Logical parameter. Should the function be verbose?
@@ -73,30 +74,46 @@
 #'
 #' @examples
 #' # Obtain example Illumina example data (450k)
-#' if (!exists("GM12878_450k")) GM12878_450k <- getGM12878("450k")
+#' if (!exists("GM12878_450k")) 
+#'   GM12878_450k <- getGM12878("450k")
 #' 
 #' # Make sure you have run 'initREMP' first. See ?initREMP.
 #' if (!exists("remparcel")) {
-#'   data(Alu.demo)
-#'   remparcel <- initREMP(arrayType = "450k", REtype = "Alu", RE = Alu.demo, ncore = 1)
+#'   data(Alu.hg19.demo)
+#'   remparcel <- initREMP(arrayType = "450k",
+#'                         REtype = "Alu",
+#'                         annotation.source = "AH",
+#'                         genome = "hg19",
+#'                         RE = Alu.hg19.demo,
+#'                         ncore = 1,
+#'                         verbose = TRUE)
 #' }
 #' 
-#' # With data template pre-built (See ?rempTemplate):
-#' if (!exists("template")) template <- rempTemplate(GM12878_450k, parcel = remparcel, win = 1000)
+#' # With data template pre-built. See ?rempTemplate.
+#' if (!exists("template")) 
+#'   template <- rempTemplate(GM12878_450k, 
+#'                            parcel = remparcel, 
+#'                            win = 1000, 
+#'                            verbose = TRUE)
 #' 
 #' # Run remp with pre-built template:
 #' remp.res <- remp(template, ncore = 1)
 #' 
-#' # Or run remp without pre-built template:
+#' # Or run remp without pre-built template (identical results):
 #' \dontrun{
-#' remp.res <- remp(GM12878_450k, REtype = "Alu", parcel = remparcel, ncore = 1)
+#'   remp.res <- remp(GM12878_450k, 
+#'                    REtype = "Alu", 
+#'                    parcel = remparcel, 
+#'                    ncore = 1,
+#'                    verbose = TRUE)
 #' }
 #' 
 #' remp.res
 #' details(remp.res)
 #' rempB(remp.res) # Methylation data (beta value)
 #' 
-#' # Extract CpG location information (inherit from class 'RangedSummarizedExperiment')
+#' # Extract CpG location information. 
+#' # This accessor is inherit from class 'RangedSummarizedExperiment')
 #' rowRanges(remp.res)
 #' 
 #' # RE annotation information
@@ -118,16 +135,28 @@
 #' 
 #' # Density plot across predicted RE
 #' remplot(remp.res)
+#' 
 #' @export
-remp <- function(methyDat = NULL, REtype = c("Alu", "L1"), Seq.GR = NULL,
-                 parcel = NULL, work.dir = tempdir(), win = 1000,
+remp <- function(methyDat = NULL, 
+                 REtype = c("Alu", "L1"), 
+                 Seq.GR = NULL,
+                 parcel = NULL, 
+                 work.dir = tempdir(), 
+                 win = 1000,
                  method = c("rf", "xgbTree", "svmLinear", "svmRadial", "naive"),
-                 autoTune = TRUE, param = NULL, seed = NULL, ncore = NULL, BPPARAM = NULL,
+                 autoTune = TRUE, 
+                 param = NULL, 
+                 seed = NULL, 
+                 ncore = NULL, 
+                 BPPARAM = NULL,
                  verbose = FALSE) {
   currenT <- Sys.time()
 
   if (is.null(methyDat)) stop("Methylation dataset (methyDat) is missing.")
-  if (!is.null(Seq.GR) & !is(Seq.GR, "GRanges")) stop("Seq.GR must be a GenomicRanges object.")
+  if (!is.null(Seq.GR)) {
+    .isGROrStop(Seq.GR)
+    names(Seq.GR) <- NULL
+  }
   if (!is.null(param) & !is(param, "list")) stop("Tuning parameter(s) (param) must be a list object.")
 
   method <- match.arg(method)
@@ -198,9 +227,10 @@ remp <- function(methyDat = NULL, REtype = c("Alu", "L1"), Seq.GR = NULL,
         remparcel <- readRDS(path_to_parcel)
       } else {
         stop("Necessary annotation data files are missing. Please make sure:
-             1) you have run initREMP() first to generate the data. See ?initREMP for details; 
-             2) your working directory specified is the same as you did in initREMP(); 
-             3) the RE type and/or platform match the annotation data generated by initREMP().")
+             1) you have run initREMP() first to generate the annotation data. See ?initREMP for details; 
+             2) the RE type (Alu/L1) and/or platform (450k/EPIC/Sequencing) match the annotation data generated by initREMP().
+             3) parameter 'parcel' is speficied, if the generated annotation data were not exported to local machine;
+             4) if exported, your working directory specified is the same as you did in initREMP().")
       }
     } else {
       .isREMParcelOrStop(parcel)
@@ -229,6 +259,7 @@ remp <- function(methyDat = NULL, REtype = c("Alu", "L1"), Seq.GR = NULL,
   )
 
   REtype <- TEMPLATE$REtype # make sure REtype is consistent with REMParcel
+  genome <- TEMPLATE$genome
   arrayType <- TEMPLATE$arrayType
   methyDat <- TEMPLATE$NBCpG_methyDat
   RE_NeibCpG <- TEMPLATE$NBCpG_GR
@@ -396,7 +427,8 @@ remp <- function(methyDat = NULL, REtype = c("Alu", "L1"), Seq.GR = NULL,
   message("Done.")
 
   remproduct <- REMProduct(
-    REtype = REtype, platform = arrayType, win = as.character(win),
+    REtype = REtype, genome = genome, 
+    platform = arrayType, win = as.character(win),
     predictModel = method_text, QCModel = QCname_text,
     rempM = REMP_PREDICT_CpG, rempQC = REMP_PREDICT_QC,
     cpgRanges = cpgRanges, sampleInfo = BEST_TUNE,
@@ -411,7 +443,11 @@ remp <- function(methyDat = NULL, REtype = c("Alu", "L1"), Seq.GR = NULL,
   return(remproduct)
 } ## End of remp
 
+
+
+## --------------------------------------
 ## Internal functions
+
 .toIndicator <- function(object) {
   genomicRegionInd <- matrix(0L,
     nrow = length(object),
@@ -470,7 +506,7 @@ remp <- function(methyDat = NULL, REtype = c("Alu", "L1"), Seq.GR = NULL,
   RE_NeibCpG_meta <- mcols(RE_NeibCpG)
   mcols(RE_NeibCpG) <- cbind(
     RE_NeibCpG_meta,
-    Methy_all_agg[match(
+    Methy_all_agg[base::match(
       RE_NeibCpG_meta$RE.CpG.ID,
       Methy_all_agg$RE.CpG.ID
     ), -1]
@@ -622,7 +658,7 @@ remp <- function(methyDat = NULL, REtype = c("Alu", "L1"), Seq.GR = NULL,
   for (tree in seq_len(ntree)) {
     shuffledNodes <- nodesX[rank(ind <- sample(seq_len(n), n)), tree]
     useNodes <- sort(unique(as.numeric(shuffledNodes)))
-    valuesNodes[useNodes, tree] <- y[ind[match(useNodes, shuffledNodes)]]
+    valuesNodes[useNodes, tree] <- y[ind[base::match(useNodes, shuffledNodes)]]
   }
 
   predictNodes <- predict(rangerObj, newX, num.threads,
@@ -653,7 +689,7 @@ remp <- function(methyDat = NULL, REtype = c("Alu", "L1"), Seq.GR = NULL,
 # .coverageStats_RE()
 .countREByGene <- function(RE_annotation, RE_list) {
   Total <- length(RE_annotation)
-  RE_annotation_sub <- RE_annotation[RE_annotation$Index %in% RE_list]
+  RE_annotation_sub <- RE_annotation[runValue(RE_annotation$Index) %in% RE_list]
   NM <- sum(!is.na(RE_annotation_sub$InNM))
   NR <- sum(!is.na(RE_annotation_sub$InNR))
   Gene <- sum(!is.na(RE_annotation_sub$InNM) | !is.na(RE_annotation_sub$InNR))
@@ -665,7 +701,7 @@ remp <- function(methyDat = NULL, REtype = c("Alu", "L1"), Seq.GR = NULL,
 .coverageStats_RE <- function(RE_annotation, regionCode, cpgRanges, RE_CpG_ILMN,
                               REtype, indent, verbose) {
   mcols(RE_annotation) <- cbind(mcols(RE_annotation), regionCode)
-  mcols(cpgRanges) <- mcols(RE_annotation[match(cpgRanges$RE.Index, RE_annotation$Index)])
+  mcols(cpgRanges) <- mcols(RE_annotation[base::match(as.character(cpgRanges$RE.Index), runValue(RE_annotation$Index))])
 
   RE_annotation_prf <- subsetByOverlaps(RE_annotation, RE_CpG_ILMN, ignore.strand = TRUE)
   cpgRanges_prf <- subsetByOverlaps(cpgRanges, RE_CpG_ILMN, ignore.strand = TRUE)

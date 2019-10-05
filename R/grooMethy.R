@@ -6,17 +6,21 @@
 #'
 #' @param methyDat A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
 #' \code{data.table}, \code{data.frame}, or \code{matrix} of Illumina BeadChip methylation data
-#' (450k or EPIC array) or Illumina methylation sequencing data.
+#' (450k or EPIC array) or Illumina methylation percentage estimates by sequencing. If the data are prepared
+#' as a \code{data.frame} or alike format, for Illumina array data, please make sure there is a column or row names 
+#' are available to indicate the Illumina probe names (i.e. cg00000029); for sequencing methylation data, please provide 
+#' the corresponding CpG location information in \code{Seq.GR}.
 #' @param Seq.GR A \code{\link{GRanges}} object containing genomic locations of the CpGs profiled by sequencing
 #' platforms. This parameter should not be \code{NULL} if the input methylation data \code{methyDat} are
-#' obtained by sequencing. Note that the genomic location must be in hg19 build. See details.
+#' obtained by sequencing platform. The order of \code{Seq.GR} should match the order of \code{methyDat}.
+#' Note that the genomic location can be in either hg19 or hg38 build. See details.
 #' @param impute If \code{TRUE}, K-Nearest Neighbouring imputation will be applied to fill
 #' the missing values. Default = \code{TRUE}. See Details.
 #' @param imputebyrow If \code{TRUE}, missing values will be imputed using similar values in row
 #' (i.e., across samples); if \code{FALSE}, missing values will be imputed using similar values
 #' in column (i.e., across CpGs). Default is \code{TRUE}.
 #' @param mapGenome Logical parameter. If \code{TRUE}, function will return a \code{\link{GenomicRatioSet}}
-#' object instead of a \code{\link{RatioSet}}.
+#' object instead of a \code{\link{RatioSet}}. This function is not applicable for sequencing data.
 #' @param verbose Logical parameter. Should the function be verbose?
 #'
 #' @details
@@ -34,7 +38,8 @@
 #' explicitly running \code{grooMethy}. For sequencing methylation data, please specify the genomic location of CpGs
 #' in a \code{GenomicRanges} object and specify it in \code{Seq.GR}. For an example of \code{Seq.GR}, Please
 #' run \code{minfi::getLocations(IlluminaHumanMethylation450kanno.ilmn12.hg19)} (the row names of the CpGs in \code{Seq.GR}
-#' can be \code{NULL}).
+#' can be \code{NULL}). The user should make sure the genome build of \code{Seq.GR} match the build specified 
+#' in \code{genome} parameter of function \code{\link{initREMP}} and \code{\link{remprofile}} (default is \code{"hg19"}).
 #'
 #' @return A \code{\link{RatioSet}} or \code{\link{GenomicRatioSet}} containing beta value and
 #' M value of the methylation data.
@@ -47,14 +52,22 @@
 #' # Also works if data input is a matrix
 #' grooMethy(minfi::getBeta(GM12878_450k), verbose = TRUE)
 #' @export
-grooMethy <- function(methyDat, Seq.GR = NULL, impute = TRUE, imputebyrow = TRUE, mapGenome = FALSE, verbose = FALSE) {
+grooMethy <- function(methyDat, 
+                      Seq.GR = NULL, 
+                      impute = TRUE, 
+                      imputebyrow = TRUE, 
+                      mapGenome = FALSE, 
+                      verbose = FALSE) {
   currenT <- Sys.time()
 
   if (is.null(methyDat)) stop("Methylation dataset (methyDat) is missing.")
-  if (!is.null(Seq.GR) & !is(Seq.GR, "GRanges")) stop("Seq.GR must be a GenomicRanges object.")
-
+  if (!is.null(Seq.GR)) {
+    .isGROrStop(Seq.GR)
+    names(Seq.GR) <- NULL
+  }
+  
   methyDat_work <- methyDat
-
+  
   if (is(methyDat_work, "RatioSet") || is(methyDat_work, "GenomicRatioSet")) {
     if(minfi::preprocessMethod(methyDat_work) == "grooMethy(REMP)") {
       if (verbose) message("Methylation data are already groomed.")
@@ -215,9 +228,10 @@ grooMethy <- function(methyDat, Seq.GR = NULL, impute = TRUE, imputebyrow = TRUE
   probeNameIndicator <- which(vapply(methyDat, class, character(1)) %in% c("factor", "character"))
 
   if (!is.null(Seq.GR)) {
-    if (length(probeNameIndicator) > 0) {
+    if (length(probeNameIndicator) > 0)
       stop("Factor or Character columns detected! The input methylation data from sequencing platform should all be numeric.")
-    }
+    if (nrow(methyDat) != length(Seq.GR)) 
+      stop("The number of rows in methylation data (", nrow(methyDat), ") does not match the length of Seq.GR provided (", length(Seq.GR), ").")
     methyDat.matrix <- as.matrix(methyDat)
     rownames(methyDat.matrix) <- paste0(seqnames(Seq.GR), ":", start(Seq.GR))
   } else {

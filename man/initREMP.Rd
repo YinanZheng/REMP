@@ -5,7 +5,8 @@
 \title{RE Annotation Database Initialization}
 \usage{
 initREMP(arrayType = c("450k", "EPIC", "Sequencing"), REtype = c("Alu",
-  "L1"), RE = NULL, Seq.GR = NULL, ncore = NULL, BPPARAM = NULL,
+  "L1"), annotation.source = c("AH", "UCSC"), genome = c("hg19",
+  "hg38"), RE = NULL, Seq.GR = NULL, ncore = NULL, BPPARAM = NULL,
   export = FALSE, work.dir = tempdir(), verbose = FALSE)
 }
 \arguments{
@@ -14,16 +15,25 @@ and \code{"Sequencing"} are supported. Default = \code{"450k"}.}
 
 \item{REtype}{Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.}
 
+\item{annotation.source}{Character parameter. Specify the source of annotation databases, including
+the RefSeq Gene annotation database and RepeatMasker annotation database. If \code{"AH"}, the database 
+will be obtained from the AnnotationHub package. If \code{"UCSC"}, the database will be downloaded 
+from the UCSC website http://hgdownload.cse.ucsc.edu/goldenpath. The corresponding build (\code{"hg19"} or 
+\code{"hg38"}) can be specified in the parameter \code{genome}.}
+
+\item{genome}{Character parameter. Specify the build of human genome. Can be either \code{"hg19"} or 
+\code{"hg38"}. Note that if \code{annotation.source == "AH"}, only hg19 database is available.}
+
 \item{RE}{A \code{\link{GRanges}} object containing user-specified RE genomic location information.
 If \code{NULL}, the function will retrive RepeatMasker RE database from \code{\link{AnnotationHub}}
-(build hg19).}
+(build hg19) or download the database from UCSC website (build hg19/hg38).}
 
 \item{Seq.GR}{A \code{\link{GRanges}} object containing genomic locations of the CpGs profiled by sequencing
 platforms. This parameter should not be \code{NULL} if \code{arrayType == 'Sequencing'}. Note that the genomic
-location must be in hg19 build. See details.}
+location can be in either hg19 or hg38 build. See details.}
 
-\item{ncore}{Number of cores to run parallel computation. By default max number of cores
-available in the machine will be utilized. If \code{ncore = 1}, no parallel computation is allowed.}
+\item{ncore}{Number of cores used for parallel computing. By default max number of cores
+available in the machine will be utilized. If \code{ncore = 1}, no parallel computing is allowed.}
 
 \item{BPPARAM}{An optional \code{\link{BiocParallelParam}} instance determining the parallel back-end to
 be used during evaluation. If not specified, default back-end in the machine will be used.}
@@ -45,25 +55,36 @@ An \code{\link{REMParcel}} object containing data needed for RE methylation pred
 Two major RE types in human, Alu element (Alu) and LINE-1 (L1) are available.
 }
 \details{
-Currently, we support two major types of RE in human, Alu and L1. The main purpose of
+Currently, we support two major types of RE in the human genome, Alu and L1. The main purpose of
 \code{initREMP} is to generate and annotate CpG/RE data using the refSeq Gene (hg19)
 annotation database (provided by \code{\link{AnnotationHub}}). These annotation data are crucial to
 RE methylation prediction in \code{\link{remp}}. Once generated, the data can be reused in the future
-(data can be very large). Therefore, we recommend user to save the output from
+(data can be very large). Therefore, we recommend the user to save the output from
 \code{initREMP} to the local machine, so that user only need to run this function once
-as long as there is no change to the RE database. To minimize the size of resulting data file, the generated
+as long as there is no change to the RE database. To minimize the size of the resulting data file, the generated
 annotation data are only for REs that contain RE-CpGs with neighboring profiled CpGs. By default, the
 neighboring CpGs are confined within 1200 bp flanking window. This window size can be modified using
-\code{\link{remp_options}}. For sequencing methylation data, please specify the genomic location of CpGs
+\code{\link{remp_options}}. Note that the refSeq Gene database from UCSC is dynamic (updated periodically) 
+and reflecting the latest knowledge of gene, whereas the database from AnnotationHub is static and classic. 
+Using different sources will have a slight impact on the prediction results of RE methylation and gene annotation 
+of final results. For sequencing methylation data, please specify the genomic location of CpGs
 in a \code{GenomicRanges} object and specify it in \code{Seq.GR}. For an example of \code{Seq.GR}, Please
 run \code{minfi::getLocations(IlluminaHumanMethylation450kanno.ilmn12.hg19)} (the row names of the CpGs in
-\code{Seq.GR} can be \code{NULL}).
+\code{Seq.GR} can be \code{NULL}). The user should make sure the genome build of \code{Seq.GR} match the 
+build specified in \code{genome} parameter (default is \code{"hg19"}).
 }
 \examples{
 if (!exists("remparcel")) {
-  data(Alu.demo)
-  remparcel <- initREMP(arrayType = "450k", REtype = "Alu", RE = Alu.demo, ncore = 1)
+  data(Alu.hg19.demo)
+  remparcel <- initREMP(arrayType = "450k", 
+                        REtype = "Alu", 
+                        annotation.source = "AH",
+                        genome = "hg19",
+                        RE = Alu.hg19.demo, 
+                        ncore = 1,
+                        verbose = TRUE)
 }
+
 }
 \seealso{
 See \code{\link{remp}} for RE methylation prediction.

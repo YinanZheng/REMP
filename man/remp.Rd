@@ -13,8 +13,8 @@ remp(methyDat = NULL, REtype = c("Alu", "L1"), Seq.GR = NULL,
 \arguments{
 \item{methyDat}{A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
 \code{data.table}, \code{data.frame}, or \code{matrix} of Illumina BeadChip methylation data
-(450k or EPIC array) or Illumina methylation sequencing data. See Details. Alternatively, user can also
-specify a pre-built data template (see \code{\link{rempTemplate}}).
+(450k or EPIC array) or Illumina methylation percentage estimates by sequencing. See Details. 
+Alternatively, user can also specify a pre-built data template (see \code{\link{rempTemplate}}).
 \code{remp} to carry out the prediction. See \code{\link{rempTemplate}}. With template specified, \code{methyDat},
 \code{REtype}, \code{parcel}, and \code{work.dir} can be skipped.}
 
@@ -23,7 +23,8 @@ RE will be extracted from \code{parcel}.}
 
 \item{Seq.GR}{A \code{\link{GRanges}} object containing genomic locations of the CpGs profiled by sequencing
 platforms. This parameter should not be \code{NULL} if the input methylation data \code{methyDat} are
-obtained by sequencing. Note that the genomic location must be in hg19 build. See details in \code{\link{initREMP}}.}
+obtained by sequencing. Note that the genomic location can be in either hg19 or hg38 build. 
+See details in \code{\link{initREMP}}.}
 
 \item{parcel}{An \code{\link{REMParcel}} object containing necessary data to carry out the
 prediction. If \code{NULL}, \code{REtype} must specify a type of RE so that the function can search the
@@ -40,7 +41,7 @@ region centered on the predicted CpG in RE for prediction. Default = \code{1000}
 
 \item{method}{Name of model/approach for prediction. Currently \code{"rf"} (Random Forest),
 \code{"xgbTree"} (Extreme Gradient Boosting), \code{"svmLinear"} (SVM with linear kernel), \code{"svmRadial"}
-(SVM with linear kernel), and \code{"naive"} (carrying over methylation values of the closest
+(SVM with radial kernel), and \code{"naive"} (carrying over methylation values of the closest
 CpG site) are available. Default = \code{"rf"} (Random Forest). See Details.}
 
 \item{autoTune}{Logical parameter. If \code{TRUE}, a 3-time repeated 5-fold cross validation
@@ -58,8 +59,8 @@ when \code{autoTune = FALSE}.}
 \item{seed}{Random seed for Random Forest model for reproducible prediction results.
 Default is \code{NULL}, which generates a seed.}
 
-\item{ncore}{Number of cores to run parallel computation. By default, max number of cores available
-in the machine will be utilized. If \code{ncore = 1}, no parallel computation is allowed.}
+\item{ncore}{Number of cores used for parallel computing. By default, max number of cores available
+in the machine will be utilized. If \code{ncore = 1}, no parallel computing is allowed.}
 
 \item{BPPARAM}{An optional \code{\link{BiocParallelParam}} instance determining the parallel back-end to
 be used during evaluation. If not specified, default back-end in the machine will be used.}
@@ -95,30 +96,46 @@ search grid can be access and modified using \code{\link{remp_options}}.
 }
 \examples{
 # Obtain example Illumina example data (450k)
-if (!exists("GM12878_450k")) GM12878_450k <- getGM12878("450k")
+if (!exists("GM12878_450k")) 
+  GM12878_450k <- getGM12878("450k")
 
 # Make sure you have run 'initREMP' first. See ?initREMP.
 if (!exists("remparcel")) {
-  data(Alu.demo)
-  remparcel <- initREMP(arrayType = "450k", REtype = "Alu", RE = Alu.demo, ncore = 1)
+  data(Alu.hg19.demo)
+  remparcel <- initREMP(arrayType = "450k",
+                        REtype = "Alu",
+                        annotation.source = "AH",
+                        genome = "hg19",
+                        RE = Alu.hg19.demo,
+                        ncore = 1,
+                        verbose = TRUE)
 }
 
-# With data template pre-built (See ?rempTemplate):
-if (!exists("template")) template <- rempTemplate(GM12878_450k, parcel = remparcel, win = 1000)
+# With data template pre-built. See ?rempTemplate.
+if (!exists("template")) 
+  template <- rempTemplate(GM12878_450k, 
+                           parcel = remparcel, 
+                           win = 1000, 
+                           verbose = TRUE)
 
 # Run remp with pre-built template:
 remp.res <- remp(template, ncore = 1)
 
-# Or run remp without pre-built template:
+# Or run remp without pre-built template (identical results):
 \dontrun{
-remp.res <- remp(GM12878_450k, REtype = "Alu", parcel = remparcel, ncore = 1)
+  remp.res <- remp(GM12878_450k, 
+                   REtype = "Alu", 
+                   parcel = remparcel, 
+                   ncore = 1,
+                   verbose = TRUE)
 }
 
 remp.res
 details(remp.res)
 rempB(remp.res) # Methylation data (beta value)
 
-# Extract CpG location information (inherit from class 'RangedSummarizedExperiment')
+# Extract CpG location information. 
+# This accessor is inherit from class 'RangedSummarizedExperiment')
 rowRanges(remp.res)
 
 # RE annotation information
@@ -140,6 +157,7 @@ rowRanges(remp.res)
 
 # Density plot across predicted RE
 remplot(remp.res)
+
 }
 \seealso{
 See \code{\link{initREMP}} to prepare necessary annotation database before running \code{remp}.

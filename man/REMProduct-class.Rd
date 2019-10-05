@@ -31,11 +31,12 @@
 \alias{rempCombine,REMProduct,REMProduct-method}
 \title{REMProduct instances}
 \usage{
-REMProduct(REtype = "Unknown", platform = "Unknown", win = "Unknown",
-  predictModel = "Unknown", QCModel = "Unknown", rempM = NULL,
-  rempB = NULL, rempQC = NULL, cpgRanges = GRanges(),
-  sampleInfo = DataFrame(), REannotation = GRanges(),
-  RECpG = GRanges(), regionCode = DataFrame(), refGene = GRanges(),
+REMProduct(REtype = "Unknown", genome = "Unknown",
+  platform = "Unknown", win = "Unknown", predictModel = "Unknown",
+  QCModel = "Unknown", rempM = NULL, rempB = NULL, rempQC = NULL,
+  cpgRanges = GRanges(), sampleInfo = DataFrame(),
+  REannotation = GRanges(), RECpG = GRanges(),
+  regionCode = DataFrame(), refGene = GRanges(),
   varImp = DataFrame(), REStats = DataFrame(),
   GeneStats = DataFrame(), Seed = NULL)
 
@@ -94,6 +95,8 @@ rempCombine(object1, object2)
 \arguments{
 \item{REtype}{Type of RE (\code{"Alu"} or \code{"L1"}).}
 
+\item{genome}{Specify the build of human genome. Can be either \code{"hg19"} or \code{"hg38"}.}
+
 \item{platform}{Illumina methylation profiling platform (\code{"450k"} or \code{"EPIC"}).}
 
 \item{win}{Flanking window size of the predicting RE-CpG.}
@@ -139,8 +142,8 @@ model is used in \code{\link{remp}}.}
 
 \item{type}{For \code{plot} and \code{decodeAnnot}: see Utilities.}
 
-\item{ncore}{For \code{decodeAnnot} and \code{rempAggregate}: number of cores to run parallel computation.
-By default no parallel computation is allowed (\code{ncore = 1}).}
+\item{ncore}{For \code{decodeAnnot} and \code{rempAggregate}: number of cores used for parallel computing.
+By default no parallel computing is allowed (\code{ncore = 1}).}
 
 \item{BPPARAM}{For \code{decodeAnnot} and \code{rempAggregate}: an optional \code{\link{BiocParallelParam}}
 instance determining the parallel back-end to be used during evaluation. If not specified, default
@@ -186,7 +189,7 @@ Class \code{REMProduct} is to maintain RE methylation prediction results.
     \item{\code{rempTrim(object, threshold = 1.7, missingRate = 0.2)}}{Any predicted CpG values with
     quality score < threshold (default = 1.7, specified by \code{threshold = 1.7}) will be replaced with NA.
     CpGs contain more than missingRate * 100% (default = 20%, specified by \code{missingRage = 0.2}) missing
-    rate across samples will be discarded. Relavant statistics will be re-evaluated.}
+    rate across samples will be discarded. Relavant summary statistics will be re-evaluated.}
     \item{\code{rempAggregate(object, NCpG = 2, ncore = NULL, BPPARAM = NULL)}}{Aggregate the predicted RE-CpG
     methylation by RE using mean. To ensure the reliability of the aggregation, by default only RE with at
     least 2 predicted CpG sites (specified by \code{NCpG = 2}) will be aggregated.}

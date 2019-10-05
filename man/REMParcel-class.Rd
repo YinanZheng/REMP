@@ -19,9 +19,9 @@
 \alias{getILMN,REMParcel-method}
 \title{REMParcel instances}
 \usage{
-REMParcel(REtype = "Unknown", platform = "Unknown",
-  RefGene = GRanges(), RE = GRanges(), RECpG = GRanges(),
-  ILMN = GRanges())
+REMParcel(REtype = "Unknown", genome = "Unknown",
+  platform = "Unknown", RefGene = GRanges(), RE = GRanges(),
+  RECpG = GRanges(), ILMN = GRanges())
 
 getParcelInfo(object)
 
@@ -50,6 +50,8 @@ saveParcel(object, ...)
 }
 \arguments{
 \item{REtype}{Type of RE (\code{"Alu"} or \code{"L1"}).}
+
+\item{genome}{Specify the build of human genome. Can be either \code{"hg19"} or \code{"hg38"}.}
 
 \item{platform}{Illumina methylation profiling platform (\code{"450k"} or \code{"EPIC"}).}
 

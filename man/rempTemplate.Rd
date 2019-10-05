@@ -10,11 +10,12 @@ rempTemplate(methyDat = NULL, Seq.GR = NULL, parcel = NULL,
 \arguments{
 \item{methyDat}{A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
 \code{data.table}, \code{data.frame}, or \code{matrix} of Illumina BeadChip methylation data
-(450k or EPIC array) or Illumina methylation sequencing data.}
+(450k or EPIC array) or Illumina methylation percentage estimates by sequencing.}
 
 \item{Seq.GR}{A \code{\link{GRanges}} object containing genomic locations of the CpGs profiled by sequencing
 platforms. This parameter should not be \code{NULL} if the input methylation data \code{methyDat} are
-obtained by sequencing. Note that the genomic location must be in hg19 build. See details in \code{\link{initREMP}}.}
+obtained by sequencing. Note that the genomic location can be in either hg19 or hg38 build, but must be consistent
+with the build as \code{parcel}. See details in \code{\link{initREMP}}.}
 
 \item{parcel}{An \code{\link{REMParcel}} object containing necessary data to carry out the
 prediction. If \code{NULL}, the function will search the \code{.rds} data file in \code{work.dir}
@@ -38,18 +39,29 @@ and a string of methylation platform (\code{$arrayType}). Note: the subset opera
 RE-CpGs and their methylation data for model training, neighboring CpGs of RE-CpGs and their
 methylation data for model prediction, and other necessary information about the prediction.
 This function is useful when one needs to experiment different tunning parameters so that these pre-built
-data templates can be re-used.
+data templates can be re-used and substaintially improve efficiency.
 }
 \examples{
-if (!exists("GM12878_450k")) GM12878_450k <- getGM12878("450k")
+if (!exists("GM12878_450k"))
+  GM12878_450k <- getGM12878("450k")
 if (!exists("remparcel")) {
-  data(Alu.demo)
-  remparcel <- initREMP(arrayType = "450k", REtype = "Alu", RE = Alu.demo, ncore = 1)
+  data(Alu.hg19.demo)
+  remparcel <- initREMP(arrayType = "450k",
+                        REtype = "Alu",
+                        annotation.source = "AH",
+                        genome = "hg19",
+                        RE = Alu.hg19.demo,
+                        ncore = 1,
+                        verbose = TRUE)
 }
 
-template <- rempTemplate(GM12878_450k, parcel = remparcel, win = 1000)
+template <- rempTemplate(GM12878_450k, 
+                         parcel = remparcel, 
+                         win = 1000, 
+                         verbose = TRUE)
 template
 
 ## To make a subset
 template[1]
+
 }

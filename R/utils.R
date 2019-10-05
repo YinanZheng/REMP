@@ -124,19 +124,77 @@
 }
 
 .changeColNames <- function(DForGR, oldnames, newnames) {
-  if (is(DForGR, "DataFrame")) {
+  if ("DataFrame" %in% is(DForGR)) {
     cnames <- colnames(DForGR)
     colnames(DForGR)[cnames %in% oldnames] <- newnames
     return(DForGR)
   }
-  if (is(DForGR, "GRanges")) {
+  if ("GRanges" %in% is(DForGR)) {
     cnames <- colnames(mcols(DForGR))
     colnames(mcols(DForGR))[cnames %in% oldnames] <- newnames
     return(DForGR)
   }
 }
 
-#### Message display function
+.webDownload <- function(url, tag, col_types = NULL, verbose = FALSE)
+{
+  tempfilenames <- list.files(tempdir())
+  which.tag.file <- grep(tag, tempfilenames)
+  if (length(which.tag.file) == 0) {
+    temp <- tempfile(pattern = tag) # Make an identifiable ext to avoid repeated download
+    if(verbose) message("    Downloading file...")
+    download.file(url, temp, quiet = TRUE)
+  } else {
+    if(verbose) message("    File existed!")
+    temp <- file.path(tempdir(), tempfilenames[which.tag.file])
+  }
+  if(verbose) message("    Unzipping and loading file...")
+  downloadedFile <- readr::read_delim(gzfile(temp), col_names = FALSE, delim = "\t", col_types = col_types)
+  return(downloadedFile)
+}
+
+.liftOver_Hg19toHg38 <- function(ILMN.GR, m = NULL, verbose = FALSE) {
+  if(verbose) message(m)
+  ah <- .initiateAH()
+  if(is.null(ah)) stop("AnnotationHub is currently not accessible. Please try again later.")
+  ch <- suppressMessages(ah[[remp_options(".default.AH.hg19ToHg38.over.chain")]])
+  ILMN.GR <- rtracklayer::liftOver(ILMN.GR, ch)
+  ILMN.GR <- unlist(ILMN.GR)
+  return(ILMN.GR)
+}
+
+.liftOver_Hg38toHg19 <- function(ILMN.GR, m = NULL, verbose = FALSE) {
+  if(verbose) message(m)
+  ah <- .initiateAH()
+  if(is.null(ah)) stop("AnnotationHub is currently not accessible. Please try again later.")
+  ch <- suppressMessages(ah[[remp_options(".default.AH.hg38ToHg19.over.chain")]])
+  ILMN.GR <- rtracklayer::liftOver(ILMN.GR, ch)
+  ILMN.GR <- unlist(ILMN.GR)
+  return(ILMN.GR)
+}
+
+.initiateAH <- function()
+{
+  permission <- file.access(AnnotationHub::getAnnotationHubOption("CACHE"), 2)
+  
+  if (permission != 0) {
+      message(
+        AnnotationHub::getAnnotationHubOption("CACHE"),
+        " is not writable, using temporal directory ",
+        .forwardSlashPath(tempdir()), " instead."
+      )
+    AnnotationHub::setAnnotationHubOption("CACHE", file.path(tempdir(), ".AnnotationHub"))
+  }
+  ah <- tryCatch({
+    suppressMessages(AnnotationHub::AnnotationHub())
+    # stop("")
+  }, error = function(e) {
+    return(NULL)
+  })
+  return(ah)
+}
+
+#### Message display functions
 
 .printMsgArray <- function(msg, printType) {
   if (printType == "message") for (m in msg) message(m)
@@ -147,6 +205,7 @@
   info <- object@REMParcelInfo
   cat("REMParcel object\n")
   cat("RE type:", info[["REtype"]], "\n")
+  cat("Genome build:", info[["genome"]], "\n")
   cat("Illumina platform:", info[["platform"]], "\n")
   cat("Valid (max)", paste0(info[["REtype"]], "-CpG"), "flanking window size:", info[["max.win"]], "\n")
   cat("Number of RE:", length(object@RE), "\n")
@@ -185,7 +244,7 @@
   if (!isEmpty(GeneStats)) {
     p <- rep(NA, 4)
 
-    p[1] <- paste0(indent, "Gene coverage by ", REtype, " (out of total hg19 refSeq Gene):")
+    p[1] <- paste0(indent, "Gene coverage by ", REtype, " (out of total # of RefSeq genes):")
     p[2] <- paste0(
       indent, indent, GeneStats[2, 3],
       " (", round(GeneStats[2, 3] / GeneStats[1, 3] * 100, 2), "%) total genes;"
@@ -219,6 +278,7 @@
 .showREMPinfo <- function(object) {
   info <- object@REMPInfo
   cat("RE type:", info[["REtype"]], "\n")
+  cat("Genome build:", info[["genome"]], "\n")
   cat("Methylation profiling platform:", info[["platform"]], "\n")
   cat("Flanking window size:", info[["win"]], "\n")
   cat("Prediction model:", info[["predictModel"]], "\n")
@@ -270,7 +330,7 @@
 .showQCSummary <- function(object) {
   options(digits = 10)
   QC <- assays(object)[["rempQC"]]
-  cat("Distribution of reliability score:", "\n")
+  cat("Distribution of reliability score (lower score = higher reliability):", "\n")
   print(summary(as.numeric(QC)))
   options(digits = 7)
 }
@@ -304,7 +364,7 @@
 ## Class check
 
 .isGROrStop <- function(object) {
-  if (!is(object, "GRanges")) {
+  if (!"GRanges" %in% is(object)) {
     stop(sprintf(
       "object is of class '%s', but needs to be of class 'GRanges' (see object definition in package 'GenomicRanges')",
       class(object)

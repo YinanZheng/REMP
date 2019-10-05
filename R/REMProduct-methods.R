@@ -239,6 +239,7 @@ setMethod(
     ## Update object
     object_trim <- REMProduct(
       REtype = object@REMPInfo[["REtype"]],
+      genome = object@REMPInfo[["genome"]],
       platform = object@REMPInfo[["platform"]],
       win = object@REMPInfo[["win"]],
       predictModel = paste0(object@REMPInfo[["predictModel"]], " - trimmed (", threshold, ")"),
@@ -264,10 +265,12 @@ setMethod(
   function(object, NCpG = 2, ncore = 1, BPPARAM = NULL) {
     be <- getBackend(ncore, BPPARAM, TRUE)
 
-    REtype <- object@REMPInfo[["REtype"]]
+    REtype_string <- object@REMPInfo[["REtype"]]
+    REtype <- strsplit(REtype_string, "\\s+\\(")[[1]][1]
+    
     method <- object@REMPInfo[["predictModel"]]
 
-    if (grepl("aggregated", REtype)) {
+    if (REtype_string == paste0(REtype, " (aggregated by mean: min # of CpGs: ", NCpG, ")")) {
       message("The results are already aggregated. No changes made.")
       return(object)
     }
@@ -297,7 +300,7 @@ setMethod(
       Index = as.character(GR$RE.Index),
       check.names = FALSE, stringsAsFactors = FALSE
     )
-    RE_annotation <- RE_annotation[match(
+    RE_annotation <- RE_annotation[base::match(
       unique(M_df$Index),
       runValue(RE_annotation$Index)
     )]
@@ -325,7 +328,7 @@ setMethod(
       BiocParallel::bpstop(be)
     } else {
       M_df_MEAN <- aggregate(. ~ Index, M_df, mean, na.rm = TRUE, na.action = na.pass)
-      M_df_MEAN <- M_df_MEAN[match(select_RE, M_df_MEAN$Index), ]
+      M_df_MEAN <- M_df_MEAN[base::match(select_RE, M_df_MEAN$Index), ]
     }
     # identical(M_df_MEAN_par, M_df_MEAN)
     # identical(runValue(RE_annotation$Index), as.character(M_df_MEAN$Index))
@@ -351,7 +354,7 @@ setMethod(
         BiocParallel::bpstop(be)
       } else {
         QC_df_MEAN <- aggregate(. ~ Index, QC_df, mean, na.rm = TRUE, na.action = na.pass)
-        QC_df_MEAN <- QC_df_MEAN[match(select_RE, QC_df_MEAN$Index), ]
+        QC_df_MEAN <- QC_df_MEAN[base::match(select_RE, QC_df_MEAN$Index), ]
       }
       # identical(QC_df_MEAN_par, QC_df_MEAN)
       QC <- as.matrix(QC_df_MEAN[, -1, drop = FALSE])
@@ -396,6 +399,7 @@ setMethod(
     ## Update object
     object_aggregated <- REMProduct(
       REtype = paste0(REtype, " (aggregated by mean: min # of CpGs: ", NCpG, ")"),
+      genome = object@REMPInfo[["genome"]],
       platform = object@REMPInfo[["platform"]],
       win = object@REMPInfo[["win"]],
       predictModel = method,
@@ -419,6 +423,7 @@ setMethod(
   "rempCombine", signature(object1 = "REMProduct", object2 = "REMProduct"),
   function(object1, object2) {
     REtype1 <- object1@REMPInfo[["REtype"]]
+    genome1 <- object1@REMPInfo[["genome"]]
     method1 <- object1@REMPInfo[["predictModel"]]
     platform1 <- object1@REMPInfo[["platform"]]
     win1 <- object1@REMPInfo[["win"]]
@@ -426,6 +431,7 @@ setMethod(
     cnames1 <- colnames(object1)
 
     REtype2 <- object2@REMPInfo[["REtype"]]
+    genome2 <- object2@REMPInfo[["genome"]]
     method2 <- object2@REMPInfo[["predictModel"]]
     platform2 <- object2@REMPInfo[["platform"]]
     win2 <- object2@REMPInfo[["win"]]
@@ -435,6 +441,7 @@ setMethod(
     duplicated_samples <- intersect(cnames1, cnames2)
 
     if (!identical(REtype1, REtype2)) stop(paste0("You cannot combine ", REtype1, " methylation data with ", REtype2, " methylation data."))
+    if (!identical(genome1, genome2)) stop(paste0("You cannot combine genome build ", genome1, " methylation data with genome build ", genome2, " methylation data."))
     if (!identical(method1, method2)) stop(paste0("You cannot combine ", method1, " prediction with ", method2, " prediction."))
     if (!identical(platform1, platform2)) stop(paste0("You cannot combine ", platform1, " array with ", platform2, " array."))
     if (!identical(win1, win2)) stop(paste0("You cannot combine prediction with flanking window size = ", win1, " with size = ", win2, "."))
@@ -508,6 +515,7 @@ setMethod(
     ## Update object
     object_combined <- REMProduct(
       REtype = REtype1,
+      genome = genome1,
       platform = platform1,
       win = win1,
       predictModel = method1,

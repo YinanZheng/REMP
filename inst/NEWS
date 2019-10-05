@@ -64,3 +64,7 @@
 * Fixed bug in identifying numbers of back-end workers;
 * Fixed bug in predictor importance matrix;
 * Improved robustness.
+
+# REMP 1.8.2
+* REMP package now supports genome build hg38;
+* Alternative versions of annotation databases can now be accessed from UCSC websites. 

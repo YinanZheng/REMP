@@ -48,30 +48,28 @@
 #' @import S4Vectors
 #' @import BiocParallel
 #' @import caret
-#' @import IlluminaHumanMethylation450kanno.ilmn12.hg19
-#' @import IlluminaHumanMethylationEPICanno.ilm10b2.hg19
-#'
 #' @importFrom SummarizedExperiment SummarizedExperiment rowRanges assays rowData colData
 #' @importFrom minfi getAnnotation getBeta getM MethylSet RatioSet GenomicRatioSet IlluminaMethylationAnnotation
+#' @importFrom readr read_delim cols_only col_character col_integer
+#' @importFrom rtracklayer liftOver
 #' @importFrom impute impute.knn
 #' @importFrom kernlab predict
 #' @importFrom ranger ranger importance
 #' @importFrom settings stop_if_reserved reset options_manager
 #' @importFrom stats setNames density na.pass
-#' @importFrom utils download.file read.table data
+#' @importFrom utils download.file read.table data packageVersion
 #' @importFrom graphics lines plot
 #' @importFrom AnnotationHub AnnotationHub getAnnotationHubOption setAnnotationHubOption
 #' @importFrom iterators nextElem idiv
 #' @importFrom org.Hs.eg.db org.Hs.egREFSEQ2EG org.Hs.egSYMBOL
-#' @importFrom BSgenome.Hsapiens.UCSC.hg19 Hsapiens
 #' @importFrom GenomicRanges GRanges GRangesList makeGRangesListFromFeatureFragments findOverlaps
 #' @importFrom GenomicRanges granges seqnames start end strand ranges promoters shift start<- end<-
 #' @importFrom IRanges IRanges IRangesList CharacterList NumericList subsetByOverlaps
+#' @importFrom GenomeInfoDb seqlevels<-
 #' @importFrom parallel detectCores
 #' @importFrom doParallel registerDoParallel
 #' @importFrom foreach registerDoSEQ
 #' @importFrom BiocGenerics mget
 #' @importFrom BSgenome getSeq
 #' @importFrom Biostrings DNAString vmatchPattern
-
 NULL
