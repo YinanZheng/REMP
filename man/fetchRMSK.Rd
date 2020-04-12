@@ -4,11 +4,15 @@
 \alias{fetchRMSK}
 \title{Get RE database from RepeatMasker}
 \usage{
-fetchRMSK(REtype = c("Alu", "L1"), annotation.source = c("AH", "UCSC"),
-  genome = c("hg19", "hg38"), verbose = FALSE)
+fetchRMSK(
+  REtype = c("Alu", "L1", "LTR"),
+  annotation.source = c("AH", "UCSC"),
+  genome = c("hg19", "hg38"),
+  verbose = FALSE
+)
 }
 \arguments{
-\item{REtype}{Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.}
+\item{REtype}{Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"LTR"} are supported.}
 
 \item{annotation.source}{Character parameter. Specify the source of annotation databases, including
 the RefSeq Gene annotation database and RepeatMasker annotation database. If \code{"AH"}, the database 

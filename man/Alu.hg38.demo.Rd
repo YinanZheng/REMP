@@ -4,7 +4,9 @@
 \name{Alu.hg38.demo}
 \alias{Alu.hg38.demo}
 \title{Subset of Alu genomic location dataset (hg38)}
-\format{A \code{\link{GRanges}} object.}
+\format{
+A \code{\link{GRanges}} object.
+}
 \source{
 RepeatMasker database (hg38) is provided by UCSC database downloaded 
 from http://hgdownload.cse.ucsc.edu/goldenpath.

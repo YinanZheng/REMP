@@ -6,7 +6,7 @@
 #'
 #' @param arrayType Illumina methylation array type. Currently \code{"450k"}, \code{"EPIC"},
 #' and \code{"Sequencing"} are supported. Default = \code{"450k"}.
-#' @param REtype Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.
+#' @param REtype Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"LTR"} are supported.
 #' @param annotation.source Character parameter. Specify the source of annotation databases, including
 #' the RefSeq Gene annotation database and RepeatMasker annotation database. If \code{"AH"}, the database 
 #' will be obtained from the AnnotationHub package. If \code{"UCSC"}, the database will be downloaded 
@@ -68,7 +68,7 @@
 #' 
 #' @export
 initREMP <- function(arrayType = c("450k", "EPIC", "Sequencing"), 
-                     REtype = c("Alu", "L1"),
+                     REtype = c("Alu", "L1", "LTR"),
                      annotation.source = c("AH", "UCSC"), 
                      genome = c("hg19", "hg38"),
                      RE = NULL, 
@@ -153,14 +153,10 @@ initREMP <- function(arrayType = c("450k", "EPIC", "Sequencing"),
                        genome = genome, 
                        verbose = verbose)
   } else {
-    .isGROrStop(RE)
-    if (any(grepl("Alu", RE$name)) & REtype == "L1") {
-      message("Specified REtype (", REtype, ")", " does not match RE database provided. REtype is set to 'Alu'.")
-      REtype <- "Alu"
-    }
-    if (any(grepl("L1", RE$name)) & REtype == "Alu") {
-      message("Specified REtype (", REtype, ")", " does not match RE database provided. REtype is set to 'L1'.")
-      REtype <- "L1"
+    REtype_db <- .guessREtype(RE)
+    if(REtype_db != REtype){
+      message("Specified REtype (", REtype, ")", " does not match ", REtype_db, " database provided. REtype is set to '", REtype_db, "'.")
+      REtype <- REtype_db
     }
     RE.hg <- RE
   }
@@ -220,3 +216,25 @@ initREMP <- function(arrayType = c("450k", "EPIC", "Sequencing"),
 
   return(remparcel)
 } # End of intREMP
+
+
+## --------------------------------------
+## Internal functions
+
+.guessREtype <- function(RE)
+{
+  .isGROrStop(RE)
+  RE_subfamily <- RE$name
+  if(is.null(RE_subfamily)) stop("Please provide the 'name' column specifying the RE subfamily.")
+  
+  REtype <- c("Alu", "L1", "LTR")
+  
+  RE_count <- c(sum(grepl("Alu", RE_subfamily)),
+                sum(grepl("L1", RE_subfamily)),
+                sum(grepl("LTR|ERV", RE_subfamily)))
+  
+  REtype <- REtype[which.max(RE_count)]
+  return(REtype)
+}
+
+

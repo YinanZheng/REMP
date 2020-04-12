@@ -10,7 +10,7 @@
 #' \code{"hg38"}. For 450k/EPIC array, \code{"hg19"} is used more often while specifying \code{"hg38"} will 
 #' lift over the Illumina CpG probe location to build \code{"hg38"}. For sequencing data, please make
 #' sure the specified genome build is consistent with the actual genome build of \code{Seq.GR}.
-#' @param REtype Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.
+#' @param REtype Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"LTR"} are supported.
 #' @param annotation.source Character parameter. Specify the source of annotation databases, including
 #' the RefSeq Gene annotation database and RepeatMasker annotation database. If \code{"AH"}, the database 
 #' will be obtained from the AnnotationHub package. If \code{"UCSC"}, the database will be downloaded 
@@ -50,7 +50,7 @@
 #' 
 #' @export
 remprofile <- function(methyDat, 
-                       REtype = c("Alu", "L1"), 
+                       REtype = c("Alu", "L1", "LTR"), 
                        annotation.source = c("AH", "UCSC"), 
                        genome = c("hg19", "hg38"), 
                        Seq.GR = NULL,

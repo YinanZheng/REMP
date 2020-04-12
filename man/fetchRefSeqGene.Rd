@@ -4,8 +4,12 @@
 \alias{fetchRefSeqGene}
 \title{Get RefSeq gene database}
 \usage{
-fetchRefSeqGene(annotation.source = c("AH", "UCSC"), genome = c("hg19",
-  "hg38"), mainOnly = FALSE, verbose = FALSE)
+fetchRefSeqGene(
+  annotation.source = c("AH", "UCSC"),
+  genome = c("hg19", "hg38"),
+  mainOnly = FALSE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{annotation.source}{Character parameter. Specify the source of annotation databases, including

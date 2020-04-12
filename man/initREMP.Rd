@@ -4,16 +4,25 @@
 \alias{initREMP}
 \title{RE Annotation Database Initialization}
 \usage{
-initREMP(arrayType = c("450k", "EPIC", "Sequencing"), REtype = c("Alu",
-  "L1"), annotation.source = c("AH", "UCSC"), genome = c("hg19",
-  "hg38"), RE = NULL, Seq.GR = NULL, ncore = NULL, BPPARAM = NULL,
-  export = FALSE, work.dir = tempdir(), verbose = FALSE)
+initREMP(
+  arrayType = c("450k", "EPIC", "Sequencing"),
+  REtype = c("Alu", "L1", "LTR"),
+  annotation.source = c("AH", "UCSC"),
+  genome = c("hg19", "hg38"),
+  RE = NULL,
+  Seq.GR = NULL,
+  ncore = NULL,
+  BPPARAM = NULL,
+  export = FALSE,
+  work.dir = tempdir(),
+  verbose = FALSE
+)
 }
 \arguments{
 \item{arrayType}{Illumina methylation array type. Currently \code{"450k"}, \code{"EPIC"},
 and \code{"Sequencing"} are supported. Default = \code{"450k"}.}
 
-\item{REtype}{Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.}
+\item{REtype}{Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"LTR"} are supported.}
 
 \item{annotation.source}{Character parameter. Specify the source of annotation databases, including
 the RefSeq Gene annotation database and RepeatMasker annotation database. If \code{"AH"}, the database 

@@ -78,7 +78,7 @@ getBackend <- function(ncore,
 #' \code{fetchRMSK} is used to obtain specified RE database from RepeatMasker Database
 #' provided by AnnotationHub.
 #' 
-#' @param REtype Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.
+#' @param REtype Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"LTR"} are supported.
 #' @param annotation.source Character parameter. Specify the source of annotation databases, including
 #' the RefSeq Gene annotation database and RepeatMasker annotation database. If \code{"AH"}, the database 
 #' will be obtained from the AnnotationHub package. If \code{"UCSC"}, the database will be downloaded 
@@ -99,7 +99,7 @@ getBackend <- function(ncore,
 #'                 verbose = TRUE)
 #' L1
 #' @export
-fetchRMSK <- function(REtype = c("Alu", "L1"), 
+fetchRMSK <- function(REtype = c("Alu", "L1", "LTR"), 
                       annotation.source = c("AH", "UCSC"), 
                       genome = c("hg19", "hg38"), 
                       verbose = FALSE) {
@@ -156,7 +156,10 @@ fetchRMSK <- function(REtype = c("Alu", "L1"),
   if (REtype == "L1") {
     REFamily_grep <- remp_options(".default.L1Family.grep")
   }
-
+  if (REtype == "LTR") {
+    REFamily_grep <- remp_options(".default.LTRFamily.grep")
+  }
+  
   RE <- rmsk[grep(REFamily_grep, rmsk$name)]
   RE <- RE[as.character(seqnames(RE)) %in% remp_options(".default.chr")] # chr1 - 22, chrX, chrY
   seqlevels(RE) <- remp_options(".default.chr") # remove uncommon chr
@@ -385,7 +388,7 @@ fetchRefSeqGene <- function(annotation.source = c("AH", "UCSC"),
 #'
 #' @param RE A \code{\link{GRanges}} object of RE genomic location database. This
 #' can be obtained by \code{\link{fetchRMSK}}.
-#' @param REtype Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.
+#' @param REtype Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"LTR"} are supported.
 #' @param genome Character parameter. Specify the build of human genome. Can be either \code{"hg19"} or 
 #' \code{"hg38"}. User should make sure the genome build of \code{RE} is consistent with this parameter.
 #' @param be A \code{\link{BiocParallel}} object containing back-end information that is
@@ -416,7 +419,7 @@ fetchRefSeqGene <- function(annotation.source = c("AH", "UCSC"),
 #' 
 #' @export
 findRECpG <- function(RE, 
-                      REtype = c("Alu", "L1"), 
+                      REtype = c("Alu", "L1", "LTR"), 
                       genome = c("hg19", "hg38"), 
                       be = NULL, 
                       verbose = FALSE) {

@@ -4,11 +4,21 @@
 \alias{remp}
 \title{Repetitive element methylation prediction}
 \usage{
-remp(methyDat = NULL, REtype = c("Alu", "L1"), Seq.GR = NULL,
-  parcel = NULL, work.dir = tempdir(), win = 1000, method = c("rf",
-  "xgbTree", "svmLinear", "svmRadial", "naive"), autoTune = TRUE,
-  param = NULL, seed = NULL, ncore = NULL, BPPARAM = NULL,
-  verbose = FALSE)
+remp(
+  methyDat = NULL,
+  REtype = c("Alu", "L1", "LTR"),
+  Seq.GR = NULL,
+  parcel = NULL,
+  work.dir = tempdir(),
+  win = 1000,
+  method = c("rf", "xgbTree", "svmLinear", "svmRadial", "naive"),
+  autoTune = TRUE,
+  param = NULL,
+  seed = NULL,
+  ncore = NULL,
+  BPPARAM = NULL,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{methyDat}{A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
@@ -18,8 +28,8 @@ Alternatively, user can also specify a pre-built data template (see \code{\link{
 \code{remp} to carry out the prediction. See \code{\link{rempTemplate}}. With template specified, \code{methyDat},
 \code{REtype}, \code{parcel}, and \code{work.dir} can be skipped.}
 
-\item{REtype}{Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported. If \code{NULL}, the type of
-RE will be extracted from \code{parcel}.}
+\item{REtype}{Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"LTR"} are supported. If \code{NULL}, 
+the type of RE will be extracted from \code{parcel}.}
 
 \item{Seq.GR}{A \code{\link{GRanges}} object containing genomic locations of the CpGs profiled by sequencing
 platforms. This parameter should not be \code{NULL} if the input methylation data \code{methyDat} are
