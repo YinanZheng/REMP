@@ -4,8 +4,13 @@
 \alias{rempTemplate}
 \title{Prepare data template for REMP}
 \usage{
-rempTemplate(methyDat = NULL, Seq.GR = NULL, parcel = NULL,
-  win = 1000, verbose = FALSE)
+rempTemplate(
+  methyDat = NULL,
+  Seq.GR = NULL,
+  parcel = NULL,
+  win = 1000,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{methyDat}{A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},

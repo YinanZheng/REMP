@@ -10,7 +10,7 @@
 #' @param object A \code{REMProduct} object.
 #' @param object1 A \code{REMProduct} object.
 #' @param object2 A \code{REMProduct} object.
-#' @param REtype Type of RE (\code{"Alu"} or \code{"L1"}).
+#' @param REtype Type of RE (\code{"Alu"}, \code{"L1"}, or \code{"LTR"}).
 #' @param genome Specify the build of human genome. Can be either \code{"hg19"} or \code{"hg38"}.
 #' @param platform Illumina methylation profiling platform (\code{"450k"} or \code{"EPIC"}).
 #' @param win Flanking window size of the predicting RE-CpG.

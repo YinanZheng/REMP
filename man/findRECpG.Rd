@@ -4,14 +4,19 @@
 \alias{findRECpG}
 \title{Find RE-CpG genomic location given RE ranges information}
 \usage{
-findRECpG(RE, REtype = c("Alu", "L1"), genome = c("hg19", "hg38"),
-  be = NULL, verbose = FALSE)
+findRECpG(
+  RE,
+  REtype = c("Alu", "L1", "LTR"),
+  genome = c("hg19", "hg38"),
+  be = NULL,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{RE}{A \code{\link{GRanges}} object of RE genomic location database. This
 can be obtained by \code{\link{fetchRMSK}}.}
 
-\item{REtype}{Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.}
+\item{REtype}{Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"LTR"} are supported.}
 
 \item{genome}{Character parameter. Specify the build of human genome. Can be either \code{"hg19"} or 
 \code{"hg38"}. User should make sure the genome build of \code{RE} is consistent with this parameter.}

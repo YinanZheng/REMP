@@ -68,3 +68,7 @@
 # REMP 1.8.2
 * REMP package now supports genome build hg38;
 * Alternative versions of annotation databases can now be accessed from UCSC websites. 
+
+# REMP 1.10.1
+* REMP package now supports Long Terminal Repeat (LTR), including Endogenous Retroviruses (ERV)
+* Fixed bug in function 'grooMethy'.

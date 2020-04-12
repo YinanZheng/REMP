@@ -252,7 +252,7 @@ grooMethy <- function(methyDat,
     }
 
     if (containILMN) {
-      methyDat.matrix <- matrix(methyDat[, -probeNameIndicator],
+      methyDat.matrix <- as.matrix(methyDat[, -probeNameIndicator],
         ncol = ncol(methyDat) - 1
       )
       rownames(methyDat.matrix) <- methyDat[, probeNameIndicator]

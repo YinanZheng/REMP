@@ -4,17 +4,24 @@
 \alias{remprofile}
 \title{Extract DNA methylation data profiled in RE}
 \usage{
-remprofile(methyDat, REtype = c("Alu", "L1"),
-  annotation.source = c("AH", "UCSC"), genome = c("hg19", "hg38"),
-  Seq.GR = NULL, RE = NULL, impute = FALSE, imputebyrow = TRUE,
-  verbose = FALSE)
+remprofile(
+  methyDat,
+  REtype = c("Alu", "L1", "LTR"),
+  annotation.source = c("AH", "UCSC"),
+  genome = c("hg19", "hg38"),
+  Seq.GR = NULL,
+  RE = NULL,
+  impute = FALSE,
+  imputebyrow = TRUE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{methyDat}{A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
 \code{data.table}, \code{data.frame}, or \code{matrix} of Illumina BeadChip methylation data
 (450k or EPIC array) or Illumina methylation percentage estimates by sequencing.}
 
-\item{REtype}{Type of RE. Currently \code{"Alu"} and \code{"L1"} are supported.}
+\item{REtype}{Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"LTR"} are supported.}
 
 \item{annotation.source}{Character parameter. Specify the source of annotation databases, including
 the RefSeq Gene annotation database and RepeatMasker annotation database. If \code{"AH"}, the database 

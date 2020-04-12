@@ -78,7 +78,7 @@ library(REMP)
 @
 
 \section{REMP: Repetitive Element Methylation Prediction}
-Currently \Rpkg{REMP} supports Human (hg19/hg38) Alu and LINE-1 (L1) repetitive element (RE) methylation prediction using Illumina 450k/EPIC array or sequencing platform.
+Currently \Rpkg{REMP} supports Human (hg19/hg38) Alu, LINE-1 (L1), and Long Terminal Repeat (LTR) (including endogenous retroviruses, ERV) repetitive element (RE) methylation prediction using Illumina 450k/EPIC array or sequencing platform.
 
 \subsection{Groom methylation data}
 Appropriate data preprocessing including quality control and normalization of methylation data are recommended before running \Rpkg{REMP}. Many packages are available to carry out these data preprocessing steps, for example, \Rpkg{minfi}, \Rpkg{wateRmelon}, and \Rpkg{methylumi}.

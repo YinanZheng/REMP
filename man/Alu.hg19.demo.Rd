@@ -4,7 +4,9 @@
 \name{Alu.hg19.demo}
 \alias{Alu.hg19.demo}
 \title{Subset of Alu genomic location dataset (hg19)}
-\format{A \code{\link{GRanges}} object.}
+\format{
+A \code{\link{GRanges}} object.
+}
 \source{
 RepeatMasker database provided by package \code{AnnotationHub}
 }

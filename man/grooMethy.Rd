@@ -4,8 +4,14 @@
 \alias{grooMethy}
 \title{Groom methylation data to fix potential data issues}
 \usage{
-grooMethy(methyDat, Seq.GR = NULL, impute = TRUE, imputebyrow = TRUE,
-  mapGenome = FALSE, verbose = FALSE)
+grooMethy(
+  methyDat,
+  Seq.GR = NULL,
+  impute = TRUE,
+  imputebyrow = TRUE,
+  mapGenome = FALSE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{methyDat}{A \code{\link{RatioSet}}, \code{\link{GenomicRatioSet}}, \code{\link{DataFrame}},
