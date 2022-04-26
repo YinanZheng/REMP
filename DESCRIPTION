@@ -1,7 +1,7 @@
 Package: REMP
 Type: Package
 Title: Repetitive Element Methylation Prediction
-Version: 1.19.1
+Version: 1.20.0
 Authors@R: c(person("Yinan","Zheng", role = c("aut","cre"), email = "y-zheng@northwestern.edu"),person("Lei","Liu", role = c("aut"), email = "lei.liu@northwestern.edu "), person("Wei","Zhang", role = c("aut"), email = "wei.zhang1@northwestern.edu"), person("Warren","Kibbe", role = c("aut"), email = "warren.kibbe@nih.gov"), person("Lifang","Hou", role = c("aut","cph"), email = "l-hou@northwestern.edu"))
 Description: Machine learning-based tools to predict DNA methylation of locus-specific repetitive elements (RE) by learning surrounding genetic and epigenetic information. These tools provide genomewide and single-base resolution of DNA methylation prediction on RE that are difficult to measure using array-based or sequencing-based platforms, which enables epigenome-wide association study (EWAS) and differentially methylated region (DMR) analysis on RE. 
 License: GPL-3
