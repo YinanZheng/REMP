@@ -6,7 +6,7 @@
 \usage{
 remp(
   methyDat = NULL,
-  REtype = c("Alu", "L1", "LTR"),
+  REtype = c("Alu", "L1", "ERV"),
   Seq.GR = NULL,
   parcel = NULL,
   work.dir = tempdir(),
@@ -28,7 +28,7 @@ Alternatively, user can also specify a pre-built data template (see \code{\link{
 \code{remp} to carry out the prediction. See \code{\link{rempTemplate}}. With template specified, \code{methyDat},
 \code{REtype}, \code{parcel}, and \code{work.dir} can be skipped.}
 
-\item{REtype}{Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"LTR"} are supported. If \code{NULL}, 
+\item{REtype}{Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"ERV"} are supported. If \code{NULL}, 
 the type of RE will be extracted from \code{parcel}.}
 
 \item{Seq.GR}{A \code{\link{GRanges}} object containing genomic locations of the CpGs profiled by sequencing

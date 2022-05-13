@@ -101,7 +101,7 @@ rempCombine(object1, object2)
 \S4method{rempCombine}{REMProduct,REMProduct}(object1, object2)
 }
 \arguments{
-\item{REtype}{Type of RE (\code{"Alu"}, \code{"L1"}, or \code{"LTR"}).}
+\item{REtype}{Type of RE (\code{"Alu"}, \code{"L1"}, or \code{"ERV"}).}
 
 \item{genome}{Specify the build of human genome. Can be either \code{"hg19"} or \code{"hg38"}.}
 

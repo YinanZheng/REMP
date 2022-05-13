@@ -22,10 +22,9 @@ Tools to manage global setting options for REMP package.
 
 The following options are supported
 \describe{
- \item{\code{.default.AluFamily.grep}}{Regular expression for 'grep' to extract Alu subfamily to be included in the prediction.}
- \item{\code{.default.L1Family.grep}}{Regular expression for 'grep' to extract L1 subfamily to be included in the prediction.}
- \item{\code{.default.LTRFamily.grep}}{Regular expression for 'grep' to extract Long Terminal Repeat (LTR), including Endogenous 
- Retrovirus (ERV) subfamily to be included in the prediction (this includes Human Endogenous Retrovirus, HERV).}
+ \item{\code{.default.AluFamily.grep}}{Regular expression for 'grep' to extract Alu family to be included in the prediction.}
+ \item{\code{.default.L1Family.grep}}{Regular expression for 'grep' to extract L1 family to be included in the prediction.}
+ \item{\code{.default.ERVFamily.grep}}{Regular expression for 'grep' to extract ERV family to be included in the prediction.}
  \item{\code{.default.chr}}{List of human chromosome.}
  \item{\code{.default.GM12878.450k.URL}}{URL to download GM12878 450k methylation profiling data.}
  \item{\code{.default.RMSK.hg19.URL}}{URL to download RepeatMasker database in hg19 genome.}
@@ -33,7 +32,9 @@ The following options are supported
  \item{\code{.default.refGene.hg19.URL}}{URL to download refSeq gene database in hg19 genome.}
  \item{\code{.default.refGene.hg38.URL}}{URL to download refSeq gene database in hg38 genome.}
  \item{\code{.default.AH.repeatmasker.hg19}}{\code{AnnotationHub} data ID linked to RepeatMasker
- database (build hg19).}
+ annotation database (Mar 2020, build hg19).}
+ \item{\code{.default.AH.repeatmasker.hg38}}{\code{AnnotationHub} data ID linked to RepeatMasker
+ annotation database (Sep 2021, build hg38).}
  \item{\code{.default.AH.refgene.hg19}}{\code{AnnotationHub} data ID linked to refSeq gene database
  (build hg19)}
  \item{\code{.default.AH.hg38ToHg19.over.chain}}{\code{AnnotationHub} hg38 to hg19 liftover chain data ID.}

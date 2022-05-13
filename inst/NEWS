@@ -72,3 +72,8 @@
 # REMP 1.10.1
 * REMP package now supports Long Terminal Repeat (LTR), including Endogenous Retroviruses (ERV)
 * Fixed bug in function 'grooMethy'.
+
+# REMP 1.20.1
+* AnnotationHub database for RepeatMasker is updated (both hg19 and hg38).
+* Long Terminal Repeat (LTR) is renamed to Endogenous Retrovirus (ERV).
+* The UCSC annotation database source is disabled in function fetchRMSK. AnnotationHub provides more accurate class and family definition.
