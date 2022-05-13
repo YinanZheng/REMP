@@ -7,8 +7,10 @@
 #'   \item seqnames: chromosome number
 #'   \item ranges: hg19 genomic position
 #'   \item strand: DNA strand
-#'   \item name: Alu subfamily
-#'   \item score: Smith Waterman (SW) alignment score
+#'   \item swScore: Smith Waterman (SW) alignment score
+#'   \item repName: Alu name
+#'   \item repClass: Alu class
+#'   \item repFamily: Alu family
 #'   \item Index: internal index (meaningless for external use; 
 #'   not communicable between genome builds)
 #' }
@@ -34,8 +36,10 @@
 #'   \item seqnames: chromosome number
 #'   \item ranges: hg38 genomic position
 #'   \item strand: DNA strand
-#'   \item name: Alu subfamily
-#'   \item score: Smith Waterman (SW) alignment score
+#'   \item swScore: Smith Waterman (SW) alignment score
+#'   \item repName: Alu name
+#'   \item repClass: Alu class
+#'   \item repFamily: Alu family
 #'   \item Index: internal index (meaningless for external use; 
 #'   not communicable between genome builds)
 #' }

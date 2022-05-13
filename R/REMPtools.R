@@ -78,7 +78,7 @@ getBackend <- function(ncore,
 #' \code{fetchRMSK} is used to obtain specified RE database from RepeatMasker Database
 #' provided by AnnotationHub.
 #' 
-#' @param REtype Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"LTR"} are supported.
+#' @param REtype Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"ERV"} are supported.
 #' @param annotation.source Character parameter. Specify the source of annotation databases, including
 #' the RefSeq Gene annotation database and RepeatMasker annotation database. If \code{"AH"}, the database 
 #' will be obtained from the AnnotationHub package. If \code{"UCSC"}, the database will be downloaded 
@@ -88,8 +88,8 @@ getBackend <- function(ncore,
 #' \code{"hg38"}.
 #' @param verbose Logical parameter. Should the function be verbose?
 #'
-#' @return A \code{\link{GRanges}} object containing RE database. 'name' column
-#' indicates the RE subfamily; 'score' column indicates the SW score; 'Index' is an
+#' @return A \code{\link{GRanges}} object containing RE database. 'repName' column
+#' indicates the RE name; 'swScore' column indicates the SW score; 'Index' is an
 #' internal index for RE to facilitate data referral, which is meaningless for external use.
 #'
 #' @examples
@@ -99,7 +99,7 @@ getBackend <- function(ncore,
 #'                 verbose = TRUE)
 #' L1
 #' @export
-fetchRMSK <- function(REtype = c("Alu", "L1", "LTR"), 
+fetchRMSK <- function(REtype = c("Alu", "L1", "ERV"), 
                       annotation.source = c("AH", "UCSC"), 
                       genome = c("hg19", "hg38"), 
                       verbose = FALSE) {
@@ -108,6 +108,10 @@ fetchRMSK <- function(REtype = c("Alu", "L1", "LTR"),
   genome = match.arg(genome)
   
   if(genome == "hg19") {
+    if(annotation.source == "UCSC") {
+      message("UCSC RepeatMasker annotation database is not recommended. Switching to AnnotationHub instead...")
+      annotation.source = "AH"
+    }
     if(annotation.source == "AH") {
       if (verbose) message(
         "Loading ", REtype, " annotation data from RepeatMasker (hg19) database from AnnotationHub: ",
@@ -115,40 +119,31 @@ fetchRMSK <- function(REtype = c("Alu", "L1", "LTR"),
       )
       ah <- .initiateAH()
       if(is.null(ah)) {
-        message("AnnotationHub is currently not accessible, Switching to 'UCSC' source instead...")
-        annotation.source <- "UCSC"
+        warning("AnnotationHub is currently not accessible, Please try again later.")
       } else {
         rmsk <- suppressMessages(ah[[remp_options(".default.AH.repeatmasker.hg19")]])
-        rmsk$score <- as.integer(rmsk$score)
       }
-    }
-    if(annotation.source == "UCSC") {
-      if (verbose) message(
-        "Loading ", REtype, " annotation data from RepeatMasker (hg19) database from ",
-        remp_options(".default.RMSK.hg19.URL")
-      )
-      rmsk <- .RMSKDownload(url = remp_options(".default.RMSK.hg19.URL"), 
-                            tag = "RMSK.hg19",
-                            verbose)
     }
   }
   
   if(genome == "hg38") {
-    if(annotation.source == "AH") {
-      message("RepeatMasker database in hg38 build is not available in AnnotationHub. Switching to 'UCSC' source instead...")
-      annotation.source <- "UCSC"
-    }
     if(annotation.source == "UCSC") {
+      message("UCSC RepeatMasker annotation database is not recommended. Switching to AnnotationHub instead...")
+      annotation.source = "AH"
+    }
+    if(annotation.source == "AH") {
       if (verbose) message(
-        "Loading ", REtype, " annotation data from RepeatMasker (hg38) database from ",
-        remp_options(".default.RMSK.hg38.URL")
+        "Loading ", REtype, " annotation data from RepeatMasker (hg38) database from AnnotationHub: ",
+        remp_options(".default.AH.repeatmasker.hg38")
       )
-      rmsk <- .RMSKDownload(url = remp_options(".default.RMSK.hg38.URL"), 
-                            tag = "RMSK.hg38",
-                            verbose)
+      ah <- .initiateAH()
+      if(is.null(ah)) {
+        warning("AnnotationHub is currently not accessible, Please try again later.")
+      } else {
+        rmsk <- suppressMessages(ah[[remp_options(".default.AH.repeatmasker.hg38")]])
+      }
     }
   }
-  
 
   if (REtype == "Alu") {
     REFamily_grep <- remp_options(".default.AluFamily.grep")
@@ -156,11 +151,11 @@ fetchRMSK <- function(REtype = c("Alu", "L1", "LTR"),
   if (REtype == "L1") {
     REFamily_grep <- remp_options(".default.L1Family.grep")
   }
-  if (REtype == "LTR") {
-    REFamily_grep <- remp_options(".default.LTRFamily.grep")
+  if (REtype == "ERV") {
+    REFamily_grep <- remp_options(".default.ERVFamily.grep")
   }
   
-  RE <- rmsk[grep(REFamily_grep, rmsk$name)]
+  RE <- rmsk[grep(REFamily_grep, rmsk$repFamily)]
   RE <- RE[as.character(seqnames(RE)) %in% remp_options(".default.chr")] # chr1 - 22, chrX, chrY
   seqlevels(RE) <- remp_options(".default.chr") # remove uncommon chr
 
@@ -388,7 +383,7 @@ fetchRefSeqGene <- function(annotation.source = c("AH", "UCSC"),
 #'
 #' @param RE A \code{\link{GRanges}} object of RE genomic location database. This
 #' can be obtained by \code{\link{fetchRMSK}}.
-#' @param REtype Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"LTR"} are supported.
+#' @param REtype Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"ERV"} are supported.
 #' @param genome Character parameter. Specify the build of human genome. Can be either \code{"hg19"} or 
 #' \code{"hg38"}. User should make sure the genome build of \code{RE} is consistent with this parameter.
 #' @param be A \code{\link{BiocParallel}} object containing back-end information that is
@@ -419,7 +414,7 @@ fetchRefSeqGene <- function(annotation.source = c("AH", "UCSC"),
 #' 
 #' @export
 findRECpG <- function(RE, 
-                      REtype = c("Alu", "L1", "LTR"), 
+                      REtype = c("Alu", "L1", "ERV"), 
                       genome = c("hg19", "hg38"), 
                       be = NULL, 
                       verbose = FALSE) {
@@ -690,24 +685,6 @@ GRannot <- function(object.GR,
   }
 
   return(object.GR)
-}
-
-# Used by fetchRMSK
-.RMSKDownload <- function(url, tag, verbose)
-{
-  rmsk_raw <- .webDownload(url = url,
-                           tag = tag,
-                           col_types = readr::cols_only(X2 = readr::col_integer(),
-                                                        X6 = readr::col_character(),
-                                                        X7 = readr::col_integer(),
-                                                        X8 = readr::col_integer(),
-                                                        X10 = readr::col_character(),
-                                                        X11 = readr::col_character()),
-                           verbose = verbose)
-  
-  rmsk <- GRanges(seqnames = rmsk_raw$X6, IRanges(start = rmsk_raw$X7+1, end = rmsk_raw$X8),
-                  strand = rmsk_raw$X10, name = rmsk_raw$X11, score = rmsk_raw$X2)
-  return(rmsk)
 }
 
 # Used by fetchRefSeqGene

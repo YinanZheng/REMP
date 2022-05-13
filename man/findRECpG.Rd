@@ -6,7 +6,7 @@
 \usage{
 findRECpG(
   RE,
-  REtype = c("Alu", "L1", "LTR"),
+  REtype = c("Alu", "L1", "ERV"),
   genome = c("hg19", "hg38"),
   be = NULL,
   verbose = FALSE
@@ -16,7 +16,7 @@ findRECpG(
 \item{RE}{A \code{\link{GRanges}} object of RE genomic location database. This
 can be obtained by \code{\link{fetchRMSK}}.}
 
-\item{REtype}{Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"LTR"} are supported.}
+\item{REtype}{Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"ERV"} are supported.}
 
 \item{genome}{Character parameter. Specify the build of human genome. Can be either \code{"hg19"} or 
 \code{"hg38"}. User should make sure the genome build of \code{RE} is consistent with this parameter.}

@@ -6,7 +6,7 @@
 \usage{
 initREMP(
   arrayType = c("450k", "EPIC", "Sequencing"),
-  REtype = c("Alu", "L1", "LTR"),
+  REtype = c("Alu", "L1", "ERV"),
   annotation.source = c("AH", "UCSC"),
   genome = c("hg19", "hg38"),
   RE = NULL,
@@ -22,7 +22,7 @@ initREMP(
 \item{arrayType}{Illumina methylation array type. Currently \code{"450k"}, \code{"EPIC"},
 and \code{"Sequencing"} are supported. Default = \code{"450k"}.}
 
-\item{REtype}{Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"LTR"} are supported.}
+\item{REtype}{Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"ERV"} are supported.}
 
 \item{annotation.source}{Character parameter. Specify the source of annotation databases, including
 the RefSeq Gene annotation database and RepeatMasker annotation database. If \code{"AH"}, the database 
@@ -61,7 +61,7 @@ An \code{\link{REMParcel}} object containing data needed for RE methylation pred
 }
 \description{
 \code{initREMP} is used to initialize annotation database for RE methylation prediction.
-Two major RE types in human, Alu element (Alu) and LINE-1 (L1) are available.
+Three RE types in human, Alu element (Alu), LINE-1 (L1), and endogenous retrovirus (ERV) are available.
 }
 \details{
 Currently, we support two major types of RE in the human genome, Alu and L1. The main purpose of

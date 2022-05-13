@@ -85,8 +85,8 @@ Alu38_ILMN.GR <- Alu38_ILMN.GR[Alu38_ILMN.GR$Index %in% unique(RE38_NeibCpG$Inde
 
 
 ## Find same Alu between two build:
-Alu_ILMN.GR$id <- paste0(seqnames(Alu_ILMN.GR), strand(Alu_ILMN.GR), Alu_ILMN.GR$name, Alu_ILMN.GR$score)
-Alu38_ILMN.GR$id <- paste0(seqnames(Alu38_ILMN.GR), strand(Alu38_ILMN.GR), Alu38_ILMN.GR$name, Alu38_ILMN.GR$score)
+Alu_ILMN.GR$id <- paste0(seqnames(Alu_ILMN.GR), strand(Alu_ILMN.GR), Alu_ILMN.GR$repName, Alu_ILMN.GR$swScore)
+Alu38_ILMN.GR$id <- paste0(seqnames(Alu38_ILMN.GR), strand(Alu38_ILMN.GR), Alu38_ILMN.GR$repName, Alu38_ILMN.GR$swScore)
 
 commonid <- intersect(Alu_ILMN.GR$id, Alu38_ILMN.GR$id )
 
@@ -101,29 +101,19 @@ Alu_ILMN.GR_common_LO <- REMP::.liftOver_Hg19toHg38(Alu_ILMN.GR_common)
 Alu38_ILMN.GR_common_true <- subsetByOverlaps(Alu38_ILMN.GR_common, Alu_ILMN.GR_common_LO, type = "equal")
 
 identical(Alu_ILMN.GR_common_true$id, Alu38_ILMN.GR_common_true$id)
-identical(Alu_ILMN.GR_common_true$name, Alu38_ILMN.GR_common_true$name)
-identical(Alu_ILMN.GR_common_true$score, Alu38_ILMN.GR_common_true$score)
+identical(Alu_ILMN.GR_common_true$repName, Alu38_ILMN.GR_common_true$repName)
+identical(Alu_ILMN.GR_common_true$swScore, Alu38_ILMN.GR_common_true$swScore)
 
 
 #
-set.seed(2017)
+set.seed(2022)
 ind <- sample(seq_len(length(Alu_ILMN.GR_common_true)), 500)
 
-Alu.hg19.demo = GRanges(seqnames = factor(as.character(seqnames(Alu_ILMN.GR_common_true))[ind], levels = paste0("chr", 1:22)),
-                   IRanges(start = as.integer(start(Alu_ILMN.GR_common_true))[ind],
-                           end = as.integer(end(Alu_ILMN.GR_common_true))[ind]),
-                   strand = as.character(strand(Alu_ILMN.GR_common_true))[ind],
-                   name = as.character(Alu_ILMN.GR_common_true$name)[ind],
-                   score = as.integer(Alu_ILMN.GR_common_true$score)[ind],
-                   Index = Rle(as.character(Alu_ILMN.GR_common_true$Index)[ind]))
+Alu.hg19.demo = Alu_ILMN.GR_common_true[ind, ]
+Alu.hg19.demo$id <- NULL
 
-Alu.hg38.demo = GRanges(seqnames = factor(as.character(seqnames(Alu38_ILMN.GR_common_true))[ind], levels = paste0("chr", 1:22)),
-                        IRanges(start = as.integer(start(Alu38_ILMN.GR_common_true))[ind],
-                                end = as.integer(end(Alu38_ILMN.GR_common_true))[ind]),
-                        strand = as.character(strand(Alu38_ILMN.GR_common_true))[ind],
-                        name = as.character(Alu38_ILMN.GR_common_true$name)[ind],
-                        score = as.integer(Alu38_ILMN.GR_common_true$score)[ind],
-                        Index = Rle(as.character(Alu38_ILMN.GR_common_true$Index)[ind]))
+Alu.hg38.demo = Alu38_ILMN.GR_common_true[ind, ]
+Alu.hg38.demo$id <- NULL
 
 Alu.hg19.demo <- sort(Alu.hg19.demo)
 Alu.hg38.demo <- sort(Alu.hg38.demo)

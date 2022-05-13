@@ -53,7 +53,7 @@ saveParcel(object, ...)
 \S4method{getILMN}{REMParcel}(object, REonly = FALSE)
 }
 \arguments{
-\item{REtype}{Type of RE (\code{"Alu"}, \code{"L1"}, or \code{"LTR"}).}
+\item{REtype}{Type of RE (\code{"Alu"}, \code{"L1"}, or \code{"ERV"}).}
 
 \item{genome}{Specify the build of human genome. Can be either \code{"hg19"} or \code{"hg38"}.}
 

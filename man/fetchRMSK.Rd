@@ -5,14 +5,14 @@
 \title{Get RE database from RepeatMasker}
 \usage{
 fetchRMSK(
-  REtype = c("Alu", "L1", "LTR"),
+  REtype = c("Alu", "L1", "ERV"),
   annotation.source = c("AH", "UCSC"),
   genome = c("hg19", "hg38"),
   verbose = FALSE
 )
 }
 \arguments{
-\item{REtype}{Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"LTR"} are supported.}
+\item{REtype}{Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"ERV"} are supported.}
 
 \item{annotation.source}{Character parameter. Specify the source of annotation databases, including
 the RefSeq Gene annotation database and RepeatMasker annotation database. If \code{"AH"}, the database 
@@ -26,8 +26,8 @@ from the UCSC website http://hgdownload.cse.ucsc.edu/goldenpath. The correspondi
 \item{verbose}{Logical parameter. Should the function be verbose?}
 }
 \value{
-A \code{\link{GRanges}} object containing RE database. 'name' column
-indicates the RE subfamily; 'score' column indicates the SW score; 'Index' is an
+A \code{\link{GRanges}} object containing RE database. 'repName' column
+indicates the RE name; 'swScore' column indicates the SW score; 'Index' is an
 internal index for RE to facilitate data referral, which is meaningless for external use.
 }
 \description{

@@ -2,11 +2,11 @@
 #'
 #' @description
 #' \code{initREMP} is used to initialize annotation database for RE methylation prediction.
-#' Two major RE types in human, Alu element (Alu) and LINE-1 (L1) are available.
+#' Three RE types in human, Alu element (Alu), LINE-1 (L1), and endogenous retrovirus (ERV) are available.
 #'
 #' @param arrayType Illumina methylation array type. Currently \code{"450k"}, \code{"EPIC"},
 #' and \code{"Sequencing"} are supported. Default = \code{"450k"}.
-#' @param REtype Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"LTR"} are supported.
+#' @param REtype Type of RE. Currently \code{"Alu"}, \code{"L1"}, and \code{"ERV"} are supported.
 #' @param annotation.source Character parameter. Specify the source of annotation databases, including
 #' the RefSeq Gene annotation database and RepeatMasker annotation database. If \code{"AH"}, the database 
 #' will be obtained from the AnnotationHub package. If \code{"UCSC"}, the database will be downloaded 
@@ -68,7 +68,7 @@
 #' 
 #' @export
 initREMP <- function(arrayType = c("450k", "EPIC", "Sequencing"), 
-                     REtype = c("Alu", "L1", "LTR"),
+                     REtype = c("Alu", "L1", "ERV"),
                      annotation.source = c("AH", "UCSC"), 
                      genome = c("hg19", "hg38"),
                      RE = NULL, 
@@ -224,14 +224,14 @@ initREMP <- function(arrayType = c("450k", "EPIC", "Sequencing"),
 .guessREtype <- function(RE)
 {
   .isGROrStop(RE)
-  RE_subfamily <- RE$name
-  if(is.null(RE_subfamily)) stop("Please provide the 'name' column specifying the RE subfamily.")
+  RE_family <- RE$repFamily
+  if(is.null(RE_family)) stop("Please provide the 'repFamily' column specifying the RE family.")
   
-  REtype <- c("Alu", "L1", "LTR")
+  REtype <- c("Alu", "L1", "ERV")
   
-  RE_count <- c(sum(grepl("Alu", RE_subfamily)),
-                sum(grepl("L1", RE_subfamily)),
-                sum(grepl("LTR|ERV", RE_subfamily)))
+  RE_count <- c(sum(grepl("Alu", RE_family)),
+                sum(grepl("L1", RE_family)),
+                sum(grepl("ERV", RE_family)))
   
   REtype <- REtype[which.max(RE_count)]
   return(REtype)

@@ -1,11 +1,11 @@
 # Variable, global to REMP's namespace.
 # This function is not exported to user space and does not need to be documented.
 REMPOPTIONS <- settings::options_manager(
-  .default.AluFamily.grep = "^Alu|^FAM|^FLAM|^FRAM",
+  .default.AluFamily.grep = "^Alu$",
   
-  .default.L1Family.grep = "^L1|^HAL1",
+  .default.L1Family.grep = "^L1$",
 
-  .default.LTRFamily.grep = "ERV|LTR",
+  .default.ERVFamily.grep = "^ERV1$|^ERVK$|^ERVL$|^ERVL-MaLR$",
   
   .default.chr = paste0("chr", c(seq_len(22), "X", "Y")),
   
@@ -19,8 +19,10 @@ REMPOPTIONS <- settings::options_manager(
   
   .default.refGene.hg38.URL = "https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/refGene.txt.gz",
   
-  .default.AH.repeatmasker.hg19 = "AH5122",
-
+  .default.AH.repeatmasker.hg19 = "AH99002",
+  
+  .default.AH.repeatmasker.hg38 = "AH99003",
+  
   .default.AH.refgene.hg19 = "AH5040",
 
   .default.AH.hg38ToHg19.over.chain = "AH14108",
@@ -49,7 +51,7 @@ REMPOPTIONS <- settings::options_manager(
   ),
 
   .default.predictors = c(
-    "RE.score", "RE.Length", "RE.CpG.density",
+    "RE.swScore", "RE.Length", "RE.CpG.density",
     "RE.InTSS", "RE.In5UTR", "RE.InCDS",
     "N.nbr", "distance.mean", "distance.std", "distance.min", "distance.min2",
     "Methy.min", "Methy.min2", "Methy.mean.mov1", "Methy.mean.mov2",
@@ -84,10 +86,9 @@ REMPOPTIONS <- settings::options_manager(
 #' @section Supported options:
 #' The following options are supported
 #' \describe{
-#'  \item{\code{.default.AluFamily.grep}}{Regular expression for 'grep' to extract Alu subfamily to be included in the prediction.}
-#'  \item{\code{.default.L1Family.grep}}{Regular expression for 'grep' to extract L1 subfamily to be included in the prediction.}
-#'  \item{\code{.default.LTRFamily.grep}}{Regular expression for 'grep' to extract Long Terminal Repeat (LTR), including Endogenous 
-#'  Retrovirus (ERV) subfamily to be included in the prediction (this includes Human Endogenous Retrovirus, HERV).}
+#'  \item{\code{.default.AluFamily.grep}}{Regular expression for 'grep' to extract Alu family to be included in the prediction.}
+#'  \item{\code{.default.L1Family.grep}}{Regular expression for 'grep' to extract L1 family to be included in the prediction.}
+#'  \item{\code{.default.ERVFamily.grep}}{Regular expression for 'grep' to extract ERV family to be included in the prediction.}
 #'  \item{\code{.default.chr}}{List of human chromosome.}
 #'  \item{\code{.default.GM12878.450k.URL}}{URL to download GM12878 450k methylation profiling data.}
 #'  \item{\code{.default.RMSK.hg19.URL}}{URL to download RepeatMasker database in hg19 genome.}
@@ -95,7 +96,9 @@ REMPOPTIONS <- settings::options_manager(
 #'  \item{\code{.default.refGene.hg19.URL}}{URL to download refSeq gene database in hg19 genome.}
 #'  \item{\code{.default.refGene.hg38.URL}}{URL to download refSeq gene database in hg38 genome.}
 #'  \item{\code{.default.AH.repeatmasker.hg19}}{\code{AnnotationHub} data ID linked to RepeatMasker
-#'  database (build hg19).}
+#'  annotation database (Mar 2020, build hg19).}
+#'  \item{\code{.default.AH.repeatmasker.hg38}}{\code{AnnotationHub} data ID linked to RepeatMasker
+#'  annotation database (Sep 2021, build hg38).}
 #'  \item{\code{.default.AH.refgene.hg19}}{\code{AnnotationHub} data ID linked to refSeq gene database
 #'  (build hg19)}
 #'  \item{\code{.default.AH.hg38ToHg19.over.chain}}{\code{AnnotationHub} hg38 to hg19 liftover chain data ID.}

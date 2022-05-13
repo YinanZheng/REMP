@@ -8,7 +8,7 @@
 #' @rdname REMParcel-class
 #'
 #' @param object A \code{REMParcel} object.
-#' @param REtype Type of RE (\code{"Alu"}, \code{"L1"}, or \code{"LTR"}).
+#' @param REtype Type of RE (\code{"Alu"}, \code{"L1"}, or \code{"ERV"}).
 #' @param genome Specify the build of human genome. Can be either \code{"hg19"} or \code{"hg38"}.
 #' @param platform Illumina methylation profiling platform (\code{"450k"} or \code{"EPIC"}).
 #' @param RefGene refSeq gene annotation data, which can be obtained by \code{\link{fetchRefSeqGene}}.
